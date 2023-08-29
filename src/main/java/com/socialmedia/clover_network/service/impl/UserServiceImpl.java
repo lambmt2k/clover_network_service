@@ -23,7 +23,7 @@ public class UserServiceImpl implements UserService {
 
         Optional<UserAuth> userAuth = userAuthRepo.findByEmail(req.getEmail());
 
-        if (userAuth.isEmpty()) {
+        if (!userAuth.isPresent()) {
             throw new SystemException(ResponseCode.UserAuthError.USER_AUTH_NOT_EXIST);
         }
 
