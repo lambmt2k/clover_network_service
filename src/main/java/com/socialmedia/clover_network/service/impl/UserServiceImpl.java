@@ -1,7 +1,7 @@
 package com.socialmedia.clover_network.service.impl;
 
-import com.socialmedia.clover_network.controller.dto.UserLoginReq;
-import com.socialmedia.clover_network.controller.dto.UserLoginRes;
+import com.socialmedia.clover_network.dto.req.UserLoginReq;
+import com.socialmedia.clover_network.dto.res.UserLoginRes;
 import com.socialmedia.clover_network.entity.UserAuth;
 import com.socialmedia.clover_network.repository.UserAuthRepo;
 import com.socialmedia.clover_network.service.UserService;
@@ -23,7 +23,7 @@ public class UserServiceImpl implements UserService {
 
         Optional<UserAuth> userAuth = userAuthRepo.findByEmail(req.getEmail());
 
-        if (userAuth.isEmpty()) {
+        if (!userAuth.isPresent()) {
             throw new SystemException(ResponseCode.UserAuthError.USER_AUTH_NOT_EXIST);
         }
 

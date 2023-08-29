@@ -1,4 +1,4 @@
-package com.socialmedia.clover_network.controller.dto;
+package com.socialmedia.clover_network.dto.req;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
