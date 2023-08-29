@@ -1,4 +1,4 @@
-package com.socialmedia.clover_network.controller.dto;
+package com.socialmedia.clover_network.dto.res;
 
 import com.socialmedia.clover_network.dto.UserDTO;
 import lombok.AllArgsConstructor;

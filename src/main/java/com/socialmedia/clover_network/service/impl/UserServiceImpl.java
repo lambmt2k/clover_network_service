@@ -1,7 +1,7 @@
 package com.socialmedia.clover_network.service.impl;
 
-import com.socialmedia.clover_network.controller.dto.UserLoginReq;
-import com.socialmedia.clover_network.controller.dto.UserLoginRes;
+import com.socialmedia.clover_network.dto.req.UserLoginReq;
+import com.socialmedia.clover_network.dto.res.UserLoginRes;
 import com.socialmedia.clover_network.entity.UserAuth;
 import com.socialmedia.clover_network.repository.UserAuthRepo;
 import com.socialmedia.clover_network.service.UserService;
