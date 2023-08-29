@@ -1,7 +1,7 @@
 package com.socialmedia.clover_network.entity;
 
-import io.micrometer.common.util.StringUtils;
 import lombok.*;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.redis.core.index.Indexed;
 

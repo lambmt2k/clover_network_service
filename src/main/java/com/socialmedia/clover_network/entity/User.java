@@ -1,7 +1,7 @@
 package com.socialmedia.clover_network.entity;
 
 import com.socialmedia.clover_network.enumuration.UserStatus;
-import jakarta.persistence.*;
+import javax.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
