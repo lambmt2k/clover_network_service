@@ -1,21 +1,26 @@
 package com.socialmedia.clover_network.enumuration;
 
 public enum UserStatus {
-    ACTIVE("active"),
-    INACTIVE("inactive"),
-    DELETED("deleted"),
-    OTHER("other"),
-    ;
+    INACTIVE(0, "Inactive"),
+    ACTIVE(1,"Active"),
+    DELETED(2, "Deleted"),
+    OTHER(10,"Other"),;
 
-    private final String code;
+    int statusCode;
+    String statusName;
 
-    UserStatus(String code) { this.code = code; }
+    UserStatus(int statusCode, String statusName) {
+        this.statusCode = statusCode;
+        this.statusName = statusName;
+    }
 
-    public String getCode() { return code; }
+    public String getStatusName() {
+        return statusName;
+    }
 
-    public UserStatus getStatusByCode(String code) {
+    public UserStatus getStatusByCode(int statusCode) {
         for (UserStatus status : UserStatus.values()) {
-            if (code.equalsIgnoreCase(status.code))
+            if (statusCode == status.statusCode)
                 return status;
         }
         return null;

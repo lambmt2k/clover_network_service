@@ -19,10 +19,6 @@ public class UserAuth {
     @Column(name = "id")
     private Long id;
 
-    @OneToOne
-    @JoinColumn(name = "user_id")
-    private User user;
-
     @Column(name = "email")
     private String email;
 
