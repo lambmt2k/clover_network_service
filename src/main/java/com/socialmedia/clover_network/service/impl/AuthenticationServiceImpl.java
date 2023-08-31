@@ -31,6 +31,8 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     public TokenItem loginByEmail(UserLoginReq req) {
         String dryptPass = decyptPass(requestInfo.getData().getPassword().trim());
         authenticate(requestInfo.getData().getUsername().trim(), dryptPass);
+        //generate token
+            String token = jwtTokenUtil.generateToken(requestInfo.getData().getUsername());
         return null;
     }
 
