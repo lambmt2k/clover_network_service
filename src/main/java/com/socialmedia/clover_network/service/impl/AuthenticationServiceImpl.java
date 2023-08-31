@@ -29,6 +29,8 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
     @Override
     public TokenItem loginByEmail(UserLoginReq req) {
+        String dryptPass = decyptPass(requestInfo.getData().getPassword().trim());
+        authenticate(requestInfo.getData().getUsername().trim(), dryptPass);
         return null;
     }
 
@@ -64,6 +66,16 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
             userInfoRepository.save(newUserInfo);
             userAuthRepository.save(newUserAuth);
+        }
+    }
+    private void authenticate(String userId , String password) throws Exception {
+        logger.info("authenticate");
+        try{
+            authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(userId,password));
+        }catch (DisabledException e){
+            throw new Exception(Config.ERROR.USER_DISABLE.getValue(),e);
+        }catch (BadCredentialsException e){
+            throw new Exception(Config.ERROR.INVALID_CREDNTIALS.getValue(),e);
         }
     }
 }
