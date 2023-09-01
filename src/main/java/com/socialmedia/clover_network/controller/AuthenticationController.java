@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping(path = "api/authenticate")
+@RequestMapping(path = "/api/authenticate")
 public class AuthenticationController {
 
     private final AuthenticationService authenticationService;
@@ -24,7 +24,7 @@ public class AuthenticationController {
     }
 
     @PostMapping("/login-by-email")
-    public ResponseEntity<TokenItem> loginByEmail(HttpServletRequest request, @RequestBody UserLoginReq req) {
+    public ResponseEntity<TokenItem> loginByEmail(HttpServletRequest request, @RequestBody UserLoginReq req) throws Exception {
 
         //validate req
         if (!req.getEmail().contains(CommonRegex.REGEX_EMAIL)) {

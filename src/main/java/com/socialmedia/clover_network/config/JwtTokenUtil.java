@@ -1,4 +1,4 @@
-package vn.com.namabank.internal.authen.security.JWT;
+package com.socialmedia.clover_network.config;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
@@ -59,11 +59,11 @@ public class JwtTokenUtil implements Serializable {
     }
 
     //tao token cho user
-    public String generateToken(String user_id){
+    public String generateToken(String email){
         Map<String, Object> claims = new HashMap<>(); // Tao gia tri cho payload JWT token
 //        claims.put("user_id",userDetail.getUsername());
 
-        return doGenerateToken(claims, user_id);
+        return doGenerateToken(claims, email);
     }
 
     public String doGenerateToken(Map<String, Object> claims , String user_id){

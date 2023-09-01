@@ -1,10 +1,10 @@
 package com.socialmedia.clover_network.config;
 
+import com.socialmedia.clover_network.constant.CommonConstant;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
@@ -13,9 +13,8 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
-import vn.com.namabank.common.config.API_Config;
-import vn.com.namabank.internal.authen.security.JWT.JwtAuthenticationEntryPoint;
-import vn.com.namabank.internal.authen.security.filter.JwtRequestFilter;
+
+import java.util.Arrays;
 
 @EnableWebSecurity
 @Configuration
@@ -24,7 +23,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter{
     private JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
     private JwtRequestFilter jwtRequestFilter;
 
-    public WebSecutiryConfig(JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint, JwtRequestFilter jwtRequestFilter){
+    public WebSecurityConfig(JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint, JwtRequestFilter jwtRequestFilter){
         this.jwtRequestFilter = jwtRequestFilter;
     }
 
@@ -33,7 +32,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter{
         http
                 .cors()
                 .and()
-                .authorizeRequests().antMatchers("/"+API_Config.API_LOGIN_URL_NEW,"/"+API_Config.API_LOGIN_URL,"/media/portal/v1/**","/ticket/shopping/v1/download/**","/media/creditappaisal/v1/**").permitAll()
+                .authorizeRequests().antMatchers(CommonConstant.API.API_LOGIN,CommonConstant.API.API_SIGNUP).permitAll()
                 .anyRequest().authenticated()
                 .and()
                 .exceptionHandling().authenticationEntryPoint(jwtAuthenticationEntryPoint).and().sessionManagement()

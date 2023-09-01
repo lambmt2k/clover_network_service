@@ -1,4 +1,4 @@
-package vn.com.namabank.database.dto;
+package com.socialmedia.clover_network.dto.res;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -24,22 +24,18 @@ public class ApiResponse implements Serializable {
     @JsonProperty("messages")
     private String message;
 
-    @JsonProperty("status")
-    private int status_code;
-
     @JsonProperty("data")
     private Object data;
 
-    @JsonIgnore
-    private HttpStatus status;
+    @JsonProperty("status")
+    private int status;
 
     public ApiResponse() {
     }
 
-    public ApiResponse(String code, String message, int status_code, Object data, HttpStatus status) {
+    public ApiResponse(String code, String message, Object data, int status) {
         this.code = code;
         this.message = message;
-        this.status_code = status_code;
         this.data = data;
         this.status = status;
     }
@@ -60,14 +56,6 @@ public class ApiResponse implements Serializable {
         this.message = message;
     }
 
-    public int getStatus_code() {
-        return status_code;
-    }
-
-    public void setStatus_code(int status_code) {
-        this.status_code = status_code;
-    }
-
     public Object getData() {
         return data;
     }
@@ -76,11 +64,11 @@ public class ApiResponse implements Serializable {
         this.data = data;
     }
 
-    public HttpStatus getStatus() {
+    public int getStatus() {
         return status;
     }
 
-    public void setStatus(HttpStatus status) {
+    public void setStatus(int status) {
         this.status = status;
     }
 }

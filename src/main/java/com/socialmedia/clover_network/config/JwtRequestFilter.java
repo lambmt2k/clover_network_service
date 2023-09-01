@@ -1,5 +1,7 @@
-package vn.com.namabank.internal.authen.security.filter;
+package com.socialmedia.clover_network.config;
 
+import com.socialmedia.clover_network.dto.res.ApiResponse;
+import com.socialmedia.clover_network.repository.UserInfoRepository;
 import io.jsonwebtoken.ExpiredJwtException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -12,11 +14,6 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
-import vn.com.namabank.internal.authen.repository.AccountInfoRepository;
-import vn.com.namabank.internal.authen.security.JWT.JwtTokenUtil;
-import vn.com.namabank.common.payload.ApiResponse;
-import vn.com.namabank.common.utils.authen.MessageCode;
-import vn.com.namabank.internal.authen.exception.BadRequestException;
 
 import javax.servlet.FilterChain;
 import javax.servlet.ServletException;
@@ -34,7 +31,7 @@ public class JwtRequestFilter extends OncePerRequestFilter {
     @Autowired
     private JwtTokenUtil jwtTokenUtil;
     @Autowired
-    private AccountInfoRepository accountInfoRepository;
+    private UserInfoRepository userInfoRepository;
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
         String requestTokenHeader = request.getHeader("authorization");
@@ -47,14 +44,13 @@ public class JwtRequestFilter extends OncePerRequestFilter {
 
             try{
                 user_id = jwtTokenUtil.getUserIDFromToken(jwtToken);
-                String reftokent = accountInfoRepository.reftoken(user_id.toUpperCase());
+                String reftokent = userInfoRepository.reftoken(user_id.toUpperCase());
                 if(!jwtToken.equals(reftokent)){
                     ApiResponse apiResponse = new ApiResponse();
-                    apiResponse.setCode(MessageCode.LOGIN_FAILED.getErrorcode());
-                    apiResponse.setMessage(MessageCode.LOGIN_FAILED.getDescription());
-                    apiResponse.setStatus_code(HttpStatus.FORBIDDEN.value());
+                    apiResponse.setCode("");
+                    apiResponse.setMessage("");
+                    apiResponse.setStatus(HttpStatus.FORBIDDEN.value());
                     logger.info("=================end authenticate badrequest=================");
-                    throw new BadRequestException(apiResponse);
                 }
             }catch(IllegalArgumentException e){
                 logger.info("Unable to get JWT token");
