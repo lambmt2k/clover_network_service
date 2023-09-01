@@ -7,12 +7,14 @@ import com.socialmedia.clover_network.dto.req.UserSignUpReq;
 import com.socialmedia.clover_network.entity.TokenItem;
 import com.socialmedia.clover_network.entity.UserAuth;
 import com.socialmedia.clover_network.entity.UserInfo;
+import com.socialmedia.clover_network.enumuration.AccountType;
 import com.socialmedia.clover_network.enumuration.UserStatus;
 import com.socialmedia.clover_network.repository.UserAuthRepository;
 import com.socialmedia.clover_network.repository.UserInfoRepository;
 import com.socialmedia.clover_network.service.AuthenticationService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -29,21 +31,29 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     private final UserInfoRepository userInfoRepository;
     private final UserAuthRepository userAuthRepository;
     private final JwtTokenUtil jwtTokenUtil;
+    private final AuthenticationManager authenticationManager;
 
     public AuthenticationServiceImpl(UserInfoRepository userInfoRepository,
-                                     UserAuthRepository userAuthRepository, JwtTokenUtil jwtTokenUtil) {
+                                     UserAuthRepository userAuthRepository,
+                                     JwtTokenUtil jwtTokenUtil,
+                                     AuthenticationManager authenticationManager) {
         this.userInfoRepository = userInfoRepository;
         this.userAuthRepository = userAuthRepository;
         this.jwtTokenUtil = jwtTokenUtil;
+        this.authenticationManager = authenticationManager;
     }
 
 
     @Override
     public TokenItem loginByEmail(UserLoginReq req) throws Exception {
-        String dryptPass = decyptPass(req.getPassword().trim());
-        authenticate(req.getEmail().trim(), dryptPass);
+        String decryptPassword = decryptPassword(req.getPassword().trim());
+        authenticate(req.getEmail().trim(), decryptPassword);
         //generate token
             String token = jwtTokenUtil.generateToken(req.getEmail());
+        return null;
+    }
+
+    private String decryptPassword(String originPassword) {
         return null;
     }
 
@@ -71,6 +81,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
             newUserInfo.setCreatedDate(now);
             newUserInfo.setUpdatedBy("anonymous");
             newUserInfo.setUpdatedDate(now);
+            newUserInfo.setAccountType(AccountType.EMAIL);
 
             //create new user auth
             UserAuth newUserAuth = new UserAuth();
@@ -86,9 +97,9 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         try{
             authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(email,password));
         }catch (DisabledException e){
-            throw new Exception(Config.ERROR.USER_DISABLE.getValue(),e);
+            throw new Exception(e);
         }catch (BadCredentialsException e){
-            throw new Exception(Config.ERROR.INVALID_CREDNTIALS.getValue(),e);
+            throw new Exception(e);
         }
     }
 }

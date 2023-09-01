@@ -44,7 +44,7 @@ public class JwtRequestFilter extends OncePerRequestFilter {
 
             try{
                 user_id = jwtTokenUtil.getUserIDFromToken(jwtToken);
-                String reftokent = userInfoRepository.reftoken(user_id.toUpperCase());
+                String reftokent = "";
                 if(!jwtToken.equals(reftokent)){
                     ApiResponse apiResponse = new ApiResponse();
                     apiResponse.setCode("");

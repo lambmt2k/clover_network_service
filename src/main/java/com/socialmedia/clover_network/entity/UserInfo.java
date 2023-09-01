@@ -1,5 +1,6 @@
 package com.socialmedia.clover_network.entity;
 
+import com.socialmedia.clover_network.enumuration.AccountType;
 import com.socialmedia.clover_network.enumuration.Gender;
 import com.socialmedia.clover_network.enumuration.UserStatus;
 import lombok.AllArgsConstructor;
@@ -37,6 +38,9 @@ public class UserInfo {
 
     @Column(name = "gender")
     private Gender gender;
+
+    @Column(name = "account_type")
+    private AccountType accountType;
 
     @Column(name = "created_by")
     private String createdBy;
