@@ -22,13 +22,6 @@ import java.util.function.Function;
 public class JwtTokenUtil implements Serializable {
     private static Logger logger = LoggerFactory.getLogger(JwtTokenUtil.class);
 
-    @Value("${jwt.secret}")
-    private String secret;
-
-    @Value("${TIME.JWT_TOKEN_VALIDITY}")
-    private int JWT_TOKEN_VALIDITY;
-
-
     @Autowired
     private Properties properties;
 
@@ -39,7 +32,7 @@ public class JwtTokenUtil implements Serializable {
 
     private Claims getAllClaimFromToken(String token) {
         return Jwts.parser()
-                .setSigningKey(secret)
+                .setSigningKey("abc")
                 .parseClaimsJws(token)
                 .getBody();
     }
@@ -71,8 +64,8 @@ public class JwtTokenUtil implements Serializable {
                 .setHeaderParam("typ","JWT")
                 .setClaims(claims).setSubject(user_id)
                 .setIssuedAt(new Date(System.currentTimeMillis()))
-                .setExpiration(new Date(System.currentTimeMillis()+ JWT_TOKEN_VALIDITY))
-                .signWith(SignatureAlgorithm.HS512,secret).compact();
+                .setExpiration(new Date(System.currentTimeMillis()+ 60000))
+                .signWith(SignatureAlgorithm.HS512,"abc").compact();
     }
 
     public boolean validateToken(String token, String userId){

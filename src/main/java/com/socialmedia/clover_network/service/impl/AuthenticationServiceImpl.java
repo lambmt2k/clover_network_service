@@ -26,7 +26,7 @@ import java.util.Optional;
 @Service
 public class AuthenticationServiceImpl implements AuthenticationService {
 
-    private static Logger logger = LoggerFactory.getLogger(JwtRequestFilter.class);
+    private static Logger logger = LoggerFactory.getLogger(AuthenticationServiceImpl.class);
 
     private final UserInfoRepository userInfoRepository;
     private final UserAuthRepository userAuthRepository;
