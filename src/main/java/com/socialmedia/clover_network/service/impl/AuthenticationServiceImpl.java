@@ -52,6 +52,36 @@ public class AuthenticationServiceImpl implements AuthenticationService {
             String token = jwtTokenUtil.generateToken(req.getEmail());
         return null;
     }
+    @PostMapping(API_Config.API_LOGIN_URL)
+    public ResponseEntity<AccountInfoRp> loginAuthenticationToken(@RequestBody AccountInfoRq requestInfo ) throws Exception {
+        //authentication
+        boolean isChecked = !requestInfo.getData().getUsername().isEmpty() && !requestInfo.getData().getPassword().isEmpty();
+        AccountInfoRp accountRp = new AccountInfoRp();
+        AccountDataRp accountDbRp = new AccountDataRp();
+        AuthToken authentk = new AuthToken();
+        if (isChecked) {
+            String dryptPass = decyptPass(requestInfo.getData().getPassword().trim());
+            authenticate(requestInfo.getData().getUsername().trim(), dryptPass);
+            //generate token
+            String token = jwtTokenUtil.generateToken(requestInfo.getData().getUsername());
+            accountInfoService.saveAccountInfo(requestInfo.getData().getUsername(), requestInfo.getIp() , requestInfo.getDeviceId(), token, 1);
+            accountRp.setCode(MessageCode.LOGIN_SUCCESSFUL.getErrorcode());
+            accountRp.setMessage(ssoErrorMessageRepository.findByErrorCode(MessageCode.LOGIN_SUCCESSFUL.getErrorcode()).getDescriptionVn());
+            authentk.setToken(token);
+            accountDbRp.setAuth(authentk);
+            //hard code user info - lên live sẽ thay đổi
+            //accountDbRp.setAccountUserInfo(accountInfoService.getInfoUserById("DUCOH"));
+            accountDbRp.setAccountUserInfo(accountInfoService.getInfoUserById(requestInfo.getData().getUsername().trim()));
+            accountRp.setData(accountDbRp);
+            accountRp.setStatus_code(Integer.parseInt(Config.MESSAGE_STATUS.OK.getValue()));
+            return new ResponseEntity<AccountInfoRp>(accountRp, HttpStatus.OK);
+        } else {
+            accountRp.setCode(MessageCode.LOGIN_FAILED.getErrorcode());
+            accountRp.setMessage(ssoErrorMessageRepository.findByErrorCode(MessageCode.LOGIN_FAILED.getErrorcode()).getDescriptionVn());
+            accountRp.setStatus(HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<AccountInfoRp>(accountRp, HttpStatus.OK);
+        }
+    }
 
     private String decryptPassword(String originPassword) {
         return null;
@@ -100,6 +130,26 @@ public class AuthenticationServiceImpl implements AuthenticationService {
             throw new Exception(e);
         }catch (BadCredentialsException e){
             throw new Exception(e);
+        }
+    }
+    @GetMapping(API_Config.API_INFO_URL)
+    public ResponseEntity<Object> getInfo(){
+        ApiResponse response = new ApiResponse();
+        String userId = SecurityContextHolder.getContext().getAuthentication().getName();
+        AccountUserInfo info = accountInfoService.getInfoUserById(userId);
+        logger.info("[Get info] userId : " + userId);
+        if(info != null){
+            response.setCode(MessageCode.LOGIN_SUCCESSFUL.getErrorcode());
+            response.setData(info);
+            response.setStatus_code(Integer.parseInt(Config.MESSAGE_STATUS.OK.getValue()));
+            response.setMessage(ssoErrorMessageRepository.findByErrorCode(MessageCode.LOGIN_SUCCESSFUL.getErrorcode()).getDescriptionVn());
+            return new ResponseEntity<Object>(response, HttpStatus.OK);
+        }else{
+            response.setCode(MessageCode.PORTAL_NODATAFIND.name());
+            response.setData(null);
+            response.setStatus(HttpStatus.NOT_FOUND);
+            response.setMessage(Config.MESSAGE_TEXT.NOT_FOUND.getValue());
+            return new ResponseEntity<Object>(response, HttpStatus.OK);
         }
     }
 }
