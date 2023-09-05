@@ -152,4 +152,42 @@ public class AuthenticationServiceImpl implements AuthenticationService {
             return new ResponseEntity<Object>(response, HttpStatus.OK);
         }
     }
+
+    public String decryptWithKey(String decryptKey,String encryptText) {
+        String result = "";
+
+        try {
+            logger.info("********************* START DECRYPT TRIPLEDES *********************");
+
+
+            TripleDesEncryptionUtil tripleDesEncryptionUtil = new TripleDesEncryptionUtil();
+            result = tripleDesEncryptionUtil.decrypt(decryptKey, encryptText);
+
+            logger.info("********************* END DECRYPT TRIPLEDES *********************");
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            result = e.toString();
+        }
+        return result;
+    }
+
+    public String encryptWithKey(String encryptKey ,String plainText) {
+        String result = "";
+
+        try {
+            logger.info("********************* START ENCRYPT TRIPLEDES *********************");
+
+            TripleDesEncryptionUtil tripleDesEncryptionUtil = new TripleDesEncryptionUtil();
+            result = tripleDesEncryptionUtil.encrypt(encryptKey,plainText);
+
+            logger.info("********************* END ENCRYPT TRIPLEDES *********************");
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            result = e.toString();
+        }
+
+        return result;
+    }
 }
