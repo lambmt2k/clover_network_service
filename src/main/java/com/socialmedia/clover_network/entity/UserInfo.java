@@ -36,6 +36,9 @@ public class UserInfo {
     @Column(name = "day_of_birth")
     private Date dayOfBirth;
 
+    @Column(name = "phone_no")
+    private String phoneNo;
+
     @Column(name = "gender")
     private Gender gender;
 

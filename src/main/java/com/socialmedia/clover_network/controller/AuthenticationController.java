@@ -3,15 +3,15 @@ package com.socialmedia.clover_network.controller;
 import com.socialmedia.clover_network.constant.CommonRegex;
 import com.socialmedia.clover_network.dto.req.UserLoginReq;
 import com.socialmedia.clover_network.dto.req.UserSignUpReq;
+import com.socialmedia.clover_network.dto.res.ApiResponse;
 import com.socialmedia.clover_network.entity.TokenItem;
+import com.socialmedia.clover_network.entity.UserInfo;
 import com.socialmedia.clover_network.service.AuthenticationService;
 import javax.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping(path = "/api/authenticate")
@@ -46,5 +46,10 @@ public class AuthenticationController {
         }
         authenticationService.signUpNewUser(req);
         return ResponseEntity.status(HttpStatus.OK).body(null);
+    }
+
+    @GetMapping("/get-user-info")
+    public ResponseEntity<Object> getInfo(){
+        return null;
     }
 }

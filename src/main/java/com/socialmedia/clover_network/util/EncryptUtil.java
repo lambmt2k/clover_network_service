@@ -1,11 +1,20 @@
-packpackage com.socialmedia.clover_network.util;
+package com.socialmedia.clover_network.util;
 
-public class TripleDesEncryptionUtil {
+import org.apache.tomcat.util.codec.binary.Base64;
+
+import javax.crypto.Cipher;
+import javax.crypto.SecretKey;
+import javax.crypto.spec.IvParameterSpec;
+import javax.crypto.spec.SecretKeySpec;
+import java.security.MessageDigest;
+import java.util.Arrays;
+
+public class EncryptUtil {
   private static final String DESEDE_ENCRYPTION_SCHEME_CIPHER = "DESede/ECB/PKCS5Padding";
   private static final String UNICODE_FORMAT = "UTF8";
   private static final String DESEDE_ENCRYPTION_SCHEME_KEY = "DESede";
 
-public TripleDesEncryptionUtil() throws Exception {
+public EncryptUtil() throws Exception {
         final MessageDigest md = MessageDigest.getInstance("md5");
         final byte[] digestOfPassword = md.digest(encryptionSecretKey.getBytes(UNICODE_FORMAT));
         final byte[] keyBytes = Arrays.copyOf(digestOfPassword, 24);
@@ -37,7 +46,7 @@ public TripleDesEncryptionUtil() throws Exception {
 
 
     public static String decrypt(String key, String str) throws Exception {
-        byte[] data =Base64.decodeBase64(str);
+        byte[] data = Base64.decodeBase64(str);
         SecretKey secretKey1 = new SecretKeySpec(key.getBytes(UNICODE_FORMAT), DESEDE_ENCRYPTION_SCHEME_KEY);
         Cipher cipher = Cipher.getInstance(DESEDE_ENCRYPTION_SCHEME_CIPHER);
         cipher.init(Cipher.DECRYPT_MODE, secretKey1);
