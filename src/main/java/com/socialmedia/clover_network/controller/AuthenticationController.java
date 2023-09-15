@@ -7,11 +7,15 @@ import com.socialmedia.clover_network.dto.res.ApiResponse;
 import com.socialmedia.clover_network.entity.TokenItem;
 import com.socialmedia.clover_network.entity.UserInfo;
 import com.socialmedia.clover_network.service.AuthenticationService;
+
+import javax.mail.MessagingException;
 import javax.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
+
+import java.io.UnsupportedEncodingException;
 
 @RestController
 @RequestMapping(path = "/api/authenticate")
@@ -38,7 +42,7 @@ public class AuthenticationController {
     }
 
     @PostMapping("/signup-by-email")
-    public ResponseEntity<?> signUpByEmail(@RequestBody UserSignUpReq req) {
+    public ResponseEntity<?> signUpByEmail(@RequestBody UserSignUpReq req) throws MessagingException, UnsupportedEncodingException {
 
         //validate req
         if (!req.getEmail().contains(CommonRegex.REGEX_EMAIL)) {
@@ -49,7 +53,14 @@ public class AuthenticationController {
     }
 
     @GetMapping("/get-user-info")
-    public ResponseEntity<Object> getInfo(){
-        return null;
+    public ResponseEntity<ApiResponse> getInfo(){
+        ApiResponse res = authenticationService.getUserInfo();
+        return ResponseEntity.ok(res);
+    }
+
+    @GetMapping("/verify")
+    public ResponseEntity<ApiResponse> verifyAccount(@RequestParam("tokenId") String tokenId){
+        ApiResponse res = authenticationService.verifyAccount(tokenId);
+        return ResponseEntity.ok(res);
     }
 }

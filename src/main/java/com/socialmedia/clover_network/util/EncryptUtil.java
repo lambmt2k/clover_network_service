@@ -10,32 +10,31 @@ import java.security.MessageDigest;
 import java.util.Arrays;
 
 public class EncryptUtil {
-  private static final String DESEDE_ENCRYPTION_SCHEME_CIPHER = "DESede/ECB/PKCS5Padding";
-  private static final String UNICODE_FORMAT = "UTF8";
-  private static final String DESEDE_ENCRYPTION_SCHEME_KEY = "DESede";
+    private static final String DESEDE_ENCRYPTION_SCHEME_CIPHER = "DESede/ECB/PKCS5Padding";
+    private static final String UNICODE_FORMAT = "UTF8";
+    private static final String DESEDE_ENCRYPTION_SCHEME_KEY = "DESede";
 
-public EncryptUtil() throws Exception {
+    /*public EncryptUtil() throws Exception {
         final MessageDigest md = MessageDigest.getInstance("md5");
         final byte[] digestOfPassword = md.digest(encryptionSecretKey.getBytes(UNICODE_FORMAT));
         final byte[] keyBytes = Arrays.copyOf(digestOfPassword, 24);
-        for (int j = 0, k = 16; j < 8;) {
+        for (int j = 0, k = 16; j < 8; ) {
             keyBytes[k++] = keyBytes[j++];
         }
         key = new SecretKeySpec(keyBytes, DESEDE_ENCRYPTION_SCHEME_KEY);
 
 
-
         final byte[] digestOfPassword2 = md.digest(encryptionSecretKeyV2.getBytes(UNICODE_FORMAT));
         final byte[] keyBytes2 = Arrays.copyOf(digestOfPassword2, 24);
-        for (int j = 0, k = 16; j < 8;) {
+        for (int j = 0, k = 16; j < 8; ) {
             keyBytes2[k++] = keyBytes2[j++];
         }
         key2 = new SecretKeySpec(keyBytes2, DESEDE_ENCRYPTION_SCHEME_KEY);
 
         iv = new IvParameterSpec(new byte[8]);
-    }
-  
-  public static String encrypt(String key, String str) throws Exception {
+    }*/
+
+    public static String encrypt(String key, String str) throws Exception {
         Cipher cipher = Cipher.getInstance(DESEDE_ENCRYPTION_SCHEME_CIPHER);
         SecretKey secretKey1 = new SecretKeySpec(key.getBytes(UNICODE_FORMAT), DESEDE_ENCRYPTION_SCHEME_KEY);
         cipher.init(Cipher.ENCRYPT_MODE, secretKey1);
