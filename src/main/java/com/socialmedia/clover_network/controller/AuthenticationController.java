@@ -3,15 +3,19 @@ package com.socialmedia.clover_network.controller;
 import com.socialmedia.clover_network.constant.CommonRegex;
 import com.socialmedia.clover_network.dto.req.UserLoginReq;
 import com.socialmedia.clover_network.dto.req.UserSignUpReq;
+import com.socialmedia.clover_network.dto.res.ApiResponse;
 import com.socialmedia.clover_network.entity.TokenItem;
+import com.socialmedia.clover_network.entity.UserInfo;
 import com.socialmedia.clover_network.service.AuthenticationService;
+
+import javax.mail.MessagingException;
 import javax.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.web.bind.annotation.*;
+
+import java.io.UnsupportedEncodingException;
 
 @RestController
 @RequestMapping(path = "/api/authenticate")
@@ -38,7 +42,7 @@ public class AuthenticationController {
     }
 
     @PostMapping("/signup-by-email")
-    public ResponseEntity<?> signUpByEmail(@RequestBody UserSignUpReq req) {
+    public ResponseEntity<?> signUpByEmail(@RequestBody UserSignUpReq req) throws MessagingException, UnsupportedEncodingException {
 
         //validate req
         if (!req.getEmail().contains(CommonRegex.REGEX_EMAIL)) {
@@ -46,5 +50,17 @@ public class AuthenticationController {
         }
         authenticationService.signUpNewUser(req);
         return ResponseEntity.status(HttpStatus.OK).body(null);
+    }
+
+    @GetMapping("/get-user-info")
+    public ResponseEntity<ApiResponse> getInfo(){
+        ApiResponse res = authenticationService.getUserInfo();
+        return ResponseEntity.ok(res);
+    }
+
+    @GetMapping("/verify")
+    public ResponseEntity<ApiResponse> verifyAccount(@RequestParam("tokenId") String tokenId){
+        ApiResponse res = authenticationService.verifyAccount(tokenId);
+        return ResponseEntity.ok(res);
     }
 }

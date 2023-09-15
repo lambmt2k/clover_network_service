@@ -5,6 +5,8 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.redis.core.index.Indexed;
 
+import javax.persistence.Entity;
+import javax.persistence.Table;
 import java.io.Serializable;
 import java.time.LocalDateTime;
 
@@ -14,6 +16,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @Builder
 @Data
+@Table(name = "user_info", schema = "public", catalog = "clove")
 public class TokenItem implements Serializable {
     @Id
     private String tokenId;
