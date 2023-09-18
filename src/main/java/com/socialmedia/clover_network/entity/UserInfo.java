@@ -2,6 +2,7 @@ package com.socialmedia.clover_network.entity;
 
 import com.socialmedia.clover_network.enumuration.AccountType;
 import com.socialmedia.clover_network.enumuration.Gender;
+import com.socialmedia.clover_network.enumuration.UserRole;
 import com.socialmedia.clover_network.enumuration.UserStatus;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -17,12 +18,17 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @NoArgsConstructor
 @Entity
-@Table(name = "user_info", schema = "public", catalog = "clove")
+@Table(name = "user_info")
 public class UserInfo {
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Id
-    @Column(name = "id")
-    private Long id;
+    @Column(name = "user_id")
+    private String user_id;
+
+    @Column(name = "avatar_img_url")
+    private String avatarImgUrl;
+
+    @Column(name = "banner_img_url")
+    private String bannerImgUrl;
 
     @Column(name = "email")
     private String email;
@@ -32,6 +38,9 @@ public class UserInfo {
 
     @Column(name = "lastname")
     private String lastname;
+
+    @Column(name = "display_name")
+    private String displayName;
 
     @Column(name = "day_of_birth")
     private Date dayOfBirth;
@@ -45,6 +54,12 @@ public class UserInfo {
     @Column(name = "account_type")
     private AccountType accountType;
 
+    @Column(name = "user_role")
+    private UserRole userRole;
+
+    @Column(name = "status")
+    private UserStatus status;
+
     @Column(name = "created_by")
     private String createdBy;
 
@@ -56,8 +71,5 @@ public class UserInfo {
 
     @Column(name = "updated_date")
     private LocalDateTime updatedDate;
-
-    @Column(name = "status")
-    private UserStatus status;
 
 }
