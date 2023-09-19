@@ -12,12 +12,15 @@ import javax.persistence.*;
 @AllArgsConstructor
 @NoArgsConstructor
 @Entity
-@Table(name = "user_auth", schema = "public", catalog = "clove")
+@Table(name = "user_auth")
 public class UserAuth {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Id
     @Column(name = "id")
     private Long id;
+
+    @Column(name = "user_id")
+    private String userId;
 
     @Column(name = "email")
     private String email;

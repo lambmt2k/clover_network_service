@@ -1,5 +1,6 @@
 package com.socialmedia.clover_network.entity;
 
+import com.socialmedia.clover_network.enumuration.UserRole;
 import lombok.*;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.data.annotation.Id;
@@ -16,15 +17,13 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @Builder
 @Data
-@Table(name = "user_info", schema = "public", catalog = "clove")
+@Table(name = "user_info")
 public class TokenItem implements Serializable {
     @Id
     private String tokenId;
     @Indexed
     private String userId;
-    @Indexed
-    private String domain;
-    private int roleId;
+    private UserRole userRole;
     private String deviceId;
     private String deviceName;
     private PLATFORM platform;
@@ -46,7 +45,6 @@ public class TokenItem implements Serializable {
     public static enum PLATFORM {
         INVALID,
         WEB,
-        PC,
         MOBILE
     }
 
