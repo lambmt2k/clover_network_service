@@ -21,7 +21,7 @@ public class GroupRolePermission {
     private Long id;
 
     @Column(name = "group_id")
-    private Long groupId;
+    private String groupId;
 
     @Column(name = "group_role_id")
     private GroupRole groupRoleId;
