@@ -21,7 +21,7 @@ public class GroupMember {
     private Long id;
 
     @Column(name = "group_id")
-    private Long groupId;
+    private String groupId;
 
     @Column(name = "user_id")
     private String userId;
