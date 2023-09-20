@@ -11,7 +11,7 @@ import java.io.UnsupportedEncodingException;
 
 public interface AuthenticationService {
     TokenItem loginByEmail(UserLoginReq req) throws Exception;
-    void signUpNewUser(UserSignUpReq req) throws MessagingException, UnsupportedEncodingException;
+    ApiResponse signUpNewUser(UserSignUpReq req) throws MessagingException, UnsupportedEncodingException;
     ApiResponse getUserInfo();
     ApiResponse verifyAccount(String tokenId);
 }
