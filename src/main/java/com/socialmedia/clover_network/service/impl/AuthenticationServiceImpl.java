@@ -1,22 +1,27 @@
 package com.socialmedia.clover_network.service.impl;
 
 import com.socialmedia.clover_network.config.JwtTokenUtil;
+import com.socialmedia.clover_network.constant.CommonConstant;
+import com.socialmedia.clover_network.constant.CommonMessage;
+import com.socialmedia.clover_network.constant.CommonRegex;
 import com.socialmedia.clover_network.dto.req.UserLoginReq;
 import com.socialmedia.clover_network.dto.req.UserSignUpReq;
 import com.socialmedia.clover_network.dto.res.ApiResponse;
+import com.socialmedia.clover_network.dto.res.UserInfoRes;
 import com.socialmedia.clover_network.entity.TokenItem;
 import com.socialmedia.clover_network.entity.UserAuth;
 import com.socialmedia.clover_network.entity.UserInfo;
-import com.socialmedia.clover_network.enumuration.AccountType;
-import com.socialmedia.clover_network.enumuration.UserStatus;
+import com.socialmedia.clover_network.enumuration.*;
 import com.socialmedia.clover_network.repository.UserAuthRepository;
 import com.socialmedia.clover_network.repository.UserInfoRepository;
 import com.socialmedia.clover_network.service.AuthenticationService;
 import com.socialmedia.clover_network.service.MailService;
 import com.socialmedia.clover_network.util.EncryptUtil;
+import com.socialmedia.clover_network.util.GenIDUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.DisabledException;
@@ -26,6 +31,7 @@ import org.springframework.stereotype.Service;
 
 import javax.mail.MessagingException;
 import java.io.UnsupportedEncodingException;
+import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
 import java.util.Optional;
 
@@ -38,6 +44,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     private final UserAuthRepository userAuthRepository;
 
     private final JwtTokenUtil jwtTokenUtil;
+    private final GenIDUtil genIDUtil;
     private final AuthenticationManager authenticationManager;
 
     private final MailService mailService;
@@ -45,11 +52,13 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     public AuthenticationServiceImpl(UserInfoRepository userInfoRepository,
                                      UserAuthRepository userAuthRepository,
                                      JwtTokenUtil jwtTokenUtil,
+                                     GenIDUtil genIDUtil,
                                      AuthenticationManager authenticationManager,
                                      MailService mailService) {
         this.userInfoRepository = userInfoRepository;
         this.userAuthRepository = userAuthRepository;
         this.jwtTokenUtil = jwtTokenUtil;
+        this.genIDUtil = genIDUtil;
         this.authenticationManager = authenticationManager;
         this.mailService = mailService;
     }
@@ -93,41 +102,77 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     }
 
     @Override
-    public void signUpNewUser(UserSignUpReq req) throws MessagingException, UnsupportedEncodingException {
+    public ApiResponse signUpNewUser(UserSignUpReq req) throws MessagingException, UnsupportedEncodingException {
         logger.info("Start [signUpNewUser]");
+        ApiResponse res = new ApiResponse();
+        SimpleDateFormat dateFormat = new SimpleDateFormat(CommonRegex.PATTERN_DATE.pattern());
+        if (!req.getEmail().contains(CommonRegex.REGEX_EMAIL)) {
+            res.setStatus(HttpStatus.BAD_REQUEST.value());
+            res.setData(null);
+            res.setMessage(HttpStatus.BAD_REQUEST.getReasonPhrase());
+            return res;
+        }
         //verify input data
         Optional<UserInfo> userInfoOpt = userInfoRepository.findByEmail(req.getEmail());
         Optional<UserAuth> userAuthOpt = userAuthRepository.findByEmail(req.getEmail());
         if (userInfoOpt.isPresent() || userAuthOpt.isPresent()) {
-
+            res.setStatus(HttpStatus.CONFLICT.value());
+            res.setData(req.getEmail());
+            res.setMessage(HttpStatus.CONTINUE.getReasonPhrase());
+            return res;
         } else {
             LocalDateTime now = LocalDateTime.now();
+            String newUserId = genIDUtil.genId();
 
             //create new user info
             UserInfo newUserInfo = new UserInfo();
+            newUserInfo.setUser_id(newUserId);
+            newUserInfo.setAvatarImgUrl(null);
+            newUserInfo.setBannerImgUrl(null);
             newUserInfo.setEmail(req.getEmail());
             newUserInfo.setFirstname(req.getFirstname());
             newUserInfo.setLastname(req.getLastname());
+            newUserInfo.setDisplayName(req.getFirstname() + CommonRegex.REGEX_SPACE + req.getLastname());
             newUserInfo.setDayOfBirth(req.getDayOfBirth());
+            newUserInfo.setPhoneNo(null);
             newUserInfo.setGender(req.getGender());
+            newUserInfo.setAccountType(AccountType.EMAIL);
+            newUserInfo.setUserRole(UserRole.USER);
             newUserInfo.setStatus(UserStatus.INACTIVE);
-            newUserInfo.setCreatedBy("anonymous");
+            newUserInfo.setCreatedBy(CommonConstant.ADMIN_ACCOUNT);
             newUserInfo.setCreatedDate(now);
-            newUserInfo.setUpdatedBy("anonymous");
+            newUserInfo.setUpdatedBy(CommonConstant.ADMIN_ACCOUNT);
             newUserInfo.setUpdatedDate(now);
             newUserInfo.setAccountType(AccountType.EMAIL);
 
             //create new user auth
             UserAuth newUserAuth = new UserAuth();
+            newUserAuth.setUserId(newUserId);
             newUserAuth.setEmail(req.getEmail());
-            newUserAuth.setPassword(req.getPassword());
+            newUserAuth.setPassword(encryptWithKey(CommonConstant.ENCRYPT_KEY,req.getPassword()));
 
+            //save into database
             userInfoRepository.save(newUserInfo);
             userAuthRepository.save(newUserAuth);
 
             //send mail active account
             mailService.sendMailActiveAccount(newUserInfo, null);
+
+            UserInfoRes userInfoRes = new UserInfoRes();
+            userInfoRes.setEmail(newUserInfo.getEmail());
+            userInfoRes.setFirstname(newUserInfo.getFirstname());
+            userInfoRes.setLastname(newUserInfo.getLastname());
+            userInfoRes.setGender(
+                    newUserInfo.getGender().equals(Gender.MALE) ? "MALE"
+                            : (newUserInfo.getGender().equals(Gender.FEMALE) ? "FEMALE" : "OTHER"));
+            userInfoRes.setUserRole(newUserInfo.getUserRole().getRoleName());
+            userInfoRes.setDayOfBirth(dateFormat.format(newUserInfo.getDayOfBirth()));
+            userInfoRes.setStatus(newUserInfo.getStatus().getStatusName());
+            res.setStatus(HttpStatus.OK.value());
+            res.setMessage(CommonMessage.ResponseMessage.STATUS_200);
+            res.setData(userInfoRes);
         }
+        return res;
     }
 
     @Override

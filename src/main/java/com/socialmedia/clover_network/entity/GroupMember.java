@@ -1,5 +1,6 @@
 package com.socialmedia.clover_network.entity;
 
+import com.socialmedia.clover_network.enumuration.GroupMemberRole;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -30,7 +31,7 @@ public class GroupMember {
     private String displayName;
 
     @Column(name = "group_role_id")
-    private GroupRolePermission.GroupRole groupRoleId;
+    private GroupMemberRole groupRoleId;
 
     @Column(name = "join_time")
     private LocalDateTime joinTime;

@@ -42,14 +42,10 @@ public class AuthenticationController {
     }
 
     @PostMapping("/signup-by-email")
-    public ResponseEntity<?> signUpByEmail(@RequestBody UserSignUpReq req) throws MessagingException, UnsupportedEncodingException {
-
+    public ResponseEntity<ApiResponse> signUpByEmail(@RequestBody UserSignUpReq req) throws MessagingException, UnsupportedEncodingException {
+        ApiResponse res = authenticationService.signUpNewUser(req);
         //validate req
-        if (!req.getEmail().contains(CommonRegex.REGEX_EMAIL)) {
-            return ResponseEntity.badRequest().build();
-        }
-        authenticationService.signUpNewUser(req);
-        return ResponseEntity.status(HttpStatus.OK).body(null);
+        return ResponseEntity.status(HttpStatus.OK).body(res);
     }
 
     @GetMapping("/get-user-info")
