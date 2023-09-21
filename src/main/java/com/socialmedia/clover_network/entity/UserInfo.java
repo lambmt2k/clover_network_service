@@ -22,7 +22,7 @@ import java.time.LocalDateTime;
 public class UserInfo {
     @Id
     @Column(name = "user_id")
-    private String user_id;
+    private String userId;
 
     @Column(name = "avatar_img_url")
     private String avatarImgUrl;

@@ -30,6 +30,7 @@ public class MailServiceImpl implements MailService {
     public void sendMailActiveAccount(UserInfo userInfo, String tokenId) throws MessagingException, UnsupportedEncodingException {
         logger.info("Start [sendMailActiveAccount]");
         String toEmail = userInfo.getEmail();
+        
         MimeMessage message = javaMailSender.createMimeMessage();
         MimeMessageHelper helper = new MimeMessageHelper(message, true);
 

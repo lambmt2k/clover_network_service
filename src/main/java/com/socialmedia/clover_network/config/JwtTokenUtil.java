@@ -11,15 +11,16 @@ import org.springframework.context.annotation.PropertySource;
 import org.springframework.stereotype.Component;
 
 import java.io.Serializable;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Properties;
+import java.util.*;
 import java.util.function.Function;
 
 @Component
 //@PropertySource("classpath:config.properties")
 public class JwtTokenUtil implements Serializable {
+
+    @Value("${jwt.secret}")
+    private String secret;
+
     private static Logger logger = LoggerFactory.getLogger(JwtTokenUtil.class);
 
     @Autowired
@@ -60,12 +61,13 @@ public class JwtTokenUtil implements Serializable {
     }
 
     public String doGenerateToken(Map<String, Object> claims , String user_id){
+        String encodedString = Base64.getEncoder().encodeToString(secret.getBytes());
         return Jwts.builder()
-                .setHeaderParam("typ","JWT")
+                .setHeaderParam("type","JWT")
                 .setClaims(claims).setSubject(user_id)
                 .setIssuedAt(new Date(System.currentTimeMillis()))
                 .setExpiration(new Date(System.currentTimeMillis()+ 60000))
-                .signWith(SignatureAlgorithm.HS512,"abc").compact();
+                .signWith(SignatureAlgorithm.HS512,encodedString).compact();
     }
 
     public boolean validateToken(String token, String userId){

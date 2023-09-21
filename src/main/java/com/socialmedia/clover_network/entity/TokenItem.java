@@ -3,10 +3,11 @@ package com.socialmedia.clover_network.entity;
 import com.socialmedia.clover_network.enumuration.UserRole;
 import lombok.*;
 import org.apache.commons.lang3.StringUtils;
-import org.springframework.data.annotation.Id;
+
 import org.springframework.data.redis.core.index.Indexed;
 
 import javax.persistence.Entity;
+import javax.persistence.Id;
 import javax.persistence.Table;
 import java.io.Serializable;
 import java.time.LocalDateTime;
@@ -16,8 +17,8 @@ import java.time.LocalDateTime;
 @AllArgsConstructor(staticName = "of")
 @NoArgsConstructor
 @Builder
-@Data
-@Table(name = "user_info")
+@Entity
+@Table(name = "token_item")
 public class TokenItem implements Serializable {
     @Id
     private String tokenId;
