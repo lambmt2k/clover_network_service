@@ -33,7 +33,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter{
                 .cors()
                 .and()
                 .authorizeRequests()
-                .antMatchers(CommonConstant.API.API_LOGIN,CommonConstant.API.API_SIGNUP, CommonConstant.API.API_VERIFY_ACCOUNT).permitAll()
+                .antMatchers("/api/authenticate/**").permitAll()
                 .anyRequest().authenticated()
                 .and()
                 .exceptionHandling().authenticationEntryPoint(jwtAuthenticationEntryPoint).and().sessionManagement()

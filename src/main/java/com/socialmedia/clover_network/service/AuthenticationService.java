@@ -12,7 +12,7 @@ import java.io.UnsupportedEncodingException;
 
 public interface AuthenticationService {
     TokenItem loginByEmail(UserLoginReq req) throws Exception;
-    ApiResponse signUpNewUser(HttpServletRequest request, UserSignUpReq req) throws MessagingException, UnsupportedEncodingException;
+    ApiResponse signUpNewUser(HttpServletRequest request, UserSignUpReq req) throws Exception;
     ApiResponse getUserInfo();
     ApiResponse verifyAccount(String tokenId);
 }

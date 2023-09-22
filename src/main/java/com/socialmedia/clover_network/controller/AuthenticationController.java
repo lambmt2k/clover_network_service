@@ -42,7 +42,7 @@ public class AuthenticationController {
     }
 
     @PostMapping("/signup-by-email")
-    public ResponseEntity<ApiResponse> signUpByEmail(HttpServletRequest request, @RequestBody UserSignUpReq req) throws MessagingException, UnsupportedEncodingException {
+    public ResponseEntity<ApiResponse> signUpByEmail(HttpServletRequest request, @RequestBody UserSignUpReq req) throws Exception {
         ApiResponse res = authenticationService.signUpNewUser(request, req);
         //validate req
         return ResponseEntity.status(HttpStatus.OK).body(res);

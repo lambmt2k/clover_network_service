@@ -111,7 +111,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     }
 
     @Override
-    public ApiResponse signUpNewUser(HttpServletRequest request, UserSignUpReq req) throws MessagingException, UnsupportedEncodingException {
+    public ApiResponse signUpNewUser(HttpServletRequest request, UserSignUpReq req) throws Exception {
         logger.info("Start [signUpNewUser]");
         ApiResponse res = new ApiResponse();
         SimpleDateFormat dateFormat = new SimpleDateFormat(CommonRegex.PATTERN_DATE.pattern());
@@ -158,7 +158,8 @@ public class AuthenticationServiceImpl implements AuthenticationService {
             UserAuth newUserAuth = new UserAuth();
             newUserAuth.setUserId(newUserId);
             newUserAuth.setEmail(req.getEmail());
-            newUserAuth.setPassword(encryptWithKey(CommonConstant.ENCRYPT_KEY, req.getPassword()));
+            String encryptedPassword = EncryptUtil.encrypt(req.getPassword());
+            newUserAuth.setPassword(encryptedPassword);
 
             //save into database
             userInfoRepository.save(newUserInfo);
@@ -196,6 +197,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
             res.setMessage(CommonMessage.ResponseMessage.STATUS_200);
             res.setData(userInfoRes);
         }
+        logger.info("Finish [signUpNewUser]");
         return res;
     }
 
@@ -270,34 +272,5 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         } catch (DisabledException | BadCredentialsException e) {
             throw new Exception(e);
         }
-    }
-
-
-    public String decryptWithKey(String decryptKey, String encryptText) {
-        String result;
-        try {
-            logger.info("********************* START DECRYPT TRIPLEDES *********************");
-            EncryptUtil encryptUtil = new EncryptUtil();
-            result = EncryptUtil.decrypt(decryptKey, encryptText);
-            logger.info("********************* END DECRYPT TRIPLEDES *********************");
-        } catch (Exception e) {
-            e.printStackTrace();
-            result = e.toString();
-        }
-        return result;
-    }
-
-    public String encryptWithKey(String encryptKey, String plainText) {
-        String result;
-        try {
-            logger.info("********************* START ENCRYPT TRIPLEDES *********************");
-            EncryptUtil encryptUtil = new EncryptUtil();
-            result = EncryptUtil.encrypt(encryptKey, plainText);
-            logger.info("********************* END ENCRYPT TRIPLEDES *********************");
-        } catch (Exception e) {
-            e.printStackTrace();
-            result = e.toString();
-        }
-        return result;
     }
 }
