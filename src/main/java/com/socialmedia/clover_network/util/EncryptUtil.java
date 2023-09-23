@@ -1,55 +1,58 @@
 package com.socialmedia.clover_network.util;
 
-import org.apache.tomcat.util.codec.binary.Base64;
+import com.socialmedia.clover_network.constant.CommonConstant;
+import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 
 import javax.crypto.Cipher;
 import javax.crypto.SecretKey;
+import javax.crypto.SecretKeyFactory;
 import javax.crypto.spec.IvParameterSpec;
+import javax.crypto.spec.PBEKeySpec;
 import javax.crypto.spec.SecretKeySpec;
-import java.security.MessageDigest;
-import java.util.Arrays;
+import java.security.spec.KeySpec;
+import java.util.Base64;
 
+@Service
 public class EncryptUtil {
-    private static final String DESEDE_ENCRYPTION_SCHEME_CIPHER = "DESede/ECB/PKCS5Padding";
-    private static final String UNICODE_FORMAT = "UTF8";
-    private static final String DESEDE_ENCRYPTION_SCHEME_KEY = "DESede";
+    public static String encrypt(String originalString) throws Exception {
+        SecretKeyFactory factory = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA256");
+        KeySpec spec = new PBEKeySpec(CommonConstant.SECRET_KEY.toCharArray(), CommonConstant.SALT_VALUE.getBytes(), 65536, 256);
+        SecretKey tmp = factory.generateSecret(spec);
+        SecretKey secret = new SecretKeySpec(tmp.getEncoded(), "AES");
 
-    /*public EncryptUtil() throws Exception {
-        final MessageDigest md = MessageDigest.getInstance("md5");
-        final byte[] digestOfPassword = md.digest(encryptionSecretKey.getBytes(UNICODE_FORMAT));
-        final byte[] keyBytes = Arrays.copyOf(digestOfPassword, 24);
-        for (int j = 0, k = 16; j < 8; ) {
-            keyBytes[k++] = keyBytes[j++];
-        }
-        key = new SecretKeySpec(keyBytes, DESEDE_ENCRYPTION_SCHEME_KEY);
+        Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
+        cipher.init(Cipher.ENCRYPT_MODE, secret);
+        byte[] encrypted = cipher.doFinal(originalString.getBytes("UTF-8"));
+        byte[] iv = cipher.getIV();
 
+        // Combine IV and encrypted data
+        byte[] combined = new byte[iv.length + encrypted.length];
+        System.arraycopy(iv, 0, combined, 0, iv.length);
+        System.arraycopy(encrypted, 0, combined, iv.length, encrypted.length);
 
-        final byte[] digestOfPassword2 = md.digest(encryptionSecretKeyV2.getBytes(UNICODE_FORMAT));
-        final byte[] keyBytes2 = Arrays.copyOf(digestOfPassword2, 24);
-        for (int j = 0, k = 16; j < 8; ) {
-            keyBytes2[k++] = keyBytes2[j++];
-        }
-        key2 = new SecretKeySpec(keyBytes2, DESEDE_ENCRYPTION_SCHEME_KEY);
-
-        iv = new IvParameterSpec(new byte[8]);
-    }*/
-
-    public static String encrypt(String key, String str) throws Exception {
-        Cipher cipher = Cipher.getInstance(DESEDE_ENCRYPTION_SCHEME_CIPHER);
-        SecretKey secretKey1 = new SecretKeySpec(key.getBytes(UNICODE_FORMAT), DESEDE_ENCRYPTION_SCHEME_KEY);
-        cipher.init(Cipher.ENCRYPT_MODE, secretKey1);
-        byte[] bytes = cipher.doFinal(str.getBytes(UNICODE_FORMAT));
-        byte[] base64Bytes = Base64.encodeBase64(bytes);
-        return new String(base64Bytes);
+        return Base64.getEncoder().encodeToString(combined);
     }
 
 
-    public static String decrypt(String key, String str) throws Exception {
-        byte[] data = Base64.decodeBase64(str);
-        SecretKey secretKey1 = new SecretKeySpec(key.getBytes(UNICODE_FORMAT), DESEDE_ENCRYPTION_SCHEME_KEY);
-        Cipher cipher = Cipher.getInstance(DESEDE_ENCRYPTION_SCHEME_CIPHER);
-        cipher.init(Cipher.DECRYPT_MODE, secretKey1);
-        byte[] decryptedBytes = cipher.doFinal(data);
-        return new String(decryptedBytes, UNICODE_FORMAT);
+    public static String decrypt(String encryptedString) throws Exception {
+        byte[] combined = Base64.getDecoder().decode(encryptedString);
+
+        // Extract IV and encrypted data
+        byte[] iv = new byte[16]; // IV size is always 16 bytes for AES
+        byte[] encrypted = new byte[combined.length - 16];
+        System.arraycopy(combined, 0, iv, 0, 16);
+        System.arraycopy(combined, 16, encrypted, 0, encrypted.length);
+
+        SecretKeyFactory factory = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA256");
+        KeySpec spec = new PBEKeySpec(CommonConstant.SECRET_KEY.toCharArray(), CommonConstant.SALT_VALUE.getBytes(), 65536, 256);
+        SecretKey tmp = factory.generateSecret(spec);
+        SecretKey secret = new SecretKeySpec(tmp.getEncoded(), "AES");
+
+        Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
+        cipher.init(Cipher.DECRYPT_MODE, secret, new IvParameterSpec(iv));
+        byte[] decrypted = cipher.doFinal(encrypted);
+
+        return new String(decrypted, "UTF-8");
     }
 }

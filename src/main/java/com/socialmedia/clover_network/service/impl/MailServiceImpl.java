@@ -30,6 +30,7 @@ public class MailServiceImpl implements MailService {
     public void sendMailActiveAccount(UserInfo userInfo, String tokenId) throws MessagingException, UnsupportedEncodingException {
         logger.info("Start [sendMailActiveAccount]");
         String toEmail = userInfo.getEmail();
+        
         MimeMessage message = javaMailSender.createMimeMessage();
         MimeMessageHelper helper = new MimeMessageHelper(message, true);
 
@@ -38,13 +39,15 @@ public class MailServiceImpl implements MailService {
         String title = "Please verify your registration";
 
         String content = "Dear [[name]],<br>"
+                + "Thank you for using and supporting our product.<br>"
+                + "Just one more step to experience this product.<br>"
                 + "Please click the link below to verify your registration:<br>"
                 + "<h3><a href=\"[[URL]]\" target=\"_self\">VERIFY</a></h3>"
                 + "Thank you,<br>"
                 + "Clover Network Admin.";
 
         content = content.replace("[[name]]", userInfo.getFirstname() + CommonRegex.REGEX_SPACE + userInfo.getLastname());
-        String verifyURL = "http://localhost:8080/api/authenticate/verify?token=" + tokenId;
+        String verifyURL = "http://localhost:8080/api/authenticate/verify?tokenId=" + tokenId;
         content = content.replace("[[URL]]", verifyURL);
 
 

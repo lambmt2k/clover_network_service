@@ -11,17 +11,21 @@ import com.socialmedia.clover_network.dto.res.UserInfoRes;
 import com.socialmedia.clover_network.entity.TokenItem;
 import com.socialmedia.clover_network.entity.UserAuth;
 import com.socialmedia.clover_network.entity.UserInfo;
-import com.socialmedia.clover_network.enumuration.*;
+import com.socialmedia.clover_network.enumuration.AccountType;
+import com.socialmedia.clover_network.enumuration.Gender;
+import com.socialmedia.clover_network.enumuration.UserRole;
+import com.socialmedia.clover_network.enumuration.UserStatus;
+import com.socialmedia.clover_network.repository.TokenItemRepository;
 import com.socialmedia.clover_network.repository.UserAuthRepository;
 import com.socialmedia.clover_network.repository.UserInfoRepository;
 import com.socialmedia.clover_network.service.AuthenticationService;
 import com.socialmedia.clover_network.service.MailService;
 import com.socialmedia.clover_network.util.EncryptUtil;
 import com.socialmedia.clover_network.util.GenIDUtil;
+import com.socialmedia.clover_network.util.HttpHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.DisabledException;
@@ -30,9 +34,11 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import javax.mail.MessagingException;
+import javax.servlet.http.HttpServletRequest;
 import java.io.UnsupportedEncodingException;
 import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.Optional;
 
 @Service
@@ -42,6 +48,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
     private final UserInfoRepository userInfoRepository;
     private final UserAuthRepository userAuthRepository;
+    private final TokenItemRepository tokenItemRepository;
 
     private final JwtTokenUtil jwtTokenUtil;
     private final GenIDUtil genIDUtil;
@@ -51,12 +58,14 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
     public AuthenticationServiceImpl(UserInfoRepository userInfoRepository,
                                      UserAuthRepository userAuthRepository,
+                                     TokenItemRepository tokenItemRepository,
                                      JwtTokenUtil jwtTokenUtil,
                                      GenIDUtil genIDUtil,
                                      AuthenticationManager authenticationManager,
                                      MailService mailService) {
         this.userInfoRepository = userInfoRepository;
         this.userAuthRepository = userAuthRepository;
+        this.tokenItemRepository = tokenItemRepository;
         this.jwtTokenUtil = jwtTokenUtil;
         this.genIDUtil = genIDUtil;
         this.authenticationManager = authenticationManager;
@@ -102,7 +111,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     }
 
     @Override
-    public ApiResponse signUpNewUser(UserSignUpReq req) throws MessagingException, UnsupportedEncodingException {
+    public ApiResponse signUpNewUser(HttpServletRequest request, UserSignUpReq req) throws Exception {
         logger.info("Start [signUpNewUser]");
         ApiResponse res = new ApiResponse();
         SimpleDateFormat dateFormat = new SimpleDateFormat(CommonRegex.PATTERN_DATE.pattern());
@@ -126,7 +135,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
             //create new user info
             UserInfo newUserInfo = new UserInfo();
-            newUserInfo.setUser_id(newUserId);
+            newUserInfo.setUserId(newUserId);
             newUserInfo.setAvatarImgUrl(null);
             newUserInfo.setBannerImgUrl(null);
             newUserInfo.setEmail(req.getEmail());
@@ -149,14 +158,30 @@ public class AuthenticationServiceImpl implements AuthenticationService {
             UserAuth newUserAuth = new UserAuth();
             newUserAuth.setUserId(newUserId);
             newUserAuth.setEmail(req.getEmail());
-            newUserAuth.setPassword(encryptWithKey(CommonConstant.ENCRYPT_KEY,req.getPassword()));
+            String encryptedPassword = EncryptUtil.encrypt(req.getPassword());
+            newUserAuth.setPassword(encryptedPassword);
 
             //save into database
             userInfoRepository.save(newUserInfo);
             userAuthRepository.save(newUserAuth);
 
+            HttpHelper httpHelper = new HttpHelper(request);
+            String tokenId = jwtTokenUtil.generateToken(newUserAuth.getEmail());
+            TokenItem tokenItem = TokenItem
+                    .builder()
+                    .tokenId(tokenId)
+                    .userId(newUserInfo.getUserId())
+                    .userRole(newUserInfo.getUserRole())
+                    .userIp(httpHelper.getClientIp())
+                    .userAgent(httpHelper.getUserAgent())
+                    .os(TokenItem.OS.WINDOWS)
+                    .createdTime(now)
+                    .expireTime(now.plus(90, ChronoUnit.DAYS))
+                    .build();
+            tokenItemRepository.save(tokenItem);
+
             //send mail active account
-            mailService.sendMailActiveAccount(newUserInfo, null);
+            mailService.sendMailActiveAccount(newUserInfo, tokenId);
 
             UserInfoRes userInfoRes = new UserInfoRes();
             userInfoRes.setEmail(newUserInfo.getEmail());
@@ -172,6 +197,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
             res.setMessage(CommonMessage.ResponseMessage.STATUS_200);
             res.setData(userInfoRes);
         }
+        logger.info("Finish [signUpNewUser]");
         return res;
     }
 
@@ -199,7 +225,30 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     public ApiResponse verifyAccount(String tokenId) {
         logger.info("Start [verifyAccount]");
         ApiResponse res = new ApiResponse();
-        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+        Optional<TokenItem> tokenItemOpt = tokenItemRepository.findByTokenId(tokenId);
+        if (tokenItemOpt.isPresent()) {
+            TokenItem tokenItem = tokenItemOpt.get();
+            Optional<UserInfo> userInfoOpt = userInfoRepository.findByUserId(tokenItem.getUserId());
+            if (userInfoOpt.isPresent()) {
+                UserInfo existedUser = userInfoOpt.get();
+                existedUser.setStatus(UserStatus.ACTIVE);
+                userInfoRepository.save(existedUser);
+                res.setCode(null);
+                res.setData(null);
+                res.setStatus(HttpStatus.OK.value());
+                res.setMessage(HttpStatus.OK.getReasonPhrase());
+            } else {
+                res.setCode(null);
+                res.setData(null);
+                res.setStatus(HttpStatus.NOT_FOUND.value());
+                res.setMessage(HttpStatus.NOT_FOUND.getReasonPhrase());
+            }
+        } else {
+            res.setStatus(HttpStatus.FORBIDDEN.value());
+            res.setMessage(HttpStatus.FORBIDDEN.getReasonPhrase());
+            res.setData(null);
+            res.setCode(null);
+        }
         /*Optional<TokenItem> tokenItemOpt = tokenItemRepository.findByTokenId(tokenId);
         if (tokenItemOpt.isPresent()) {
             res.setCode(null);
@@ -212,7 +261,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
             res.setStatus(HttpStatus.NOT_FOUND.value());
             res.setMessage(HttpStatus.NOT_FOUND.getReasonPhrase());
         }*/
-        return null;
+        return res;
     }
 
 
@@ -223,34 +272,5 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         } catch (DisabledException | BadCredentialsException e) {
             throw new Exception(e);
         }
-    }
-
-
-    public String decryptWithKey(String decryptKey, String encryptText) {
-        String result;
-        try {
-            logger.info("********************* START DECRYPT TRIPLEDES *********************");
-            EncryptUtil encryptUtil = new EncryptUtil();
-            result = EncryptUtil.decrypt(decryptKey, encryptText);
-            logger.info("********************* END DECRYPT TRIPLEDES *********************");
-        } catch (Exception e) {
-            e.printStackTrace();
-            result = e.toString();
-        }
-        return result;
-    }
-
-    public String encryptWithKey(String encryptKey, String plainText) {
-        String result;
-        try {
-            logger.info("********************* START ENCRYPT TRIPLEDES *********************");
-            EncryptUtil encryptUtil = new EncryptUtil();
-            result = EncryptUtil.encrypt(encryptKey, plainText);
-            logger.info("********************* END ENCRYPT TRIPLEDES *********************");
-        } catch (Exception e) {
-            e.printStackTrace();
-            result = e.toString();
-        }
-        return result;
     }
 }
