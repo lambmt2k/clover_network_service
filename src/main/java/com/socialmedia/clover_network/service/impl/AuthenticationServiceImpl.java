@@ -8,6 +8,7 @@ import com.socialmedia.clover_network.dto.req.UserLoginReq;
 import com.socialmedia.clover_network.dto.req.UserSignUpReq;
 import com.socialmedia.clover_network.dto.res.ApiResponse;
 import com.socialmedia.clover_network.dto.res.UserInfoRes;
+import com.socialmedia.clover_network.dto.res.UserLoginRes;
 import com.socialmedia.clover_network.entity.TokenItem;
 import com.socialmedia.clover_network.entity.UserAuth;
 import com.socialmedia.clover_network.entity.UserInfo;
@@ -35,6 +36,7 @@ import org.springframework.stereotype.Service;
 
 import javax.mail.MessagingException;
 import javax.servlet.http.HttpServletRequest;
+import java.io.ObjectInputFilter;
 import java.io.UnsupportedEncodingException;
 import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
@@ -74,40 +76,68 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
 
     @Override
-    public TokenItem loginByEmail(UserLoginReq req) throws Exception {
+    public ApiResponse loginByEmail(HttpServletRequest request, UserLoginReq req) throws Exception {
         logger.info("Start [loginByEmail]");
-        /*boolean isChecked = !req.getEmail().isEmpty() && !req.getPassword().isEmpty();
-        AccountInfoRp accountRp = new AccountInfoRp();
-        AccountDataRp accountDbRp = new AccountDataRp();
-        AuthToken authentk = new AuthToken();
+        ApiResponse res = new ApiResponse();
+        LocalDateTime now = LocalDateTime.now();
+        boolean isChecked = !req.getEmail().isEmpty() && !req.getPassword().isEmpty();
         if (isChecked) {
-            String decryptPassword = decryptPassword(req.getPassword().trim());
-            authenticate(req.getEmail().trim(), decryptPassword);
-            //generate token
-            String token = jwtTokenUtil.generateToken(req.getEmail());
-            accountInfoService.saveAccountInfo(requestInfo.getData().getUsername(), requestInfo.getIp() , requestInfo.getDeviceId(), token, 1);
-            accountRp.setCode(MessageCode.LOGIN_SUCCESSFUL.getErrorcode());
-            accountRp.setMessage(ssoErrorMessageRepository.findByErrorCode(MessageCode.LOGIN_SUCCESSFUL.getErrorcode()).getDescriptionVn());
-            authentk.setToken(token);
-            accountDbRp.setAuth(authentk);
-            //hard code user info - lên live sẽ thay đổi
-            //accountDbRp.setAccountUserInfo(accountInfoService.getInfoUserById("DUCOH"));
-            accountDbRp.setAccountUserInfo(accountInfoService.getInfoUserById(requestInfo.getData().getUsername().trim()));
-            accountRp.setData(accountDbRp);
-            accountRp.setStatus_code(Integer.parseInt(Config.MESSAGE_STATUS.OK.getValue()));
-            return new ResponseEntity<AccountInfoRp>(accountRp, HttpStatus.OK);
+            String encryptedPassword = EncryptUtil.encrypt(req.getPassword().trim());
+            /*authenticate(req.getEmail().trim(), encryptedPassword);*/
+            //find userinfo
+            Optional<UserInfo> userInfoOpt = userInfoRepository.findByEmail(req.getEmail());
+            Optional<UserAuth> userAuthOpt = userAuthRepository.findByEmail(req.getEmail());
+            if (userAuthOpt.isPresent() && userInfoOpt.isPresent()) {
+                UserInfo existedUserInfo = userInfoOpt.get();
+                UserAuth existedUserAuth = userAuthOpt.get();
+                if (existedUserAuth.getPassword().equals(encryptedPassword)) {
+                    //generate token
+                    String tokenId = jwtTokenUtil.generateToken(req.getEmail());
+                    HttpHelper httpHelper = new HttpHelper(request);
+                    TokenItem tokenItem = TokenItem
+                            .builder()
+                            .tokenId(tokenId)
+                            .userId(existedUserInfo.getUserId())
+                            .userRole(existedUserInfo.getUserRole())
+                            .userIp(httpHelper.getClientIp())
+                            .userAgent(httpHelper.getUserAgent())
+                            .os(TokenItem.OS.WINDOWS)
+                            .createdTime(now)
+                            .expireTime(now.plus(90, ChronoUnit.DAYS))
+                            .build();
+                    tokenItemRepository.save(tokenItem);
+
+                    UserLoginRes userLoginRes = new UserLoginRes();
+                    userLoginRes.setUserId(tokenItem.getUserId());
+                    userLoginRes.setTokenId(tokenItem.getTokenId());
+                    userLoginRes.setUserRole(tokenItem.getUserRole());
+                    userLoginRes.setExpireTime(tokenItem.getExpireTime());
+
+                    res.setStatus(HttpStatus.OK.value());
+                    res.setMessage(HttpStatus.OK.getReasonPhrase());
+                    res.setCode(String.valueOf(HttpStatus.OK.value()));
+                    res.setData(userLoginRes);
+                } else {
+                    res.setStatus(HttpStatus.UNAUTHORIZED.value());
+                    res.setMessage("Wrong password");
+                    res.setCode(String.valueOf(HttpStatus.UNAUTHORIZED.value()));
+                    res.setData(req);
+                }
+
+            } else {
+                res.setStatus(HttpStatus.NOT_FOUND.value());
+                res.setMessage(HttpStatus.NOT_FOUND.getReasonPhrase());
+                res.setCode(String.valueOf(HttpStatus.NOT_FOUND.value()));
+                res.setData(req);
+            }
         } else {
-            accountRp.setCode(MessageCode.LOGIN_FAILED.getErrorcode());
-            accountRp.setMessage(ssoErrorMessageRepository.findByErrorCode(MessageCode.LOGIN_FAILED.getErrorcode()).getDescriptionVn());
-            accountRp.setStatus(HttpStatus.BAD_REQUEST);
-            return new ResponseEntity<AccountInfoRp>(accountRp, HttpStatus.OK);
-        }*/
-        return null;
-    }
+            res.setStatus(HttpStatus.BAD_REQUEST.value());
+            res.setMessage(HttpStatus.BAD_REQUEST.getReasonPhrase());
+            res.setCode(String.valueOf(HttpStatus.BAD_REQUEST.value()));
+            res.setData(req);
 
-
-    private String decryptPassword(String originPassword) {
-        return null;
+        }
+        return res;
     }
 
     @Override
@@ -127,7 +157,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         if (userInfoOpt.isPresent() || userAuthOpt.isPresent()) {
             res.setStatus(HttpStatus.CONFLICT.value());
             res.setData(req.getEmail());
-            res.setMessage(HttpStatus.CONTINUE.getReasonPhrase());
+            res.setMessage(HttpStatus.CONFLICT.getReasonPhrase());
             return res;
         } else {
             LocalDateTime now = LocalDateTime.now();
