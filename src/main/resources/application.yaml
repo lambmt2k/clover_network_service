@@ -30,3 +30,6 @@ redis:
   host: localhost
 jwt:
   secret: abc
+clover:
+  server_host: localhost:8080
+  
