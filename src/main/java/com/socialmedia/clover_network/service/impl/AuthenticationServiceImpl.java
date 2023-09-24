@@ -21,6 +21,7 @@ import com.socialmedia.clover_network.repository.UserAuthRepository;
 import com.socialmedia.clover_network.repository.UserInfoRepository;
 import com.socialmedia.clover_network.service.AuthenticationService;
 import com.socialmedia.clover_network.service.MailService;
+import com.socialmedia.clover_network.service.UserWallService;
 import com.socialmedia.clover_network.util.EncryptUtil;
 import com.socialmedia.clover_network.util.GenIDUtil;
 import com.socialmedia.clover_network.util.HttpHelper;
@@ -34,10 +35,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
-import javax.mail.MessagingException;
 import javax.servlet.http.HttpServletRequest;
-import java.io.ObjectInputFilter;
-import java.io.UnsupportedEncodingException;
 import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
@@ -57,6 +55,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     private final AuthenticationManager authenticationManager;
 
     private final MailService mailService;
+    private final UserWallService userWallService;
 
     public AuthenticationServiceImpl(UserInfoRepository userInfoRepository,
                                      UserAuthRepository userAuthRepository,
@@ -64,7 +63,8 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                                      JwtTokenUtil jwtTokenUtil,
                                      GenIDUtil genIDUtil,
                                      AuthenticationManager authenticationManager,
-                                     MailService mailService) {
+                                     MailService mailService,
+                                     UserWallService userWallService) {
         this.userInfoRepository = userInfoRepository;
         this.userAuthRepository = userAuthRepository;
         this.tokenItemRepository = tokenItemRepository;
@@ -72,6 +72,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         this.genIDUtil = genIDUtil;
         this.authenticationManager = authenticationManager;
         this.mailService = mailService;
+        this.userWallService = userWallService;
     }
 
 
@@ -195,6 +196,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
             userInfoRepository.save(newUserInfo);
             userAuthRepository.save(newUserAuth);
 
+            //gen token
             HttpHelper httpHelper = new HttpHelper(request);
             String tokenId = jwtTokenUtil.generateToken(newUserAuth.getEmail());
             TokenItem tokenItem = TokenItem
@@ -212,6 +214,9 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
             //send mail active account
             mailService.sendMailActiveAccount(newUserInfo, tokenId);
+
+            //create new user's wall
+            String newUserWallId = userWallService.createUserWall(newUserId);
 
             UserInfoRes userInfoRes = new UserInfoRes();
             userInfoRes.setEmail(newUserInfo.getEmail());

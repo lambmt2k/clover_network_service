@@ -1,8 +1,6 @@
 package com.socialmedia.clover_network.entity;
 
 import com.fasterxml.jackson.annotation.JsonValue;
-import com.socialmedia.clover_network.enumuration.GroupMemberRole;
-import com.socialmedia.clover_network.enumuration.PrivacyPostType;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -17,7 +15,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @Entity
 @Table(name = "groups")
-public class Group {
+public class GroupEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id")
