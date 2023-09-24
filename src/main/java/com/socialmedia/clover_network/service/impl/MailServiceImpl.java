@@ -7,6 +7,7 @@ import com.socialmedia.clover_network.service.MailService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.scheduling.annotation.Async;
@@ -19,6 +20,9 @@ import java.util.List;
 
 @Service
 public class MailServiceImpl implements MailService {
+
+    @Value("${clover.server_host}")
+    private String serverHost;
 
     Logger logger = LoggerFactory.getLogger(MailServiceImpl.class);
 
@@ -47,7 +51,7 @@ public class MailServiceImpl implements MailService {
                 + "Clover Network Admin.";
 
         content = content.replace("[[name]]", userInfo.getFirstname() + CommonRegex.REGEX_SPACE + userInfo.getLastname());
-        String verifyURL = "http://localhost:8080/api/authenticate/verify?tokenId=" + tokenId;
+        String verifyURL = serverHost + "/api/authenticate/verify?tokenId=" + tokenId;
         content = content.replace("[[URL]]", verifyURL);
 
 
