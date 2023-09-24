@@ -16,6 +16,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.UnsupportedEncodingException;
+import java.util.Objects;
 
 @RestController
 @RequestMapping(path = "/api/authenticate")
@@ -28,14 +29,14 @@ public class AuthenticationController {
     }
 
     @PostMapping("/login-by-email")
-    public ResponseEntity<TokenItem> loginByEmail(HttpServletRequest request, @RequestBody UserLoginReq req) throws Exception {
+    public ResponseEntity<ApiResponse> loginByEmail(HttpServletRequest request, @RequestBody UserLoginReq req) throws Exception {
 
         //validate req
         if (!req.getEmail().contains(CommonRegex.REGEX_EMAIL)) {
             return ResponseEntity.badRequest().build();
         }
-        TokenItem res = authenticationService.loginByEmail(req);
-        if (res.isValidTokenItem()) {
+        ApiResponse res = authenticationService.loginByEmail(request, req);
+        if (Objects.nonNull(res.getData())) {
             return ResponseEntity.status(HttpStatus.OK).body(res);
         }
         return null;

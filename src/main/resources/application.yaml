@@ -1,4 +1,6 @@
 spring:
+  profiles:
+    active: dev
   jpa:
     properties:
       hibernate:
@@ -33,4 +35,4 @@ jwt:
 clover:
   server_host: https://clover-network-service.onrender.com
   local_host: localhost:8080
-  
+
