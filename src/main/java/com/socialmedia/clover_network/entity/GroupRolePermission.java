@@ -1,9 +1,6 @@
 package com.socialmedia.clover_network.entity;
 
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
 import javax.persistence.*;
 import java.time.LocalDateTime;
@@ -12,6 +9,7 @@ import java.time.LocalDateTime;
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
+@Builder
 @Entity
 @Table(name = "group_role_permission")
 public class GroupRolePermission {
@@ -42,5 +40,14 @@ public class GroupRolePermission {
         OWNER,
         ADMIN,
         MEMBER;
+    }
+
+    public GroupRolePermission(String groupId, GroupRole groupRoleId, boolean enableComment, boolean enablePost, boolean enableShare, boolean enableGroup) {
+        this.groupId = groupId;
+        this.groupRoleId = groupRoleId;
+        this.enableComment = enableComment;
+        this.enablePost = enablePost;
+        this.enableShare = enableShare;
+        this.enableGroup = enableGroup;
     }
 }
