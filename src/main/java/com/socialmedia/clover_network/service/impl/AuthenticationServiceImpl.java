@@ -39,7 +39,10 @@ import javax.servlet.http.HttpServletRequest;
 import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
+import java.util.Comparator;
+import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 public class AuthenticationServiceImpl implements AuthenticationService {
@@ -93,20 +96,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                 UserAuth existedUserAuth = userAuthOpt.get();
                 if (existedUserAuth.getPassword().equals(encryptedPassword)) {
                     //generate token
-                    String tokenId = jwtTokenUtil.generateToken(req.getEmail());
-                    HttpHelper httpHelper = new HttpHelper(request);
-                    TokenItem tokenItem = TokenItem
-                            .builder()
-                            .tokenId(tokenId)
-                            .userId(existedUserInfo.getUserId())
-                            .userRole(existedUserInfo.getUserRole())
-                            .userIp(httpHelper.getClientIp())
-                            .userAgent(httpHelper.getUserAgent())
-                            .os(TokenItem.OS.WINDOWS)
-                            .createdTime(now)
-                            .expireTime(now.plus(90, ChronoUnit.DAYS))
-                            .build();
-                    tokenItemRepository.save(tokenItem);
+                    TokenItem tokenItem = this.genTokenItem(existedUserInfo, request);
 
                     UserLoginRes userLoginRes = new UserLoginRes();
                     userLoginRes.setUserId(tokenItem.getUserId());
@@ -137,6 +127,38 @@ public class AuthenticationServiceImpl implements AuthenticationService {
             res.setCode(String.valueOf(HttpStatus.BAD_REQUEST.value()));
             res.setData(req);
 
+        }
+        return res;
+    }
+
+    private TokenItem genTokenItem(UserInfo userInfo, HttpServletRequest request) {
+        LocalDateTime now = LocalDateTime.now();
+        TokenItem res = new TokenItem();
+        if (userInfo != null) {
+            List<TokenItem> tokenItems = tokenItemRepository.findByUserId(userInfo.getUserId())
+                    .stream()
+                    .sorted(Comparator.comparing(TokenItem::getExpireTime).reversed())
+                    .collect(Collectors.toList());
+            if (tokenItems.size() > 0 && tokenItems.get(0).getExpireTime().isAfter(now)) {
+                //get old token
+                res = tokenItems.get(0);
+            } else {
+                //gen new token
+                HttpHelper httpHelper = new HttpHelper(request);
+                String tokenId = jwtTokenUtil.generateToken(userInfo.getUserId());
+                res = TokenItem
+                        .builder()
+                        .tokenId(tokenId)
+                        .userId(userInfo.getUserId())
+                        .userRole(userInfo.getUserRole())
+                        .userIp(httpHelper.getClientIp())
+                        .userAgent(httpHelper.getUserAgent())
+                        .os(TokenItem.OS.WINDOWS)
+                        .createdTime(now)
+                        .expireTime(now.plus(90, ChronoUnit.DAYS))
+                        .build();
+                tokenItemRepository.save(res);
+            }
         }
         return res;
     }
@@ -198,7 +220,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
             //gen token
             HttpHelper httpHelper = new HttpHelper(request);
-            String tokenId = jwtTokenUtil.generateToken(newUserAuth.getEmail());
+            String tokenId = jwtTokenUtil.generateToken(newUserAuth.getUserId());
             TokenItem tokenItem = TokenItem
                     .builder()
                     .tokenId(tokenId)

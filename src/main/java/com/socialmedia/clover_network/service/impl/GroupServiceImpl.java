@@ -13,6 +13,7 @@ public class GroupServiceImpl implements GroupService {
     @Override
     public ApiResponse createNewGroup(GroupReq groupReq) {
         ApiResponse res = new ApiResponse();
+
         return res;
     }
 }
