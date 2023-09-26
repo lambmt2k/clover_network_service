@@ -19,7 +19,7 @@ import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 
 @Component
 public class JwtAuthenticationEntryPoint implements AuthenticationEntryPoint {
-    private static Logger logger = LoggerFactory.getLogger(JwtAuthenticationEntryPoint.class);
+    private final Logger logger = LoggerFactory.getLogger(JwtAuthenticationEntryPoint.class);
     private ObjectMapper objectMapper = new ObjectMapper();
     @Override
     public void commence(HttpServletRequest request, HttpServletResponse response, AuthenticationException authException) throws IOException, ServletException {
