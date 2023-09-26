@@ -81,7 +81,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
     @Override
     public ApiResponse loginByEmail(HttpServletRequest request, UserLoginReq req) throws Exception {
-        logger.info("Start [loginByEmail]");
+        logger.info("Start [loginByEmail] has email: {}", req.getEmail());
         ApiResponse res = new ApiResponse();
         LocalDateTime now = LocalDateTime.now();
         boolean isChecked = !req.getEmail().isEmpty() && !req.getPassword().isEmpty();
@@ -285,6 +285,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         Optional<TokenItem> tokenItemOpt = tokenItemRepository.findByTokenId(tokenId);
         if (tokenItemOpt.isPresent()) {
             TokenItem tokenItem = tokenItemOpt.get();
+            logger.info("Verify account has userId: {}", tokenItem.getUserId());
             Optional<UserInfo> userInfoOpt = userInfoRepository.findByUserId(tokenItem.getUserId());
             if (userInfoOpt.isPresent()) {
                 UserInfo existedUser = userInfoOpt.get();
