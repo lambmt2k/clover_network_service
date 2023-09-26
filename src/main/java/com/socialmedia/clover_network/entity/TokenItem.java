@@ -4,7 +4,6 @@ import com.socialmedia.clover_network.enumuration.UserRole;
 import lombok.*;
 import org.apache.commons.lang3.StringUtils;
 
-import org.springframework.data.redis.core.index.Indexed;
 
 import javax.persistence.Entity;
 import javax.persistence.Id;
@@ -22,7 +21,6 @@ import java.time.LocalDateTime;
 public class TokenItem implements Serializable {
     @Id
     private String tokenId;
-    @Indexed
     private String userId;
     private UserRole userRole;
     private String deviceId;
