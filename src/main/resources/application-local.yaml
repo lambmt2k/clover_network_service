@@ -33,7 +33,7 @@ redis:
   port: '6379'
   host: localhost
 jwt:
-  secret: abc
+  secret: clover
 clover:
   server_host: localhost:8080
   local_host: localhost:8080
