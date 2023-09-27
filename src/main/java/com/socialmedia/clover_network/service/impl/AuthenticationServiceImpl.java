@@ -132,7 +132,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                     .stream()
                     .sorted(Comparator.comparing(TokenItem::getExpireTime).reversed())
                     .collect(Collectors.toList());
-            if (tokenItems.size() > 0 && tokenItems.get(0).getExpireTime().isAfter(now)) {
+            if (tokenItems.size() > 0 && tokenItems.get(0).getExpireTime().isAfter(now) && !tokenItems.get(0).isDelFlag()) {
                 //get old token
                 res = tokenItems.get(0);
             } else {
