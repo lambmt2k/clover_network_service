@@ -5,4 +5,6 @@ import com.socialmedia.clover_network.dto.res.ApiResponse;
 
 public interface GroupService {
     ApiResponse createNewGroup(GroupReq groupReq);
+    ApiResponse getListAllGroupOfUser();
+    ApiResponse joinInGroup(String groupId, String userId);
 }

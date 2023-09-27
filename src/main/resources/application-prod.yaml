@@ -31,8 +31,8 @@ redis:
   port: '6379'
   host: localhost
 jwt:
-  secret: abc
+  secret: clover
 clover:
-  server_host: https://clover-network-service.onrender.com
+  server_host: 18.143.92.139:8080
   local_host: localhost:8080
 

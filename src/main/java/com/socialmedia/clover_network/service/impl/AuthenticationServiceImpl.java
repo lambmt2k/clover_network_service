@@ -1,6 +1,5 @@
 package com.socialmedia.clover_network.service.impl;
 
-import com.socialmedia.clover_network.config.JwtTokenUtil;
 import com.socialmedia.clover_network.constant.CommonConstant;
 import com.socialmedia.clover_network.constant.CommonMessage;
 import com.socialmedia.clover_network.constant.CommonRegex;
@@ -25,13 +24,10 @@ import com.socialmedia.clover_network.service.UserWallService;
 import com.socialmedia.clover_network.util.EncryptUtil;
 import com.socialmedia.clover_network.util.GenIDUtil;
 import com.socialmedia.clover_network.util.HttpHelper;
+import com.socialmedia.clover_network.util.JwtTokenUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.BadCredentialsException;
-import org.springframework.security.authentication.DisabledException;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
@@ -55,7 +51,6 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
     private final JwtTokenUtil jwtTokenUtil;
     private final GenIDUtil genIDUtil;
-    private final AuthenticationManager authenticationManager;
 
     private final MailService mailService;
     private final UserWallService userWallService;
@@ -65,7 +60,6 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                                      TokenItemRepository tokenItemRepository,
                                      JwtTokenUtil jwtTokenUtil,
                                      GenIDUtil genIDUtil,
-                                     AuthenticationManager authenticationManager,
                                      MailService mailService,
                                      UserWallService userWallService) {
         this.userInfoRepository = userInfoRepository;
@@ -73,7 +67,6 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         this.tokenItemRepository = tokenItemRepository;
         this.jwtTokenUtil = jwtTokenUtil;
         this.genIDUtil = genIDUtil;
-        this.authenticationManager = authenticationManager;
         this.mailService = mailService;
         this.userWallService = userWallService;
     }
@@ -156,6 +149,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                         .os(TokenItem.OS.WINDOWS)
                         .createdTime(now)
                         .expireTime(now.plus(90, ChronoUnit.DAYS))
+                        .delFlag(false)
                         .build();
                 tokenItemRepository.save(res);
             }
@@ -231,6 +225,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                     .os(TokenItem.OS.WINDOWS)
                     .createdTime(now)
                     .expireTime(now.plus(90, ChronoUnit.DAYS))
+                    .delFlag(false)
                     .build();
             tokenItemRepository.save(tokenItem);
 
@@ -251,7 +246,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
             userInfoRes.setDayOfBirth(dateFormat.format(newUserInfo.getDayOfBirth()));
             userInfoRes.setStatus(newUserInfo.getStatus().getStatusName());
             res.setStatus(HttpStatus.OK.value());
-            res.setMessage(CommonMessage.ResponseMessage.STATUS_200);
+            res.setMessage(CommonMessage.ResponseMessage.ACTION_SUCCESS);
             res.setData(userInfoRes);
         }
         logger.info("Finish [signUpNewUser]");
@@ -322,13 +317,10 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         return res;
     }
 
-
-    private void authenticate(String email, String password) throws Exception {
-        logger.info("authenticate");
-        try {
-            authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(email, password));
-        } catch (DisabledException | BadCredentialsException e) {
-            throw new Exception(e);
-        }
+    @Override
+    public TokenItem getTokenItem(String tokenId) {
+        logger.info("[getTokenItem] Start get token: " + tokenId);
+        Optional<TokenItem> tokenItem = tokenItemRepository.findByTokenId(tokenId);
+        return tokenItem.orElseGet(() -> null);
     }
 }

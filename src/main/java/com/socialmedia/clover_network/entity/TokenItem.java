@@ -31,6 +31,7 @@ public class TokenItem implements Serializable {
     private String userIp;
     private LocalDateTime createdTime;
     private LocalDateTime expireTime;
+    private boolean delFlag;
 
     public static enum OS {
         INVALID,

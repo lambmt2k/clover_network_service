@@ -1,10 +1,7 @@
 package com.socialmedia.clover_network.config;
 
-import com.socialmedia.clover_network.constant.CommonConstant;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
@@ -14,35 +11,32 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
-import java.util.Arrays;
 import java.util.List;
 
 @EnableWebSecurity
 @Configuration
-public class WebSecurityConfig extends WebSecurityConfigurerAdapter{
-  @Autowired
-    private JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
-    private JwtRequestFilter jwtRequestFilter;
+public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
+    private final TokenAuthenticationFilter tokenAuthenticationFilter;
 
-    public WebSecurityConfig(JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint, JwtRequestFilter jwtRequestFilter){
-        this.jwtRequestFilter = jwtRequestFilter;
+    public WebSecurityConfig(TokenAuthenticationFilter tokenAuthenticationFilter) {
+        this.tokenAuthenticationFilter = tokenAuthenticationFilter;
     }
 
-  @Override
+    @Override
     protected void configure(HttpSecurity http) throws Exception {
-        http
-                .cors()
-                .and()
-                .authorizeRequests()
-                .antMatchers("/api/authenticate/**").permitAll()
+        http.cors().and().csrf().disable();
+        http.authorizeRequests()
+                .antMatchers("/api/authenticate/login-by-email").permitAll()
+                .antMatchers("/api/authenticate/signup-by-email").permitAll()
+                .antMatchers("/api/authenticate/verify").permitAll()
                 .anyRequest().authenticated()
                 .and()
-                .exceptionHandling().authenticationEntryPoint(jwtAuthenticationEntryPoint).and().sessionManagement()
+                .sessionManagement()
                 .sessionCreationPolicy(SessionCreationPolicy.STATELESS);
-        http.csrf().disable();
 
-        http.addFilterBefore(jwtRequestFilter, UsernamePasswordAuthenticationFilter.class);
+        http.addFilterBefore(tokenAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
     }
+
     @Bean
     CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
@@ -53,10 +47,5 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter{
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
         return source;
-    }
-    @Bean
-    @Override
-    public AuthenticationManager authenticationManagerBean() throws Exception {
-        return super.authenticationManagerBean();
     }
 }
