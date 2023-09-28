@@ -9,9 +9,9 @@ import java.io.Serializable;
 
 @JsonPropertyOrder({
         "code",
-        "message",
         "data",
-        "status"
+        "messageEN",
+        "messageVN"
 })
 public class ApiResponse implements Serializable {
 
@@ -19,41 +19,33 @@ public class ApiResponse implements Serializable {
     private static final long serialVersionUID = 7702134516418120340L;
 
     @JsonProperty("code")
-    private String code;
-
-    @JsonProperty("messages")
-    private String message;
+    private int code;
 
     @JsonProperty("data")
     private Object data;
 
-    @JsonProperty("status")
-    private int status;
+    @JsonProperty("messageEN")
+    private String messageEN;
+
+    @JsonProperty("messageVN")
+    private String messageVN;
 
     public ApiResponse() {
     }
 
-    public ApiResponse(String code, String message, Object data, int status) {
+    public ApiResponse(int code, Object data, String messageEN, String messageVN) {
         this.code = code;
-        this.message = message;
         this.data = data;
-        this.status = status;
+        this.messageEN = messageEN;
+        this.messageVN = messageVN;
     }
 
-    public String getCode() {
+    public int getCode() {
         return code;
     }
 
-    public void setCode(String code) {
+    public void setCode(int code) {
         this.code = code;
-    }
-
-    public String getMessage() {
-        return message;
-    }
-
-    public void setMessage(String message) {
-        this.message = message;
     }
 
     public Object getData() {
@@ -64,11 +56,19 @@ public class ApiResponse implements Serializable {
         this.data = data;
     }
 
-    public int getStatus() {
-        return status;
+    public String getMessageEN() {
+        return messageEN;
     }
 
-    public void setStatus(int status) {
-        this.status = status;
+    public void setMessageEN(String messageEN) {
+        this.messageEN = messageEN;
+    }
+
+    public String getMessageVN() {
+        return messageVN;
+    }
+
+    public void setMessageVN(String messageVN) {
+        this.messageVN = messageVN;
     }
 }
