@@ -1,4 +1,4 @@
-package com.socialmedia.clover_network.service.impl;
+package com.socialmedia.clover_network.service;
 
 import com.socialmedia.clover_network.entity.UserInfo;
 

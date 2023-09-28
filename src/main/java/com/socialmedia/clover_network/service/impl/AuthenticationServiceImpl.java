@@ -1,7 +1,6 @@
 package com.socialmedia.clover_network.service.impl;
 
 import com.socialmedia.clover_network.constant.CommonConstant;
-import com.socialmedia.clover_network.constant.CommonMessage;
 import com.socialmedia.clover_network.constant.CommonRegex;
 import com.socialmedia.clover_network.constant.ErrorCode;
 import com.socialmedia.clover_network.dto.req.UserLoginReq;
@@ -28,7 +27,6 @@ import com.socialmedia.clover_network.util.HttpHelper;
 import com.socialmedia.clover_network.util.JwtTokenUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.http.HttpStatus;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
@@ -313,6 +311,6 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     public TokenItem getTokenItem(String tokenId) {
         logger.info("[getTokenItem] Start get token: " + tokenId);
         Optional<TokenItem> tokenItem = tokenItemRepository.findByTokenId(tokenId);
-        return tokenItem.orElseGet(() -> null);
+        return tokenItem.orElse(null);
     }
 }
