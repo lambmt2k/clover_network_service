@@ -18,28 +18,27 @@ jobs:
     steps:
       - name: Checkout source
         uses: actions/checkout@v3
-      - name: Set up JDK 11
+      - name: Setup Java
         uses: actions/setup-java@v3
         with:
           distribution: 'temurin'
-          java-version: '11'
-          cache: maven
+          java-version: '17'
       - name: Build Project
         run: mvn clean install -DskipTests
       - name: Login to docker hub
         run: docker login -u ${{secrets.DOCKER_USERNAME}} -p ${{secrets.DOCKER_PASSWORD}}
       - name: Build docker image
-        run: docker build -t lambmt2k/clover_network .
+        run: docker build -t lambmt/clover-network .
       - name: Publish image to docker hub
-        run: docker push lambmt2k/clover_network:latest
+        run: docker push lambmt/clover-network:latest
 
-    deploy:
-      needs: build
-      runs-on: [aws-ec2]
-      steps:
-        - name: Pull Image from docker hub
-          run: docker pull integrationninjas/clover_network:latest
-        - name: Delete old container
-          run: docker rm -f clover_network-container
-        - name: Run docker container
-          run: docker run -d -p 8080:8080 --name clover_network-container lambmt2k/clover_network
+  deploy:
+    needs: build
+    runs-on: [aws-ec2]
+    steps:
+      - name: Pull Image from docker hub
+        run: docker pull lambmt/clover-network:latest
+      - name: Delete old container
+        run: docker rm -f clover-network-container
+      - name: Run docker container
+        run: docker run -d -p 8080:8080 --name clover-network-container lambmt/clover-network
