@@ -133,7 +133,7 @@ public class GroupServiceImpl implements GroupService {
                     .map(GroupEntity::getGroupId)
                     .distinct()
                     .collect(Collectors.toList());
-            groupIds.removeAll(userWallIds);
+            /*groupIds.removeAll(userWallIds);*/
             if (groupIds.size() == 0) {
                 res.setCode(ErrorCode.Group.GROUP_NOT_FOUND.getCode());
                 res.setData(null);
