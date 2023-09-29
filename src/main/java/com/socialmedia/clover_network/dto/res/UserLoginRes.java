@@ -1,6 +1,5 @@
 package com.socialmedia.clover_network.dto.res;
 
-import com.socialmedia.clover_network.dto.UserDTO;
 import com.socialmedia.clover_network.enumuration.UserRole;
 import lombok.AllArgsConstructor;
 import lombok.Getter;

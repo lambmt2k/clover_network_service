@@ -1,5 +1,6 @@
 package com.socialmedia.clover_network.controller;
 
+import com.socialmedia.clover_network.config.AuthenticationHelper;
 import com.socialmedia.clover_network.dto.req.GroupReq;
 import com.socialmedia.clover_network.dto.res.ApiResponse;
 import com.socialmedia.clover_network.service.GroupService;
@@ -40,11 +41,12 @@ public class GroupController {
 
     @GetMapping(value = "/join", produces = {MediaType.APPLICATION_JSON_VALUE})
     public ResponseEntity<ApiResponse> joinGroup(@RequestParam(name = "groupId") String groupId) {
-        ApiResponse res = groupService.getListAllGroupOfUser();
-        if (Objects.nonNull(res)) {
+        String currentUserId = AuthenticationHelper.getUserIdFromContext();
+        if (currentUserId != null) {
+            ApiResponse res = groupService.joinGroup(groupId, currentUserId);
             return ResponseEntity.ok().body(res);
         } else {
-            return ResponseEntity.internalServerError().body(null);
+            return ResponseEntity.badRequest().build();
         }
     }
 }

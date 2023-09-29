@@ -1,8 +1,8 @@
 package com.socialmedia.clover_network.service.impl;
 
 import com.socialmedia.clover_network.constant.CommonConstant;
-import com.socialmedia.clover_network.constant.CommonMessage;
 import com.socialmedia.clover_network.constant.CommonRegex;
+import com.socialmedia.clover_network.constant.ErrorCode;
 import com.socialmedia.clover_network.dto.req.UserLoginReq;
 import com.socialmedia.clover_network.dto.req.UserSignUpReq;
 import com.socialmedia.clover_network.dto.res.ApiResponse;
@@ -27,7 +27,6 @@ import com.socialmedia.clover_network.util.HttpHelper;
 import com.socialmedia.clover_network.util.JwtTokenUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.http.HttpStatus;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
@@ -97,29 +96,27 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                     userLoginRes.setUserRole(tokenItem.getUserRole());
                     userLoginRes.setExpireTime(tokenItem.getExpireTime());
 
-                    res.setStatus(HttpStatus.OK.value());
-                    res.setMessage(HttpStatus.OK.getReasonPhrase());
-                    res.setCode(String.valueOf(HttpStatus.OK.value()));
+                    res.setCode(ErrorCode.Authentication.ACTION_SUCCESS.getCode());
                     res.setData(userLoginRes);
+                    res.setMessageEN(ErrorCode.Authentication.ACTION_SUCCESS.getMessageEN());
+                    res.setMessageVN(ErrorCode.Authentication.ACTION_SUCCESS.getMessageVN());
                 } else {
-                    res.setStatus(HttpStatus.UNAUTHORIZED.value());
-                    res.setMessage("Wrong password");
-                    res.setCode(String.valueOf(HttpStatus.UNAUTHORIZED.value()));
+                    res.setCode(ErrorCode.Authentication.AUTHEN_ERROR.getCode());
                     res.setData(req);
+                    res.setMessageEN(ErrorCode.Authentication.AUTHEN_ERROR.getMessageEN());
+                    res.setMessageVN(ErrorCode.Authentication.AUTHEN_ERROR.getMessageEN());
                 }
-
             } else {
-                res.setStatus(HttpStatus.NOT_FOUND.value());
-                res.setMessage(HttpStatus.NOT_FOUND.getReasonPhrase());
-                res.setCode(String.valueOf(HttpStatus.NOT_FOUND.value()));
+                res.setCode(ErrorCode.User.PROFILE_GET_EMPTY.getCode());
                 res.setData(req);
+                res.setMessageEN(ErrorCode.User.PROFILE_GET_EMPTY.getMessageEN());
+                res.setMessageVN(ErrorCode.User.PROFILE_GET_EMPTY.getMessageEN());
             }
         } else {
-            res.setStatus(HttpStatus.BAD_REQUEST.value());
-            res.setMessage(HttpStatus.BAD_REQUEST.getReasonPhrase());
-            res.setCode(String.valueOf(HttpStatus.BAD_REQUEST.value()));
+            res.setCode(ErrorCode.Authentication.AUTHEN_ERROR.getCode());
             res.setData(req);
-
+            res.setMessageEN(ErrorCode.Authentication.AUTHEN_ERROR.getMessageEN());
+            res.setMessageVN(ErrorCode.Authentication.AUTHEN_ERROR.getMessageEN());
         }
         return res;
     }
@@ -163,18 +160,20 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         ApiResponse res = new ApiResponse();
         SimpleDateFormat dateFormat = new SimpleDateFormat(CommonRegex.PATTERN_DATE.pattern());
         if (!req.getEmail().contains(CommonRegex.REGEX_EMAIL)) {
-            res.setStatus(HttpStatus.BAD_REQUEST.value());
-            res.setData(null);
-            res.setMessage(HttpStatus.BAD_REQUEST.getReasonPhrase());
+            res.setCode(ErrorCode.Authentication.INVALID_DATA.getCode());
+            res.setData(req);
+            res.setMessageEN(ErrorCode.Authentication.INVALID_DATA.getMessageEN());
+            res.setMessageVN(ErrorCode.Authentication.INVALID_DATA.getMessageVN());
             return res;
         }
         //verify input data
         Optional<UserInfo> userInfoOpt = userInfoRepository.findByEmail(req.getEmail());
         Optional<UserAuth> userAuthOpt = userAuthRepository.findByEmail(req.getEmail());
         if (userInfoOpt.isPresent() || userAuthOpt.isPresent()) {
-            res.setStatus(HttpStatus.CONFLICT.value());
+            res.setCode(ErrorCode.User.EXISTED_USER.getCode());
             res.setData(req.getEmail());
-            res.setMessage(HttpStatus.CONFLICT.getReasonPhrase());
+            res.setMessageEN(ErrorCode.User.EXISTED_USER.getMessageEN());
+            res.setMessageVN(ErrorCode.User.EXISTED_USER.getMessageVN());
             return res;
         } else {
             LocalDateTime now = LocalDateTime.now();
@@ -245,9 +244,12 @@ public class AuthenticationServiceImpl implements AuthenticationService {
             userInfoRes.setUserRole(newUserInfo.getUserRole().getRoleName());
             userInfoRes.setDayOfBirth(dateFormat.format(newUserInfo.getDayOfBirth()));
             userInfoRes.setStatus(newUserInfo.getStatus().getStatusName());
-            res.setStatus(HttpStatus.OK.value());
-            res.setMessage(CommonMessage.ResponseMessage.ACTION_SUCCESS);
+
+            res.setCode(ErrorCode.User.ACTION_SUCCESS.getCode());
             res.setData(userInfoRes);
+            res.setMessageEN(ErrorCode.User.ACTION_SUCCESS.getMessageEN());
+            res.setMessageVN(ErrorCode.User.ACTION_SUCCESS.getMessageVN());
+
         }
         logger.info("Finish [signUpNewUser]");
         return res;
@@ -260,15 +262,15 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
         Optional<UserInfo> userInfoOpt = userInfoRepository.findByEmail(email);
         if (userInfoOpt.isPresent()) {
-            res.setCode(null);
+            res.setCode(ErrorCode.User.ACTION_SUCCESS.getCode());
             res.setData(userInfoOpt.get());
-            res.setStatus(HttpStatus.OK.value());
-            res.setMessage(HttpStatus.OK.getReasonPhrase());
+            res.setMessageEN(ErrorCode.User.ACTION_SUCCESS.getMessageEN());
+            res.setMessageVN(ErrorCode.User.ACTION_SUCCESS.getMessageVN());
         } else {
-            res.setCode(null);
+            res.setCode(ErrorCode.User.PROFILE_GET_EMPTY.getCode());
             res.setData(null);
-            res.setStatus(HttpStatus.NOT_FOUND.value());
-            res.setMessage(HttpStatus.NOT_FOUND.getReasonPhrase());
+            res.setMessageEN(ErrorCode.User.PROFILE_GET_EMPTY.getMessageEN());
+            res.setMessageVN(ErrorCode.User.PROFILE_GET_EMPTY.getMessageVN());
         }
         return res;
     }
@@ -286,34 +288,22 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                 UserInfo existedUser = userInfoOpt.get();
                 existedUser.setStatus(UserStatus.ACTIVE);
                 userInfoRepository.save(existedUser);
-                res.setCode(null);
+                res.setCode(ErrorCode.User.ACTION_SUCCESS.getCode());
                 res.setData(null);
-                res.setStatus(HttpStatus.OK.value());
-                res.setMessage(HttpStatus.OK.getReasonPhrase());
+                res.setMessageEN(ErrorCode.User.ACTION_SUCCESS.getMessageEN());
+                res.setMessageVN(ErrorCode.User.ACTION_SUCCESS.getMessageVN());
             } else {
-                res.setCode(null);
+                res.setCode(ErrorCode.User.PROFILE_GET_EMPTY.getCode());
                 res.setData(null);
-                res.setStatus(HttpStatus.NOT_FOUND.value());
-                res.setMessage(HttpStatus.NOT_FOUND.getReasonPhrase());
+                res.setMessageEN(ErrorCode.User.PROFILE_GET_EMPTY.getMessageEN());
+                res.setMessageVN(ErrorCode.User.PROFILE_GET_EMPTY.getMessageVN());
             }
         } else {
-            res.setStatus(HttpStatus.FORBIDDEN.value());
-            res.setMessage(HttpStatus.FORBIDDEN.getReasonPhrase());
+            res.setCode(ErrorCode.Token.FORBIDDEN.getCode());
             res.setData(null);
-            res.setCode(null);
+            res.setMessageEN(ErrorCode.Token.FORBIDDEN.getMessageEN());
+            res.setMessageVN(ErrorCode.Token.FORBIDDEN.getMessageVN());
         }
-        /*Optional<TokenItem> tokenItemOpt = tokenItemRepository.findByTokenId(tokenId);
-        if (tokenItemOpt.isPresent()) {
-            res.setCode(null);
-            res.setData(tokenItemOpt.get().getUserId());
-            res.setStatus(HttpStatus.OK.value());
-            res.setMessage(HttpStatus.OK.getReasonPhrase());
-        } else {
-            res.setCode(null);
-            res.setData(null);
-            res.setStatus(HttpStatus.NOT_FOUND.value());
-            res.setMessage(HttpStatus.NOT_FOUND.getReasonPhrase());
-        }*/
         return res;
     }
 
@@ -321,6 +311,6 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     public TokenItem getTokenItem(String tokenId) {
         logger.info("[getTokenItem] Start get token: " + tokenId);
         Optional<TokenItem> tokenItem = tokenItemRepository.findByTokenId(tokenId);
-        return tokenItem.orElseGet(() -> null);
+        return tokenItem.orElse(null);
     }
 }
