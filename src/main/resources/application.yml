@@ -1,6 +1,4 @@
 spring:
-  profiles:
-    active: prod
   jpa:
     properties:
       hibernate:
@@ -24,7 +22,7 @@ spring:
     username: lambmt.work
     initialization-mode: always
     schema: classpath:/sql-script/schema.sql
-    url: jdbc:postgresql://ep-white-limit-63473907.ap-southeast-1.aws.neon.tech/clover_network?user=lambmt.work&password=3vFokhxJZIK2
+    url: jdbc:postgresql://ep-white-limit-63473907.ap-southeast-1.aws.neon.tech/clover_network
     continue-on-error: 'true'
     initialize: 'true'
 redis:
@@ -33,6 +31,6 @@ redis:
 jwt:
   secret: clover
 clover:
-  server_host: 18.143.92.139:8080
+  server_host: 47.128.64.91:8080
   local_host: localhost:8080
 
