@@ -127,6 +127,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         if (userInfo != null) {
             List<TokenItem> tokenItems = tokenItemRepository.findByUserId(userInfo.getUserId())
                     .stream()
+                    .filter(tokenItem -> !tokenItem.isDelFlag())
                     .sorted(Comparator.comparing(TokenItem::getExpireTime).reversed())
                     .collect(Collectors.toList());
             if (tokenItems.size() > 0 && tokenItems.get(0).getExpireTime().isAfter(now) && !tokenItems.get(0).isDelFlag()) {
