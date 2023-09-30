@@ -30,6 +30,9 @@ public class GroupEntity {
     @Column(name = "avatar_img_url")
     private String avatarImgUrl;
 
+    @Column(name = "banner_img_url")
+    private String bannerImgUrl;
+
     @Column(name = "group_desc")
     private String groupDesc;
 

@@ -2,8 +2,10 @@ package com.socialmedia.clover_network.service.impl;
 
 import com.socialmedia.clover_network.config.AuthenticationHelper;
 import com.socialmedia.clover_network.constant.ErrorCode;
+import com.socialmedia.clover_network.dto.BaseProfile;
 import com.socialmedia.clover_network.dto.req.GroupReq;
 import com.socialmedia.clover_network.dto.res.ApiResponse;
+import com.socialmedia.clover_network.dto.res.MemberGroupResDTO;
 import com.socialmedia.clover_network.entity.GroupEntity;
 import com.socialmedia.clover_network.entity.GroupMember;
 import com.socialmedia.clover_network.entity.GroupRolePermission;
@@ -18,7 +20,14 @@ import com.socialmedia.clover_network.service.UserService;
 import com.socialmedia.clover_network.util.GenIDUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
 
 import java.time.LocalDateTime;
 import java.util.*;
@@ -29,28 +38,21 @@ import java.util.stream.Collectors;
 public class GroupServiceImpl implements GroupService {
     private final Logger logger = LoggerFactory.getLogger(GroupServiceImpl.class);
 
-    private final GenIDUtil genIDUtil;
+    @Autowired
+    GenIDUtil genIDUtil;
 
-    private final GroupRepository groupRepository;
-    private final GroupMemberRepository groupMemberRepository;
-    private final GroupRolePermissionRepository groupRolePermissionRepository;
-    private final UserInfoRepository userInfoRepository;
+    @Autowired
+    GroupRepository groupRepository;
+    @Autowired
+    GroupMemberRepository groupMemberRepository;
+    @Autowired
+    GroupRolePermissionRepository groupRolePermissionRepository;
+    @Autowired
+    UserInfoRepository userInfoRepository;
 
-    private final UserService userService;
-
-    public GroupServiceImpl(GenIDUtil genIDUtil,
-                            GroupRepository groupRepository,
-                            GroupMemberRepository groupMemberRepository,
-                            GroupRolePermissionRepository groupRolePermissionRepository,
-                            UserInfoRepository userInfoRepository,
-                            UserService userService) {
-        this.genIDUtil = genIDUtil;
-        this.groupRepository = groupRepository;
-        this.groupMemberRepository = groupMemberRepository;
-        this.groupRolePermissionRepository = groupRolePermissionRepository;
-        this.userInfoRepository = userInfoRepository;
-        this.userService = userService;
-    }
+    @Lazy
+    @Autowired
+    UserService userService;
 
     @Override
     public ApiResponse createNewGroup(GroupReq groupReq) {
@@ -191,6 +193,99 @@ public class GroupServiceImpl implements GroupService {
             res.setMessageVN(ErrorCode.Group.GROUP_NOT_FOUND.getMessageVN());
         }
         logger.info("End api [joinGroup]: userId {} join groupId {}", userId, groupId);
+        return res;
+    }
+
+    @Override
+    public ApiResponse getListMemberOfGroup(String groupId, GroupMemberRole roleId, int page, int size) {
+        ApiResponse res = new ApiResponse();
+        String currentUserId = AuthenticationHelper.getUserIdFromContext();
+        if (Objects.nonNull(currentUserId)) {
+            MemberGroupResDTO memberGroupResDTO = new MemberGroupResDTO();
+            Pageable pageable = PageRequest.of(page, size, Sort.by("display_name"));
+            switch (roleId) {
+                case OWNER: {
+                    GroupMember ownerGroup = groupMemberRepository.findByGroupIdAndGroupRoleIdAndDelFlagFalse(groupId, GroupMemberRole.OWNER).orElse(null);
+                    if (Objects.nonNull(ownerGroup)) {
+                        String ownerId = ownerGroup.getUserId();
+                        Map<String, BaseProfile> mapProfile = userService.multiGetBaseProfileByUserIds(Collections.singletonList(ownerGroup.getUserId()));
+                        memberGroupResDTO.setTotal(1);
+                        memberGroupResDTO.setMembers(Collections.singletonList(mapProfile.get(ownerId)));
+                    }
+                    break;
+                }
+                case ADMIN: {
+                    Page<GroupMember> adminGroups = groupMemberRepository.getActiveRoleOfGroupByGroupId(groupId, GroupMemberRole.ADMIN.getRole(), pageable);
+                    if (adminGroups.getTotalElements() > 0) {
+                        List<String> adminUserIds = new ArrayList<>();
+                        for (GroupMember member : adminGroups) {
+                            adminUserIds.add(member.getUserId());
+                        }
+                        Map<String, BaseProfile> mapProfile = userService.multiGetBaseProfileByUserIds(adminUserIds);
+                        List<BaseProfile> admins = new ArrayList<>();
+                        for (String userId : adminUserIds) {
+                            BaseProfile bProfile = mapProfile.get(userId);
+                            if (bProfile != null) {
+                                admins.add(bProfile);
+                            }
+                        }
+                        memberGroupResDTO.setTotal((int) adminGroups.getTotalElements());
+                        memberGroupResDTO.setMembers(admins);
+                    }
+                    break;
+                }
+                case MEMBER: {
+                    Page<GroupMember> memberGroups = groupMemberRepository.getActiveRoleOfGroupByGroupId(groupId, GroupMemberRole.MEMBER.getRole(), pageable);
+                    if (memberGroups.getTotalElements() > 0) {
+                        List<String> memberUserIds = new ArrayList<>();
+                        for (GroupMember member : memberGroups) {
+                            memberUserIds.add(member.getUserId());
+                        }
+                        Map<String, BaseProfile> mapProfile = userService.multiGetBaseProfileByUserIds(memberUserIds);
+                        List<BaseProfile> member = new ArrayList<>();
+                        for (String userId : memberUserIds) {
+                            BaseProfile bProfile = mapProfile.get(userId);
+                            if (bProfile != null) {
+                                member.add(bProfile);
+                            }
+                        }
+                        memberGroupResDTO.setTotal((int) memberGroups.getTotalElements());
+                        memberGroupResDTO.setMembers(member);
+                    }
+                    break;
+                }
+                default: {
+                    break;
+                }
+            }
+
+            res.setCode(ErrorCode.Group.ACTION_SUCCESS.getCode());
+            res.setData(memberGroupResDTO);
+            res.setMessageEN(ErrorCode.Group.ACTION_SUCCESS.getMessageEN());
+            res.setMessageVN(ErrorCode.Group.ACTION_SUCCESS.getMessageVN());
+        } else {
+            res.setCode(ErrorCode.Token.FORBIDDEN.getCode());
+            res.setData(null);
+            res.setMessageEN(ErrorCode.Token.FORBIDDEN.getMessageEN());
+            res.setMessageVN(ErrorCode.Token.FORBIDDEN.getMessageVN());
+        }
+        return res;
+    }
+
+    @Override
+    public ApiResponse searchMemberOfGroup(String groupId, GroupMemberRole roleId, int page, int size, String searchKey) {
+        return null;
+    }
+
+    @Override
+    public Map<String, String> getUserWallIdByUserId(List<String> userIds) {
+        Map<String, String> res = new HashMap<>();
+        if (!CollectionUtils.isEmpty(userIds)) {
+            userIds.forEach(userId -> {
+                String userWallId = groupRepository.findByGroupOwnerIdAndGroupType(userId, GroupEntity.GroupType.USER_WALL).getGroupId();
+                res.put(userId, userWallId);
+            });
+        }
         return res;
     }
 

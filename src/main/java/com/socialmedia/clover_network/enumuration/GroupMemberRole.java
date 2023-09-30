@@ -13,6 +13,10 @@ public enum GroupMemberRole {
         this.roleName = roleName;
     }
 
+    public int getRole() {
+        return role;
+    }
+
     public String getRoleName() {
         return roleName;
     }
