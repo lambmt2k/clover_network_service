@@ -21,6 +21,9 @@ public class ErrorCode {
         public static ErrorCode ACTION_SUCCESS = of(-1, "Action success", "Thành công.");
         public static ErrorCode AUTHEN_ERROR = of(1, "Email or password is incorrect", "Sai email hoặc mật khẩu. Vui lòng thử lại.");
         public static ErrorCode INVALID_DATA = of(2, "Invalid data input", "Thông tin truyền vào không hợp lệ.");
+        public static ErrorCode ACCOUNT_NOT_ACTIVE = of(3,
+                "Account doesn't activated. Please verify account by link send to your email before first login",
+                "Tài khoản chưa được kích hoat. Vui lòng kích hoạt tài khoản bằng đường dẫn được gửi tới email của bạn.");
     }
 
     /**
