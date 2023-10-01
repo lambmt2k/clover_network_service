@@ -87,19 +87,35 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                 UserInfo existedUserInfo = userInfoOpt.get();
                 UserAuth existedUserAuth = userAuthOpt.get();
                 if (existedUserAuth.getPassword().equals(encryptedPassword)) {
-                    //generate token
-                    TokenItem tokenItem = this.genTokenItem(existedUserInfo, request);
+                    switch (existedUserInfo.getStatus()) {
+                        case INACTIVE: {
+                            String tokenId = this.genTokenItem(existedUserInfo, request).getTokenId();
+                            //send mail active account
+                            mailService.sendMailActiveAccount(existedUserInfo, tokenId);
 
-                    UserLoginRes userLoginRes = new UserLoginRes();
-                    userLoginRes.setUserId(tokenItem.getUserId());
-                    userLoginRes.setTokenId(tokenItem.getTokenId());
-                    userLoginRes.setUserRole(tokenItem.getUserRole());
-                    userLoginRes.setExpireTime(tokenItem.getExpireTime());
+                            res.setCode(ErrorCode.Authentication.ACCOUNT_NOT_ACTIVE.getCode());
+                            res.setData(req);
+                            res.setMessageEN(ErrorCode.Authentication.ACCOUNT_NOT_ACTIVE.getMessageEN());
+                            res.setMessageVN(ErrorCode.Authentication.ACCOUNT_NOT_ACTIVE.getMessageEN());
+                            break;
+                        }
+                        case ACTIVE: {
+                            //generate token
+                            TokenItem tokenItem = this.genTokenItem(existedUserInfo, request);
 
-                    res.setCode(ErrorCode.Authentication.ACTION_SUCCESS.getCode());
-                    res.setData(userLoginRes);
-                    res.setMessageEN(ErrorCode.Authentication.ACTION_SUCCESS.getMessageEN());
-                    res.setMessageVN(ErrorCode.Authentication.ACTION_SUCCESS.getMessageVN());
+                            UserLoginRes userLoginRes = new UserLoginRes();
+                            userLoginRes.setUserId(tokenItem.getUserId());
+                            userLoginRes.setTokenId(tokenItem.getTokenId());
+                            userLoginRes.setUserRole(tokenItem.getUserRole());
+                            userLoginRes.setExpireTime(tokenItem.getExpireTime());
+
+                            res.setCode(ErrorCode.Authentication.ACTION_SUCCESS.getCode());
+                            res.setData(userLoginRes);
+                            res.setMessageEN(ErrorCode.Authentication.ACTION_SUCCESS.getMessageEN());
+                            res.setMessageVN(ErrorCode.Authentication.ACTION_SUCCESS.getMessageVN());
+                            break;
+                        }
+                    }
                 } else {
                     res.setCode(ErrorCode.Authentication.AUTHEN_ERROR.getCode());
                     res.setData(req);
