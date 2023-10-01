@@ -96,7 +96,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                             res.setCode(ErrorCode.Authentication.ACCOUNT_NOT_ACTIVE.getCode());
                             res.setData(req);
                             res.setMessageEN(ErrorCode.Authentication.ACCOUNT_NOT_ACTIVE.getMessageEN());
-                            res.setMessageVN(ErrorCode.Authentication.ACCOUNT_NOT_ACTIVE.getMessageEN());
+                            res.setMessageVN(ErrorCode.Authentication.ACCOUNT_NOT_ACTIVE.getMessageVN());
                             break;
                         }
                         case ACTIVE: {
@@ -120,19 +120,19 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                     res.setCode(ErrorCode.Authentication.AUTHEN_ERROR.getCode());
                     res.setData(req);
                     res.setMessageEN(ErrorCode.Authentication.AUTHEN_ERROR.getMessageEN());
-                    res.setMessageVN(ErrorCode.Authentication.AUTHEN_ERROR.getMessageEN());
+                    res.setMessageVN(ErrorCode.Authentication.AUTHEN_ERROR.getMessageVN());
                 }
             } else {
                 res.setCode(ErrorCode.User.PROFILE_GET_EMPTY.getCode());
                 res.setData(req);
                 res.setMessageEN(ErrorCode.User.PROFILE_GET_EMPTY.getMessageEN());
-                res.setMessageVN(ErrorCode.User.PROFILE_GET_EMPTY.getMessageEN());
+                res.setMessageVN(ErrorCode.User.PROFILE_GET_EMPTY.getMessageVN());
             }
         } else {
             res.setCode(ErrorCode.Authentication.AUTHEN_ERROR.getCode());
             res.setData(req);
             res.setMessageEN(ErrorCode.Authentication.AUTHEN_ERROR.getMessageEN());
-            res.setMessageVN(ErrorCode.Authentication.AUTHEN_ERROR.getMessageEN());
+            res.setMessageVN(ErrorCode.Authentication.AUTHEN_ERROR.getMessageVN());
         }
         return res;
     }
