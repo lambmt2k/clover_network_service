@@ -99,11 +99,8 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                             TokenItem tokenItem = this.genTokenItem(existedUserInfo, request);
 
                             //send mail active account if token
-                            if(tokenItem.getUpdateTime().isAfter(now.plusDays(1))) {
-                                mailService.sendMailActiveAccount(existedUserInfo, tokenItem.getTokenId());
-                                tokenItem.setUpdateTime(now);
-                                tokenItemRepository.save(tokenItem);
-                            }
+                            mailService.sendMailActiveAccount(existedUserInfo, tokenItem.getTokenId());
+
                             res.setCode(ErrorCode.Authentication.ACCOUNT_NOT_ACTIVE.getCode());
                             res.setData(req);
                             res.setMessageEN(ErrorCode.Authentication.ACCOUNT_NOT_ACTIVE.getMessageEN());
@@ -173,7 +170,6 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                         .userAgent(httpHelper.getUserAgent())
                         .os(TokenItem.OS.WINDOWS)
                         .createdTime(now)
-                        .updateTime(now)
                         .expireTime(now.plus(90, ChronoUnit.DAYS))
                         .delFlag(false)
                         .build();
