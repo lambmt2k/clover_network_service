@@ -76,6 +76,13 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         logger.info("Start [loginByEmail] has email: {}", req.getEmail());
         ApiResponse res = new ApiResponse();
         LocalDateTime now = LocalDateTime.now();
+        if (!req.getEmail().contains(CommonRegex.REGEX_EMAIL)) {
+            res.setCode(ErrorCode.Authentication.INVALID_DATA.getCode());
+            res.setData(req);
+            res.setMessageEN(ErrorCode.Authentication.INVALID_DATA.getMessageEN());
+            res.setMessageVN(ErrorCode.Authentication.INVALID_DATA.getMessageVN());
+            return res;
+        }
         boolean isChecked = !req.getEmail().isEmpty() && !req.getPassword().isEmpty();
         if (isChecked) {
             String encryptedPassword = EncryptUtil.encrypt(req.getPassword().trim());
@@ -89,10 +96,14 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                 if (existedUserAuth.getPassword().equals(encryptedPassword)) {
                     switch (existedUserInfo.getStatus()) {
                         case INACTIVE: {
-                            String tokenId = this.genTokenItem(existedUserInfo, request).getTokenId();
-                            //send mail active account
-                            mailService.sendMailActiveAccount(existedUserInfo, tokenId);
+                            TokenItem tokenItem = this.genTokenItem(existedUserInfo, request);
 
+                            //send mail active account if token
+                            if(tokenItem.getUpdateTime().isAfter(now.plusDays(1))) {
+                                mailService.sendMailActiveAccount(existedUserInfo, tokenItem.getTokenId());
+                                tokenItem.setUpdateTime(now);
+                                tokenItemRepository.save(tokenItem);
+                            }
                             res.setCode(ErrorCode.Authentication.ACCOUNT_NOT_ACTIVE.getCode());
                             res.setData(req);
                             res.setMessageEN(ErrorCode.Authentication.ACCOUNT_NOT_ACTIVE.getMessageEN());
@@ -162,6 +173,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                         .userAgent(httpHelper.getUserAgent())
                         .os(TokenItem.OS.WINDOWS)
                         .createdTime(now)
+                        .updateTime(now)
                         .expireTime(now.plus(90, ChronoUnit.DAYS))
                         .delFlag(false)
                         .build();

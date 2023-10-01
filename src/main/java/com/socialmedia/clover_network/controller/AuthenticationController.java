@@ -30,16 +30,8 @@ public class AuthenticationController {
 
     @PostMapping("/login-by-email")
     public ResponseEntity<ApiResponse> loginByEmail(HttpServletRequest request, @RequestBody UserLoginReq req) throws Exception {
-
-        //validate req
-        if (!req.getEmail().contains(CommonRegex.REGEX_EMAIL)) {
-            return ResponseEntity.badRequest().build();
-        }
         ApiResponse res = authenticationService.loginByEmail(request, req);
-        if (Objects.nonNull(res.getData())) {
-            return ResponseEntity.status(HttpStatus.OK).body(res);
-        }
-        return null;
+        return ResponseEntity.status(HttpStatus.OK).body(res);
     }
 
     @PostMapping("/signup-by-email")
