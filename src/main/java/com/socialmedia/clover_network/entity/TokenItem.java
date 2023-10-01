@@ -30,7 +30,6 @@ public class TokenItem implements Serializable {
     private String userAgent;
     private String userIp;
     private LocalDateTime createdTime;
-    private LocalDateTime updateTime;
     private LocalDateTime expireTime;
     private boolean delFlag;
 
