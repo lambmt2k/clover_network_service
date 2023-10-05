@@ -1,6 +1,7 @@
 package com.socialmedia.clover_network.controller;
 
 import com.socialmedia.clover_network.constant.CommonRegex;
+import com.socialmedia.clover_network.constant.ErrorCode;
 import com.socialmedia.clover_network.dto.req.UserLoginReq;
 import com.socialmedia.clover_network.dto.req.UserSignUpReq;
 import com.socialmedia.clover_network.dto.res.ApiResponse;
@@ -48,8 +49,10 @@ public class AuthenticationController {
     }
 
     @GetMapping("/verify")
-    public ResponseEntity<ApiResponse> verifyAccount(@RequestParam("tokenId") String tokenId){
+    public String verifyAccount(@RequestParam("tokenId") String tokenId){
         ApiResponse res = authenticationService.verifyAccount(tokenId);
-        return ResponseEntity.ok(res);
+        if (res.getCode() == ErrorCode.User.ACTION_SUCCESS.getCode()) {
+            return  "redirect:https://clover-network-web.vercel.app/login";
+        } else return res.getMessageVN();
     }
 }
