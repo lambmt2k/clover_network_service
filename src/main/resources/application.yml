@@ -18,11 +18,11 @@ spring:
           auth: 'true'
     password: ohrxnidvjxdjvjwx
   datasource:
-    password: 3vFokhxJZIK2
-    username: lambmt.work
+    password: postgres
+    username: postgres
     initialization-mode: always
     schema: classpath:/sql-script/schema.sql
-    url: jdbc:postgresql://ep-white-limit-63473907.ap-southeast-1.aws.neon.tech/clover_network
+    url: clover-db.ck32a9mfyksb.ap-southeast-1.rds.amazonaws.com
     continue-on-error: 'true'
     initialize: 'true'
 redis:
