@@ -21,8 +21,7 @@ spring:
     password: postgres
     username: postgres
     initialization-mode: always
-    schema: classpath:/sql-script/schema.sql
-    url: clover-db.ck32a9mfyksb.ap-southeast-1.rds.amazonaws.com
+    url: jdbc:postgresql://clover-db.ck32a9mfyksb.ap-southeast-1.rds.amazonaws.com/clover_db
     continue-on-error: 'true'
     initialize: 'true'
 redis:
