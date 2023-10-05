@@ -28,7 +28,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
         http.authorizeRequests()
                 .antMatchers("/api/authenticate/login-by-email").permitAll()
                 .antMatchers("/api/authenticate/signup-by-email").permitAll()
-                .antMatchers("/api/authenticate/verify").permitAll()
+                .antMatchers("/verify-account").permitAll()
                 .anyRequest().authenticated()
                 .and()
                 .sessionManagement()
