@@ -47,12 +47,4 @@ public class AuthenticationController {
         ApiResponse res = authenticationService.getUserInfo();
         return ResponseEntity.ok(res);
     }
-
-    @GetMapping("/verify")
-    public String verifyAccount(@RequestParam("tokenId") String tokenId){
-        ApiResponse res = authenticationService.verifyAccount(tokenId);
-        if (res.getCode() == ErrorCode.User.ACTION_SUCCESS.getCode()) {
-            return  "redirect:https://clover-network-web.vercel.app/login";
-        } else return res.getMessageVN();
-    }
 }
