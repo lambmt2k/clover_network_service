@@ -31,6 +31,6 @@ redis:
 jwt:
   secret: clover
 clover:
-  server_host: 47.128.64.91:8080
+  server_host: 18.143.148.113:8080
   local_host: localhost:8080
 
