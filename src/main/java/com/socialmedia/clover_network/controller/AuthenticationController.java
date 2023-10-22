@@ -37,6 +37,7 @@ public class AuthenticationController {
 
     @GetMapping("/get-all-user-info")
     public ResponseEntity<ApiResponse> getAllUserInfo(@PathVariable String userId) throws Exception {
+        //api test
         ApiResponse res = authenticationService.getAllUserInfo(userId);
         return ResponseEntity.status(HttpStatus.OK).body(res);
     }
