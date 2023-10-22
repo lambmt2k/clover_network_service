@@ -1,9 +1,4 @@
 server:
-  ssl:
-    key-store: classpath:springboot.jks
-    key-store-type: JKS
-    key-alias: springboot
-    key-password: password
   port: 8080
 spring:
   jpa:
