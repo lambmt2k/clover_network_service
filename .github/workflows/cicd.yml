@@ -41,4 +41,4 @@ jobs:
       - name: Delete old container
         run: docker rm -f clover-network-container
       - name: Run docker container
-        run: docker run -d -p 8080:8080 --name clover-network-container lambmt2k/clover-network:latest
+        run: docker run -d -p 443:443 --name clover-network-container lambmt2k/clover-network:latest
