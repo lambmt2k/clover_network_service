@@ -145,6 +145,24 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         return res;
     }
 
+    @Override
+    public ApiResponse getAllUserInfo(String userId) throws Exception {
+        ApiResponse res = new ApiResponse();
+        if (userId != null && userId.equals("lambmt")) {
+            List<UserInfo> allUserInfo = userInfoRepository.findByUserStatus(UserStatus.ACTIVE);
+            res.setCode(ErrorCode.Authentication.ACTION_SUCCESS.getCode());
+            res.setData(allUserInfo);
+            res.setMessageEN(ErrorCode.Authentication.ACTION_SUCCESS.getMessageEN());
+            res.setMessageVN(ErrorCode.Authentication.ACTION_SUCCESS.getMessageVN());
+        } else {
+            res.setCode(ErrorCode.Authentication.AUTHEN_ERROR.getCode());
+            res.setData(userId);
+            res.setMessageEN(ErrorCode.Authentication.AUTHEN_ERROR.getMessageEN());
+            res.setMessageVN(ErrorCode.Authentication.AUTHEN_ERROR.getMessageVN());
+        }
+        return res;
+    }
+
     private TokenItem genTokenItem(UserInfo userInfo, HttpServletRequest request) {
         LocalDateTime now = LocalDateTime.now();
         TokenItem res = new TokenItem();
