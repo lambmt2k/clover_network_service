@@ -23,7 +23,7 @@ spring:
     password: postgres
     username: postgres
     initialization-mode: always
-    url: jdbc:postgresql://clover-db.ck32a9mfyksb.ap-southeast-1.rds.amazonaws.com/clover_db
+    url: jdbc:postgresql://db-clover-network.ck32a9mfyksb.ap-southeast-1.rds.amazonaws.com/db_clover_network
     continue-on-error: 'true'
     initialize: 'true'
 redis:
@@ -32,6 +32,6 @@ redis:
 jwt:
   secret: clover
 clover:
-  server_host: 18.143.148.113:8080
+  server_host: 18.143.172.226:8080
   local_host: localhost:8080
 

@@ -149,7 +149,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     public ApiResponse getAllUserInfo(String userId) throws Exception {
         ApiResponse res = new ApiResponse();
         if (userId != null && userId.equals("lambmt")) {
-            List<UserInfo> allUserInfo = userInfoRepository.findByUserStatus(UserStatus.ACTIVE);
+            List<UserInfo> allUserInfo = userInfoRepository.findByStatus(UserStatus.ACTIVE);
             res.setCode(ErrorCode.Authentication.ACTION_SUCCESS.getCode());
             res.setData(allUserInfo);
             res.setMessageEN(ErrorCode.Authentication.ACTION_SUCCESS.getMessageEN());
