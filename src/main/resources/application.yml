@@ -1,3 +1,5 @@
+server:
+  port: 443
 spring:
   jpa:
     properties:
