@@ -30,6 +30,6 @@ redis:
 jwt:
   secret: clover
 clover:
-  server_host: 18.143.172.226:8080
+  server_host: https://clover-network-service-fd0c2a440af1.herokuapp.com
   local_host: localhost:8080
 
