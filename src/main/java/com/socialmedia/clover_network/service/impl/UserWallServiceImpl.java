@@ -84,9 +84,9 @@ public class UserWallServiceImpl implements UserWallService {
                 groupMemberRepository.save(newGroupMember);
 
                 //create config role permission of group
-                GroupRolePermission ownerRole = new GroupRolePermission(groupId, GroupRolePermission.GroupRole.OWNER, true, true, true, !newGroupMember.isDelFlag());
-                GroupRolePermission adminRole = new GroupRolePermission(groupId, GroupRolePermission.GroupRole.ADMIN, true, true, true, !newGroupMember.isDelFlag());
-                GroupRolePermission memberRole = new GroupRolePermission(groupId, GroupRolePermission.GroupRole.MEMBER, true, false, false, !newGroupMember.isDelFlag());
+                GroupRolePermission ownerRole = new GroupRolePermission(groupId, GroupMemberRole.OWNER, true, true, true, !newGroupMember.isDelFlag());
+                GroupRolePermission adminRole = new GroupRolePermission(groupId, GroupMemberRole.ADMIN, true, true, true, !newGroupMember.isDelFlag());
+                GroupRolePermission memberRole = new GroupRolePermission(groupId, GroupMemberRole.MEMBER, true, false, false, !newGroupMember.isDelFlag());
                 groupRolePermissionRepository.saveAll(Arrays.asList(ownerRole, adminRole, memberRole));
 
                 return newUserWall.getGroupId();
@@ -107,5 +107,11 @@ public class UserWallServiceImpl implements UserWallService {
             }
         }
         return false;
+    }
+
+    @Override
+    public boolean isUserWall(String groupId) {
+        Optional<GroupEntity> groupEntity = groupRepository.findByGroupIdAndGroupType(groupId, GroupEntity.GroupType.USER_WALL);
+        return groupEntity.isPresent();
     }
 }
