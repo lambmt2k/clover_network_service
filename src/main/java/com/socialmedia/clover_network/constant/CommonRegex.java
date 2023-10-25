@@ -8,6 +8,7 @@ import java.util.regex.Pattern;
 public class CommonRegex {
     public static final String REGEX_EMAIL = "@";
     public static final String REGEX_SPACE = " ";
+    public static final String REGEX_BLANK = "";
 
     public static final Pattern PATTERN_DATE = Pattern.compile("dd/MM/yyyy");
 }

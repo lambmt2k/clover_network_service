@@ -16,6 +16,7 @@ public interface GroupMemberRepository extends JpaRepository<GroupMember, Long> 
     List<GroupMember> findByUserIdAndDelFlagFalse(String userId);
     List<GroupMember> findAllByGroupId(String groupId);
     Optional<GroupMember> findByUserIdAndGroupId(String userId, String groupId);
+    Optional<GroupMember> findFirstByUserIdAndGroupIdAndDelFlagFalse(String userId, String groupId);
     Optional<GroupMember> findByGroupIdAndGroupRoleIdAndDelFlagFalse(String groupId, GroupMemberRole groupRoleId);
 
     @Query(value = "SELECT gm.* " +

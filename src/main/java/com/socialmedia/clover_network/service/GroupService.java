@@ -1,6 +1,7 @@
 package com.socialmedia.clover_network.service;
 
 import com.socialmedia.clover_network.dto.req.GroupReq;
+import com.socialmedia.clover_network.dto.req.RoleGroupSettingReq;
 import com.socialmedia.clover_network.dto.res.ApiResponse;
 import com.socialmedia.clover_network.enumuration.GroupMemberRole;
 
@@ -14,4 +15,6 @@ public interface GroupService {
     ApiResponse getListMemberOfGroup(String groupId, GroupMemberRole roleId, int page, int size);
     ApiResponse searchMemberOfGroup(String groupId, GroupMemberRole roleId, int page, int size, String searchKey);
     Map<String, String> getUserWallIdByUserId(List<String> userIds);
+
+    RoleGroupSettingReq getMemberRolePermission(String userId, String groupId, boolean isUserWall);
 }

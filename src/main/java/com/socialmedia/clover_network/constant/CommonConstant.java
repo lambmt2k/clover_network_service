@@ -16,4 +16,8 @@ public class CommonConstant {
         public static final String API_SIGNUP = "/api/authenticate/signup-by-email";
         public static final String API_VERIFY_ACCOUNT = "/api/authenticate/verify";
     }
+
+    public class Feed {
+        public static final int MAX_CHARACTER_CONTENT_FEED = 30000;
+    }
 }

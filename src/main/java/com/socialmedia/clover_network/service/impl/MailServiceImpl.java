@@ -51,7 +51,7 @@ public class MailServiceImpl implements MailService {
                 + "Clover Network Admin.";
 
         content = content.replace("[[name]]", userInfo.getFirstname() + CommonRegex.REGEX_SPACE + userInfo.getLastname());
-        String verifyURL = "http://" + serverHost + "/verify-account?tokenId=" + tokenId;
+        String verifyURL = serverHost + "/verify-account?tokenId=" + tokenId;
         content = content.replace("[[URL]]", verifyURL);
 
 

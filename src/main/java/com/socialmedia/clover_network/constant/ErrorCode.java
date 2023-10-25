@@ -49,6 +49,15 @@ public class ErrorCode {
      */
     public static class Token {
         public static ErrorCode ACTION_SUCCESS = of(300, "Action success", "Thành công.");
-        public static ErrorCode FORBIDDEN = of(301, "Not permission to do that", "Không có quyền thực hiện yêu cầu");
+        public static ErrorCode FORBIDDEN = of(301, "Not permission to do that", "Không có quyền thực hiện yêu cầu.");
+    }
+
+    /**
+     * Code from 400 => 499
+     */
+    public static class Feed {
+        public static ErrorCode ACTION_SUCCESS = of(400, "Action success", "Thành công.");
+        public static ErrorCode INPUT_INVALID = of(401, "Input invalid", "Thông tin truyền vào không hợp lệ.");
+        public static ErrorCode FORBIDDEN = of(402, "Not permission to post in group", "Không có quyền đăng bài viết.");
     }
 }

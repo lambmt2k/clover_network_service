@@ -1,5 +1,6 @@
 package com.socialmedia.clover_network.entity;
 
+import com.socialmedia.clover_network.enumuration.GroupMemberRole;
 import lombok.*;
 
 import javax.persistence.*;
@@ -22,7 +23,7 @@ public class GroupRolePermission {
     private String groupId;
 
     @Column(name = "group_role_id")
-    private GroupRole groupRoleId;
+    private GroupMemberRole groupRoleId;
 
     @Column(name = "enable_comment")
     private boolean enableComment;
@@ -36,13 +37,7 @@ public class GroupRolePermission {
     @Column(name = "enable_group")
     private boolean enableGroup;
 
-    public enum GroupRole {
-        OWNER,
-        ADMIN,
-        MEMBER;
-    }
-
-    public GroupRolePermission(String groupId, GroupRole groupRoleId, boolean enableComment, boolean enablePost, boolean enableShare, boolean enableGroup) {
+    public GroupRolePermission(String groupId, GroupMemberRole groupRoleId, boolean enableComment, boolean enablePost, boolean enableShare, boolean enableGroup) {
         this.groupId = groupId;
         this.groupRoleId = groupRoleId;
         this.enableComment = enableComment;
