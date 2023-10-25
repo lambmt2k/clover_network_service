@@ -12,6 +12,8 @@ import java.io.UnsupportedEncodingException;
 
 public interface AuthenticationService {
     ApiResponse loginByEmail(HttpServletRequest request, UserLoginReq req) throws Exception;
+
+    ApiResponse getAllUserInfo(String userId) throws Exception;
     ApiResponse signUpNewUser(HttpServletRequest request, UserSignUpReq req) throws Exception;
     ApiResponse getUserInfo();
     ApiResponse verifyAccount(String tokenId);

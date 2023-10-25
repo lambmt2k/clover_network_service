@@ -35,6 +35,13 @@ public class AuthenticationController {
         return ResponseEntity.status(HttpStatus.OK).body(res);
     }
 
+    @GetMapping("/get-all-user-info/{userId}")
+    public ResponseEntity<ApiResponse> getAllUserInfo(@PathVariable String userId) throws Exception {
+        //api test
+        ApiResponse res = authenticationService.getAllUserInfo(userId);
+        return ResponseEntity.status(HttpStatus.OK).body(res);
+    }
+
     @PostMapping("/signup-by-email")
     public ResponseEntity<ApiResponse> signUpByEmail(HttpServletRequest request, @RequestBody UserSignUpReq req) throws Exception {
         ApiResponse res = authenticationService.signUpNewUser(request, req);
