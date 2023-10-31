@@ -11,4 +11,6 @@ public class CommonRegex {
     public static final String REGEX_BLANK = "";
 
     public static final Pattern PATTERN_DATE = Pattern.compile("dd/MM/yyyy");
+
+    public static final String REGEX_PASSWORD = "/^(?=.*[a-z])(?=.*[A-Z])[a-zA-Z0-9!@#\\$%\\^\\&*\\)\\(+=._-]{8,}$/";
 }

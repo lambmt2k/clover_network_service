@@ -209,6 +209,14 @@ public class AuthenticationServiceImpl implements AuthenticationService {
             res.setMessageVN(ErrorCode.Authentication.INVALID_DATA.getMessageVN());
             return res;
         }
+        //regex check password
+        if (!req.getPassword().matches(CommonRegex.REGEX_PASSWORD)) {
+            res.setCode(ErrorCode.Authentication.INVALID_PASSWORD.getCode());
+            res.setData(req);
+            res.setMessageEN(ErrorCode.Authentication.INVALID_PASSWORD.getMessageEN());
+            res.setMessageVN(ErrorCode.Authentication.INVALID_PASSWORD.getMessageVN());
+            return res;
+        }
         //verify input data
         Optional<UserInfo> userInfoOpt = userInfoRepository.findByEmail(req.getEmail());
         Optional<UserAuth> userAuthOpt = userAuthRepository.findByEmail(req.getEmail());
