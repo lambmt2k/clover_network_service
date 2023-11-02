@@ -4,7 +4,7 @@ spring:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
     hibernate:
-      ddl-auto: none
+      ddl-auto: update
       show-sql: 'true'
   mail:
     host: smtp.gmail.com
