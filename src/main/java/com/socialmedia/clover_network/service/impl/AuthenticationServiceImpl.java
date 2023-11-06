@@ -306,25 +306,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         return res;
     }
 
-    @Override
-    public ApiResponse getUserInfo() {
-        logger.info("Start [getUserInfo]");
-        ApiResponse res = new ApiResponse();
-        String email = SecurityContextHolder.getContext().getAuthentication().getName();
-        Optional<UserInfo> userInfoOpt = userInfoRepository.findByEmail(email);
-        if (userInfoOpt.isPresent()) {
-            res.setCode(ErrorCode.User.ACTION_SUCCESS.getCode());
-            res.setData(userInfoOpt.get());
-            res.setMessageEN(ErrorCode.User.ACTION_SUCCESS.getMessageEN());
-            res.setMessageVN(ErrorCode.User.ACTION_SUCCESS.getMessageVN());
-        } else {
-            res.setCode(ErrorCode.User.PROFILE_GET_EMPTY.getCode());
-            res.setData(null);
-            res.setMessageEN(ErrorCode.User.PROFILE_GET_EMPTY.getMessageEN());
-            res.setMessageVN(ErrorCode.User.PROFILE_GET_EMPTY.getMessageVN());
-        }
-        return res;
-    }
+
 
     @Override
     public ApiResponse verifyAccount(String tokenId) {
