@@ -49,9 +49,4 @@ public class AuthenticationController {
         return ResponseEntity.status(HttpStatus.OK).body(res);
     }
 
-    @GetMapping("/get-user-info")
-    public ResponseEntity<ApiResponse> getInfo(){
-        ApiResponse res = authenticationService.getUserInfo();
-        return ResponseEntity.ok(res);
-    }
 }
