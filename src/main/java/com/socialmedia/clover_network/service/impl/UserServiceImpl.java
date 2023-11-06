@@ -1,7 +1,13 @@
 package com.socialmedia.clover_network.service.impl;
 
+import com.socialmedia.clover_network.config.AuthenticationHelper;
+import com.socialmedia.clover_network.constant.CommonRegex;
+import com.socialmedia.clover_network.constant.ErrorCode;
 import com.socialmedia.clover_network.dto.BaseProfile;
+import com.socialmedia.clover_network.dto.res.ApiResponse;
+import com.socialmedia.clover_network.dto.res.UserInfoRes;
 import com.socialmedia.clover_network.entity.UserInfo;
+import com.socialmedia.clover_network.enumuration.Gender;
 import com.socialmedia.clover_network.repository.UserInfoRepository;
 import com.socialmedia.clover_network.service.GroupService;
 import com.socialmedia.clover_network.service.UserService;
@@ -9,9 +15,11 @@ import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
+import java.text.SimpleDateFormat;
 import java.util.*;
 
 @Service
@@ -69,6 +77,49 @@ public class UserServiceImpl implements UserService {
             baseProfile.setEmail(userInfo.getEmail());
         }
         return baseProfile;
+    }
+
+    @Override
+    public ApiResponse getUserInfo() {
+        logger.info("Start [getUserInfo]");
+        ApiResponse res = new ApiResponse();
+        SimpleDateFormat dateFormat = new SimpleDateFormat(CommonRegex.PATTERN_DATE.pattern());
+        String currentUserId = AuthenticationHelper.getUserIdFromContext();
+        if (currentUserId != null) {
+            logger.info("Get info of userId: {}", currentUserId);
+            Optional<UserInfo> userInfoOpt = userInfoRepository.findByUserId(currentUserId);
+            if (userInfoOpt.isPresent()) {
+                UserInfo userInfo = userInfoOpt.get();
+                UserInfoRes data = new UserInfoRes();
+                data.setEmail(userInfo.getEmail());
+                data.setFirstname(userInfo.getFirstname());
+                data.setLastname(userInfo.getLastname());
+                data.setPhoneNo(userInfo.getPhoneNo());
+                data.setGender(userInfo.getGender().equals(Gender.MALE) ? "MALE"
+                        : (userInfo.getGender().equals(Gender.FEMALE) ? "FEMALE" : "OTHER"));
+                data.setUserRole(userInfo.getUserRole().getRoleName());
+                data.setDayOfBirth(dateFormat.format(userInfo.getDayOfBirth()));
+                data.setStatus(userInfo.getStatus().getStatusName());
+
+                res.setCode(ErrorCode.User.ACTION_SUCCESS.getCode());
+                res.setData(data);
+                res.setMessageEN(ErrorCode.User.ACTION_SUCCESS.getMessageEN());
+                res.setMessageVN(ErrorCode.User.ACTION_SUCCESS.getMessageVN());
+            } else {
+                res.setCode(ErrorCode.User.PROFILE_GET_EMPTY.getCode());
+                res.setData(null);
+                res.setMessageEN(ErrorCode.User.PROFILE_GET_EMPTY.getMessageEN());
+                res.setMessageVN(ErrorCode.User.PROFILE_GET_EMPTY.getMessageVN());
+            }
+        } else {
+            res.setCode(ErrorCode.Token.FORBIDDEN.getCode());
+            res.setData(null);
+            res.setMessageEN(ErrorCode.Token.FORBIDDEN.getMessageEN());
+            res.setMessageVN(ErrorCode.Token.FORBIDDEN.getMessageVN());
+        }
+        logger.info("End api [getUserInfo]");
+        return res;
+
     }
 
 

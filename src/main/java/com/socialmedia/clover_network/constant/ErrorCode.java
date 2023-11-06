@@ -24,6 +24,7 @@ public class ErrorCode {
         public static ErrorCode ACCOUNT_NOT_ACTIVE = of(3,
                 "Account doesn't activated. Please verify account by link send to your email before first login",
                 "Tài khoản chưa được kích hoat. Vui lòng kích hoạt tài khoản bằng đường dẫn được gửi tới email của bạn.");
+        public static ErrorCode INVALID_PASSWORD = of(4, "Invalid password", "Mật khẩu không hợp lệ");
     }
 
     /**

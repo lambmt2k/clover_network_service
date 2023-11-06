@@ -18,10 +18,9 @@ spring:
           auth: 'true'
     password: ohrxnidvjxdjvjwx
   datasource:
-    password: postgres
-    username: postgres
-    initialization-mode: always
-    url: jdbc:postgresql://db-clover-network.ck32a9mfyksb.ap-southeast-1.rds.amazonaws.com/db_clover_network
+    username: clover
+    password: lambmt0910
+    url: jdbc:postgresql://clover-network-database.ck32a9mfyksb.ap-southeast-1.rds.amazonaws.com/db_clover_network
     continue-on-error: 'true'
     initialize: 'true'
 redis:
