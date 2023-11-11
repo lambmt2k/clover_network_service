@@ -1,5 +1,6 @@
 package com.socialmedia.clover_network.service.impl;
 
+import com.socialmedia.clover_network.config.AuthenticationHelper;
 import com.socialmedia.clover_network.entity.GroupEntity;
 import com.socialmedia.clover_network.entity.GroupMember;
 import com.socialmedia.clover_network.entity.GroupRolePermission;
@@ -17,6 +18,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
@@ -113,5 +115,22 @@ public class UserWallServiceImpl implements UserWallService {
     public boolean isUserWall(String groupId) {
         Optional<GroupEntity> groupEntity = groupRepository.findByGroupIdAndGroupType(groupId, GroupEntity.GroupType.USER_WALL);
         return groupEntity.isPresent();
+    }
+
+    @Override
+    public GroupEntity getUserWallByUserId(String userId) {
+        logger.info("Start get user wall of userId: {}", userId);
+        String currentUserId = AuthenticationHelper.getUserIdFromContext();
+        GroupEntity res = null;
+        if (userId != null) {
+            UserInfo userInfo = userInfoRepository.findByUserId(userId).orElse(null);
+            if (hasUserWall(userId, userInfo)) {
+                Optional<GroupEntity> groupOpt = groupRepository.findByGroupOwnerIdAndGroupType(userId, GroupEntity.GroupType.USER_WALL);
+                if(groupOpt.isPresent()) {
+                    res = groupOpt.get();
+                }
+            } 
+        }
+        return res;
     }
 }
