@@ -60,5 +60,6 @@ public class ErrorCode {
         public static ErrorCode ACTION_SUCCESS = of(400, "Action success", "Thành công.");
         public static ErrorCode INPUT_INVALID = of(401, "Input invalid", "Thông tin truyền vào không hợp lệ.");
         public static ErrorCode FORBIDDEN = of(402, "Not permission to post in group", "Không có quyền đăng bài viết.");
+        public static ErrorCode GENERATE_POST_ID_ERROR = of(403, "Can't generate post Id", "Không thể khởi tạo postId.");
     }
 }

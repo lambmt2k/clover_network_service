@@ -6,11 +6,13 @@ import com.socialmedia.clover_network.constant.ErrorCode;
 import com.socialmedia.clover_network.dto.BaseProfile;
 import com.socialmedia.clover_network.dto.res.ApiResponse;
 import com.socialmedia.clover_network.dto.res.UserInfoRes;
+import com.socialmedia.clover_network.entity.GroupEntity;
 import com.socialmedia.clover_network.entity.UserInfo;
 import com.socialmedia.clover_network.enumuration.Gender;
 import com.socialmedia.clover_network.repository.UserInfoRepository;
 import com.socialmedia.clover_network.service.GroupService;
 import com.socialmedia.clover_network.service.UserService;
+import com.socialmedia.clover_network.service.UserWallService;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -32,6 +34,8 @@ public class UserServiceImpl implements UserService {
 
     @Autowired
     GroupService groupService;
+    @Autowired
+    UserWallService userWallService;
 
 
     @Override
@@ -91,15 +95,21 @@ public class UserServiceImpl implements UserService {
             if (userInfoOpt.isPresent()) {
                 UserInfo userInfo = userInfoOpt.get();
                 UserInfoRes data = new UserInfoRes();
+                data.setUserId(userInfo.getUserId());
                 data.setEmail(userInfo.getEmail());
                 data.setFirstname(userInfo.getFirstname());
                 data.setLastname(userInfo.getLastname());
+                data.setAvatarUrl(userInfo.getAvatarImgUrl());
                 data.setPhoneNo(userInfo.getPhoneNo());
                 data.setGender(userInfo.getGender().equals(Gender.MALE) ? "MALE"
                         : (userInfo.getGender().equals(Gender.FEMALE) ? "FEMALE" : "OTHER"));
                 data.setUserRole(userInfo.getUserRole().getRoleName());
                 data.setDayOfBirth(dateFormat.format(userInfo.getDayOfBirth()));
                 data.setStatus(userInfo.getStatus().getStatusName());
+
+                //get user's wall info
+                GroupEntity userWall = userWallService.getUserWallByUserId(currentUserId);
+                data.setUserWallId(userWall.getGroupId());
 
                 res.setCode(ErrorCode.User.ACTION_SUCCESS.getCode());
                 res.setData(data);

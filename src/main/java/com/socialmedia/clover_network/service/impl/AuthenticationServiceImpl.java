@@ -250,6 +250,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
             newUserInfo.setUpdatedBy(CommonConstant.ADMIN_ACCOUNT);
             newUserInfo.setUpdatedDate(now);
             newUserInfo.setAccountType(AccountType.EMAIL);
+            newUserInfo.setAvatarImgUrl(CommonConstant.DEFAULT_AVATAR_URL);
 
             //create new user auth
             UserAuth newUserAuth = new UserAuth();

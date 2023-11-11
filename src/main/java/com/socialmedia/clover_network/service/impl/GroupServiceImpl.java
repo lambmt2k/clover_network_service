@@ -286,7 +286,8 @@ public class GroupServiceImpl implements GroupService {
         Map<String, String> res = new HashMap<>();
         if (!CollectionUtils.isEmpty(userIds)) {
             userIds.forEach(userId -> {
-                String userWallId = groupRepository.findByGroupOwnerIdAndGroupType(userId, GroupEntity.GroupType.USER_WALL).getGroupId();
+                Optional<GroupEntity> groupOpt = groupRepository.findByGroupOwnerIdAndGroupType(userId, GroupEntity.GroupType.USER_WALL);
+                String userWallId = groupOpt.map(GroupEntity::getGroupId).orElse(null);
                 res.put(userId, userWallId);
             });
         }

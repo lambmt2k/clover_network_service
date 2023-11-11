@@ -12,6 +12,5 @@ public interface UserService {
     UserInfo getUserInfo(String userId);
     Map<String, BaseProfile> multiGetBaseProfileByUserIds(List<String> userIds);
     BaseProfile mapUserInfoToBaseProfile(UserInfo userInfo);
-
     ApiResponse getUserInfo();
 }
