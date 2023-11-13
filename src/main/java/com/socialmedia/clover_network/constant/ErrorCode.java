@@ -32,8 +32,8 @@ public class ErrorCode {
      */
     public static class User {
         public static ErrorCode ACTION_SUCCESS = of(100, "Action success", "Thành công.");
-        public static ErrorCode PROFILE_GET_EMPTY = of(101, "Profile empty ", "Không tìm thấy dữ liệu user.");
-        public static ErrorCode EXISTED_USER = of(102, "Existed user ", "User đã tồn tại.");
+        public static ErrorCode PROFILE_GET_EMPTY = of(101, "Profile empty", "Không tìm thấy dữ liệu user.");
+        public static ErrorCode EXISTED_USER = of(102, "Existed user", "User đã tồn tại.");
     }
     /**
      * Code from 200 => 299

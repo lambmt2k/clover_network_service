@@ -107,6 +107,19 @@ public class FeedServiceImpl implements FeedService {
                                 //other user's wall
                                 feedItem.setToUserId(groupEntity.getGroupOwnerId());
                             }
+                            if (canPost) {
+                                feedItem = this.postFeed(feedItem);
+                                logger.info("[FeedController] postFeed: " + feedItem + " | userId: " + currentUserId);
+                                res.setCode(ErrorCode.Feed.ACTION_SUCCESS.getCode());
+                                res.setData(feedItem);
+                                res.setMessageEN(ErrorCode.Feed.ACTION_SUCCESS.getMessageEN());
+                                res.setMessageVN(ErrorCode.Feed.ACTION_SUCCESS.getMessageVN());
+                            } else {
+                                res.setCode(ErrorCode.Feed.FORBIDDEN.getCode());
+                                res.setData(null);
+                                res.setMessageEN(ErrorCode.Feed.FORBIDDEN.getMessageEN());
+                                res.setMessageVN(ErrorCode.Feed.FORBIDDEN.getMessageVN());
+                            }
                         }
                     } else {
                         res.setCode(ErrorCode.Group.GROUP_NOT_FOUND.getCode());
