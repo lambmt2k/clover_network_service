@@ -24,10 +24,10 @@ public class UserInfo {
     @Column(name = "user_id")
     private String userId;
 
-    @Column(name = "avatar_img_url")
+    @Column(name = "avatar_img_url", columnDefinition = "TEXT")
     private String avatarImgUrl;
 
-    @Column(name = "banner_img_url")
+    @Column(name = "banner_img_url", columnDefinition = "TEXT")
     private String bannerImgUrl;
 
     @Column(name = "email")
