@@ -4,14 +4,18 @@ import com.socialmedia.clover_network.config.AuthenticationHelper;
 import com.socialmedia.clover_network.constant.CommonConstant;
 import com.socialmedia.clover_network.constant.CommonRegex;
 import com.socialmedia.clover_network.constant.ErrorCode;
+import com.socialmedia.clover_network.dto.BaseProfile;
 import com.socialmedia.clover_network.dto.FeedItem;
 import com.socialmedia.clover_network.dto.req.RoleGroupSettingReq;
 import com.socialmedia.clover_network.dto.res.ApiResponse;
+import com.socialmedia.clover_network.dto.res.ListFeedRes;
 import com.socialmedia.clover_network.entity.GroupEntity;
+import com.socialmedia.clover_network.entity.GroupMember;
 import com.socialmedia.clover_network.entity.PostItem;
-import com.socialmedia.clover_network.mapper.PostMapper;
+import com.socialmedia.clover_network.mapper.PostItemMapper;
 import com.socialmedia.clover_network.repository.ConnectionRepository;
 import com.socialmedia.clover_network.repository.FeedRepository;
+import com.socialmedia.clover_network.repository.GroupMemberRepository;
 import com.socialmedia.clover_network.repository.GroupRepository;
 import com.socialmedia.clover_network.service.FeedService;
 import com.socialmedia.clover_network.service.GroupService;
@@ -23,11 +27,15 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
 
 import java.time.LocalDateTime;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
 
 @Service
 public class FeedServiceImpl implements FeedService {
@@ -40,13 +48,20 @@ public class FeedServiceImpl implements FeedService {
     private final GroupRepository groupRepository;
     private final ConnectionRepository connectionRepository;
     private final FeedRepository feedRepository;
+    @Autowired
+    GroupMemberRepository groupMemberRepository;
+
+    /*@Autowired
+    FeedItemRepositoryRedis feedItemRedis;
+    @Autowired
+    FeedUserRepositoryRedis feedUserRedis;*/
 
     private final UserService userService;
     private final GroupService groupService;
     private final UserWallService userWallService;
 
     @Autowired
-    PostMapper postMapper;
+    PostItemMapper postItemMapper;
 
     private final GenIDUtil genIDUtil;
 
@@ -149,6 +164,114 @@ public class FeedServiceImpl implements FeedService {
         return res;
     }
 
+    @Override
+    public ApiResponse listFeed(int limit, int offset) {
+        logger.info("Start API [listFeed]");
+        ApiResponse res = new ApiResponse();
+        String currentUserId = AuthenticationHelper.getUserIdFromContext();
+        if (currentUserId != null) {
+            logger.info("Get list group of userId {}", currentUserId);
+            List<String> groupIds = groupMemberRepository.findByUserIdAndDelFlagFalse(currentUserId)
+                    .stream()
+                    .map(GroupMember::getGroupId)
+                    .distinct()
+                    .collect(Collectors.toList());
+            List<String> userWallIds = groupRepository.findByGroupTypeAndGroupIdIn(GroupEntity.GroupType.USER_WALL, groupIds)
+                    .stream()
+                    .map(GroupEntity::getGroupId)
+                    .distinct()
+                    .collect(Collectors.toList());
+            Map<String, GroupEntity> mapGroups = new ConcurrentHashMap<>(10);
+
+            this.multiGetGroupItem(groupIds, mapGroups);
+            List<GroupEntity> listGroups = new ArrayList<>(mapGroups.values());
+            Pageable pageable = PageRequest.of(offset, limit);
+            List<PostItem> postItems = feedRepository.findAllByPrivacyGroupIdInAndDelFlagFalseAndLastActiveIsNotNullOrderByLastActiveDesc(groupIds, pageable)
+                    .stream()
+                    .sorted(Comparator.comparing(PostItem::getLastActive).reversed())
+                    .collect(Collectors.toList());
+            if (CollectionUtils.isEmpty(postItems)) {
+                res.setCode(ErrorCode.Feed.EMPTY_FEED.getCode());
+                res.setData(null);
+                res.setMessageEN(ErrorCode.Feed.EMPTY_FEED.getMessageEN());
+                res.setMessageVN(ErrorCode.Feed.EMPTY_FEED.getMessageVN());
+                return res;
+            } else {
+                List<FeedItem> feedItems = new ArrayList<>();
+                for (PostItem postItem: postItems) {
+                    FeedItem feedItem = postItemMapper.toDTO(postItem);
+                    feedItems.add(feedItem);
+                }
+                Map<String, FeedItem> mapFeedItem = feedItems.stream().collect(Collectors.toMap(FeedItem::getPostId, feedItem -> feedItem));
+                Map<String, RoleGroupSettingReq> mapCurrentUserRole = new LinkedHashMap<>();
+                Map<String, GroupEntity> mapGroupItem = new LinkedHashMap<>();
+
+                for (Map.Entry<String, FeedItem> feedItemEntry : mapFeedItem.entrySet()) {
+                    FeedItem feedItem = feedItemEntry.getValue();
+
+                    //check is userwall
+                    if (null != feedItem.getPrivacyGroupId()) {
+                        feedItem.setPostToUserWall(userWallService.isUserWall(feedItem.getPrivacyGroupId()));
+                    }
+                    //check role of author in group
+                    feedItem.setAuthorRoleGroup(
+                            groupService.getMemberRolePermission(
+                                    feedItem.getAuthorId(),
+                                    feedItem.getPrivacyGroupId(),
+                                    feedItem.isPostToUserWall()
+                            ).getRoleId()
+                    );
+
+                    //check role of current user in group
+                    RoleGroupSettingReq currentUserRole = groupService.getMemberRolePermission(currentUserId, feedItem.getPrivacyGroupId(), feedItem.isPostToUserWall());
+                    mapCurrentUserRole.put(feedItem.getPostId(), currentUserRole);
+
+                    //get info group
+                    mapGroupItem.put(feedItem.getPostId(), mapGroups.get(feedItem.getPrivacyGroupId()));
+                }
+                List<String> feedIds = new ArrayList<>(mapFeedItem.keySet());
+                //get userIds
+                List<String> listUserIds = new ArrayList<>();
+                this.extractMetadata(feedIds, mapFeedItem, listUserIds);
+
+                // get userId => profile
+                Map<String, BaseProfile> mapBaseProfile = userService.multiGetBaseProfileByUserIds(listUserIds);
+                res.setCode(ErrorCode.Feed.ACTION_SUCCESS.getCode());
+                res.setData(ListFeedRes.of(feedIds, mapFeedItem, null, mapBaseProfile, mapGroupItem, mapCurrentUserRole, false));
+                res.setMessageEN(ErrorCode.Feed.ACTION_SUCCESS.getMessageEN());
+                res.setMessageVN(ErrorCode.Feed.ACTION_SUCCESS.getMessageVN());
+                return res;
+            }
+        } else {
+            res.setCode(ErrorCode.Token.FORBIDDEN.getCode());
+            res.setData(null);
+            res.setMessageEN(ErrorCode.Token.FORBIDDEN.getMessageEN());
+            res.setMessageVN(ErrorCode.Token.FORBIDDEN.getMessageVN());
+        }
+        logger.info("End API [listFeed]");
+        return res;
+    }
+
+    private void extractMetadata(List<String> feedIds, Map<String, FeedItem> mapFeedItem, List<String> listUserIds) {
+        for (String feedId : feedIds) {
+            FeedItem feedItem = mapFeedItem.get(feedId);
+            if (feedItem.getAuthorId() != null) {
+                listUserIds.add(feedItem.getAuthorId());
+            }
+            if (feedItem.getToUserId() != null) {
+                listUserIds.add(feedItem.getToUserId());
+            }
+        }
+    }
+
+    private void multiGetGroupItem(List<String> groupIds, Map<String, GroupEntity> mapGroupItems) {
+        logger.info("[multiGetGroupItem] Start get multi group item for list groupIds: " + groupIds);
+        groupIds.forEach(groupId -> {
+            Optional<GroupEntity> groupEntityOpt = groupRepository.findByGroupId(groupId);
+            groupEntityOpt.ifPresent(groupEntity -> mapGroupItems.put(groupId, groupEntity));
+        });
+    }
+
     private FeedItem postFeed(FeedItem feedItem) {
         String postId = genIDUtil.genId();
         if (postId.isEmpty()) {
@@ -167,14 +290,35 @@ public class FeedServiceImpl implements FeedService {
         logger.info("[postFeed] Start post feed: " + feedItem);
         try {
             //step 1: insert feedItem to postgres
-            PostItem postItem = postMapper.toEntity(feedItem);
+            PostItem postItem = postItemMapper.toEntity(feedItem);
             feedRepository.save(postItem);
+            //step 2: insert feedItem to redis
+            //step 3: insert feed home & group for owner cache and db
+            this.insertPostForFeedUser(feedItem.getAuthorId(), feedItem.getPostId());
+            this.insertPostForFeedGroup(feedItem);
+            //step 4: set last active for group cache
+
+            //step 5: insert post for user in group & notification
+            this.broadcastGroup(feedItem, true);
+
         } catch (Exception ex) {
             logger.error("[postFeed] " + ex.getMessage() + " | feedItem: " + feedItem);
             ex.printStackTrace();
         }
 
         return feedItem;
+    }
+
+    private void insertPostForFeedUser(String userId, String feedId) {
+
+    }
+
+    private void insertPostForFeedGroup(FeedItem feedItem) {
+
+    }
+
+    public void broadcastGroup(FeedItem feedItem, boolean isNotification) {
+
     }
 
     @Override

@@ -6,8 +6,9 @@ import org.mapstruct.Mapper;
 import org.mapstruct.factory.Mappers;
 
 @Mapper(componentModel = "spring")
-public interface PostMapper {
-    PostMapper INSTANCE = Mappers.getMapper(PostMapper.class);
+public interface PostItemMapper {
+    PostItemMapper INSTANCE = Mappers.getMapper(PostItemMapper.class);
 
     PostItem toEntity(FeedItem feedItem);
+    FeedItem toDTO(PostItem postItem);
 }

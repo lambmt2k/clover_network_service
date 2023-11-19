@@ -22,14 +22,20 @@ public class FeedController {
         this.feedService = feedService;
     }
 
-    @GetMapping(value = "/list-user-home-old", produces = {MediaType.APPLICATION_JSON_VALUE})
+    @GetMapping(value = "/list-user-home", produces = {MediaType.APPLICATION_JSON_VALUE})
     public ResponseEntity<ApiResponse> listFeedUserHome(@RequestParam(name = "offset") int offset,
                                                         @RequestParam(name = "limit") int limit) {
-        return null;
+        try {
+            ApiResponse res = feedService.listFeed(limit, offset);
+            return ResponseEntity.ok().body(res);
+        } catch (Exception e) {
+            logger.error(e.getMessage());
+            return ResponseEntity.internalServerError().body(null);
+        }
     }
 
     @PostMapping("/post")
-    public ResponseEntity<ApiResponse> listMemberOfGroup(@RequestBody FeedItem feedItem) {
+    public ResponseEntity<ApiResponse> postFeed(@RequestBody FeedItem feedItem) {
         try {
             ApiResponse res = feedService.post(feedItem);
             return ResponseEntity.ok().body(res);
