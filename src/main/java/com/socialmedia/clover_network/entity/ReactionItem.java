@@ -42,6 +42,7 @@ public class ReactionItem {
     private boolean delFlag;
 
     public enum ReactType {
+        NULL,
         LIKE,
         LOVE,
         HAHA,

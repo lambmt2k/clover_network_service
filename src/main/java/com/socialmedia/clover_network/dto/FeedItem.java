@@ -1,14 +1,13 @@
 package com.socialmedia.clover_network.dto;
 
-import com.socialmedia.clover_network.entity.PostItem;
+import com.google.gson.Gson;
 import com.socialmedia.clover_network.entity.ReactionItem;
 import com.socialmedia.clover_network.enumuration.GroupMemberRole;
 import com.socialmedia.clover_network.enumuration.PrivacyPostType;
 import lombok.*;
 
-import javax.persistence.*;
+import javax.persistence.Id;
 import java.time.LocalDateTime;
-import java.util.List;
 import java.util.Map;
 
 @Getter
@@ -18,6 +17,9 @@ import java.util.Map;
 @Builder
 @Data
 public class FeedItem {
+    // gson
+    private static Gson gson = new Gson();
+
     @Id
     private String postId;
     private String authorId;
@@ -36,4 +38,9 @@ public class FeedItem {
     private boolean postToUserWall = false;
     private boolean delFlag = false;
     private boolean isPin = false;
+
+
+    public String toJson() {
+        return gson.toJson(this);
+    }
 }
