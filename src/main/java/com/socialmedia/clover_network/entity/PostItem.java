@@ -19,22 +19,22 @@ import java.time.LocalDateTime;
 @Table(name = "post_item")
 public class PostItem {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "post_id")
-    private Long postId;
+    private String postId;
 
     @Column(name = "author_id")
     private String authorId;
 
+    @Column(name = "to_user_id")
+    private String toUserId;
+
     @Column(name = "author_role_group")
     private GroupMemberRole authorRoleGroup;
 
-    @Lob
-    @Column(name = "content")
+    @Column(name = "content", columnDefinition = "TEXT")
     private String content;
 
-    @Lob
-    @Column(name = "html_content")
+    @Column(name = "html_content", columnDefinition = "TEXT")
     private String htmlContent;
 
     @Column(name = "dynamic_link")
@@ -51,6 +51,9 @@ public class PostItem {
 
     @Column(name = "updated_time")
     private LocalDateTime updatedTime;
+
+    @Column(name = "last_active")
+    private LocalDateTime lastActive;
 
     @Column(name = "del_flag")
     private boolean delFlag;

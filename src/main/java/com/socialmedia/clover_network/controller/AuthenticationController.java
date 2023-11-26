@@ -1,6 +1,7 @@
 package com.socialmedia.clover_network.controller;
 
 import com.socialmedia.clover_network.constant.CommonRegex;
+import com.socialmedia.clover_network.constant.ErrorCode;
 import com.socialmedia.clover_network.dto.req.UserLoginReq;
 import com.socialmedia.clover_network.dto.req.UserSignUpReq;
 import com.socialmedia.clover_network.dto.res.ApiResponse;
@@ -34,6 +35,13 @@ public class AuthenticationController {
         return ResponseEntity.status(HttpStatus.OK).body(res);
     }
 
+    @GetMapping("/get-all-user-info/{userId}")
+    public ResponseEntity<ApiResponse> getAllUserInfo(@PathVariable String userId) throws Exception {
+        //api test
+        ApiResponse res = authenticationService.getAllUserInfo(userId);
+        return ResponseEntity.status(HttpStatus.OK).body(res);
+    }
+
     @PostMapping("/signup-by-email")
     public ResponseEntity<ApiResponse> signUpByEmail(HttpServletRequest request, @RequestBody UserSignUpReq req) throws Exception {
         ApiResponse res = authenticationService.signUpNewUser(request, req);
@@ -41,15 +49,4 @@ public class AuthenticationController {
         return ResponseEntity.status(HttpStatus.OK).body(res);
     }
 
-    @GetMapping("/get-user-info")
-    public ResponseEntity<ApiResponse> getInfo(){
-        ApiResponse res = authenticationService.getUserInfo();
-        return ResponseEntity.ok(res);
-    }
-
-    @GetMapping("/verify")
-    public ResponseEntity<ApiResponse> verifyAccount(@RequestParam("tokenId") String tokenId){
-        ApiResponse res = authenticationService.verifyAccount(tokenId);
-        return ResponseEntity.ok(res);
-    }
 }

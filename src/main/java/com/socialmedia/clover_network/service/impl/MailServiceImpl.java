@@ -35,7 +35,7 @@ public class MailServiceImpl implements MailService {
         logger.info("Start [sendMailActiveAccount]");
         String toEmail = userInfo.getEmail();
         
-        MimeMessage message = javaMailSender.createMimeMessage();
+         MimeMessage message = javaMailSender.createMimeMessage();
         MimeMessageHelper helper = new MimeMessageHelper(message, true);
 
         String fromEmail = CommonConstant.HOST_EMAIL;
@@ -51,7 +51,7 @@ public class MailServiceImpl implements MailService {
                 + "Clover Network Admin.";
 
         content = content.replace("[[name]]", userInfo.getFirstname() + CommonRegex.REGEX_SPACE + userInfo.getLastname());
-        String verifyURL = serverHost + "/api/authenticate/verify?tokenId=" + tokenId;
+        String verifyURL = serverHost + "/verify-account?tokenId=" + tokenId;
         content = content.replace("[[URL]]", verifyURL);
 
 

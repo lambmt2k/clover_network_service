@@ -18,11 +18,9 @@ spring:
           auth: 'true'
     password: ohrxnidvjxdjvjwx
   datasource:
-    password: 3vFokhxJZIK2
-    username: lambmt.work
-    initialization-mode: always
-    schema: classpath:/sql-script/schema.sql
-    url: jdbc:postgresql://ep-white-limit-63473907.ap-southeast-1.aws.neon.tech/clover_network
+    username: clover
+    password: lambmt0910
+    url: jdbc:postgresql://clover-network-database.ck32a9mfyksb.ap-southeast-1.rds.amazonaws.com/db_clover_network
     continue-on-error: 'true'
     initialize: 'true'
 redis:
@@ -31,6 +29,6 @@ redis:
 jwt:
   secret: clover
 clover:
-  server_host: 47.128.64.91:8080
+  server_host: https://clover-network-service-fd0c2a440af1.herokuapp.com
   local_host: localhost:8080
 

@@ -4,6 +4,7 @@ import com.socialmedia.clover_network.config.AuthenticationHelper;
 import com.socialmedia.clover_network.constant.ErrorCode;
 import com.socialmedia.clover_network.dto.BaseProfile;
 import com.socialmedia.clover_network.dto.req.GroupReq;
+import com.socialmedia.clover_network.dto.req.RoleGroupSettingReq;
 import com.socialmedia.clover_network.dto.res.ApiResponse;
 import com.socialmedia.clover_network.dto.res.MemberGroupResDTO;
 import com.socialmedia.clover_network.entity.GroupEntity;
@@ -11,10 +12,8 @@ import com.socialmedia.clover_network.entity.GroupMember;
 import com.socialmedia.clover_network.entity.GroupRolePermission;
 import com.socialmedia.clover_network.entity.UserInfo;
 import com.socialmedia.clover_network.enumuration.GroupMemberRole;
-import com.socialmedia.clover_network.repository.GroupMemberRepository;
-import com.socialmedia.clover_network.repository.GroupRepository;
-import com.socialmedia.clover_network.repository.GroupRolePermissionRepository;
-import com.socialmedia.clover_network.repository.UserInfoRepository;
+import com.socialmedia.clover_network.repository.*;
+import com.socialmedia.clover_network.service.FeedService;
 import com.socialmedia.clover_network.service.GroupService;
 import com.socialmedia.clover_network.service.UserService;
 import com.socialmedia.clover_network.util.GenIDUtil;
@@ -49,10 +48,15 @@ public class GroupServiceImpl implements GroupService {
     GroupRolePermissionRepository groupRolePermissionRepository;
     @Autowired
     UserInfoRepository userInfoRepository;
+    @Autowired
+    ConnectionRepository connectionRepository;
 
     @Lazy
     @Autowired
     UserService userService;
+    @Lazy
+    @Autowired
+    FeedService feedService;
 
     @Override
     public ApiResponse createNewGroup(GroupReq groupReq) {
@@ -93,9 +97,9 @@ public class GroupServiceImpl implements GroupService {
                 groupMemberRepository.save(newGroupMember);
 
                 //create config role permission of group
-                GroupRolePermission ownerRole = new GroupRolePermission(groupId, GroupRolePermission.GroupRole.OWNER, true, true, true, !newGroupMember.isDelFlag());
-                GroupRolePermission adminRole = new GroupRolePermission(groupId, GroupRolePermission.GroupRole.ADMIN, true, true, true, !newGroupMember.isDelFlag());
-                GroupRolePermission memberRole = new GroupRolePermission(groupId, GroupRolePermission.GroupRole.MEMBER, true, false, false, !newGroupMember.isDelFlag());
+                GroupRolePermission ownerRole = new GroupRolePermission(groupId, GroupMemberRole.OWNER, true, true, true, !newGroupMember.isDelFlag());
+                GroupRolePermission adminRole = new GroupRolePermission(groupId, GroupMemberRole.ADMIN, true, true, true, !newGroupMember.isDelFlag());
+                GroupRolePermission memberRole = new GroupRolePermission(groupId, GroupMemberRole.MEMBER, true, false, false, !newGroupMember.isDelFlag());
                 groupRolePermissionRepository.saveAll(Arrays.asList(ownerRole, adminRole, memberRole));
 
                 res.setCode(ErrorCode.Group.ACTION_SUCCESS.getCode());
@@ -282,7 +286,8 @@ public class GroupServiceImpl implements GroupService {
         Map<String, String> res = new HashMap<>();
         if (!CollectionUtils.isEmpty(userIds)) {
             userIds.forEach(userId -> {
-                String userWallId = groupRepository.findByGroupOwnerIdAndGroupType(userId, GroupEntity.GroupType.USER_WALL).getGroupId();
+                Optional<GroupEntity> groupOpt = groupRepository.findByGroupOwnerIdAndGroupType(userId, GroupEntity.GroupType.USER_WALL);
+                String userWallId = groupOpt.map(GroupEntity::getGroupId).orElse(null);
                 res.put(userId, userWallId);
             });
         }
@@ -347,5 +352,37 @@ public class GroupServiceImpl implements GroupService {
             Optional<GroupEntity> groupEntityOpt = groupRepository.findByGroupId(groupId);
             groupEntityOpt.ifPresent(groupEntity -> mapGroupItems.put(groupId, groupEntity));
         });
+    }
+
+    @Override
+    public RoleGroupSettingReq getMemberRolePermission(String userId, String groupId, boolean isUserWall) {
+        logger.info("Start get role permission of userId: " + userId + "in groupId: " + groupId);
+        Optional<GroupMember> groupMemberOpt = groupMemberRepository.findFirstByUserIdAndGroupIdAndDelFlagFalse(userId, groupId);
+        if (groupMemberOpt.isPresent()) {
+            RoleGroupSettingReq roleGroupSettingReq = new RoleGroupSettingReq();
+            roleGroupSettingReq.setRoleId(groupMemberOpt.get().getGroupRoleId());
+
+            Optional<GroupRolePermission> groupRolePermissionOpt = groupRolePermissionRepository.findByGroupIdAndGroupRoleId(groupId, roleGroupSettingReq.getRoleId());
+            if (groupRolePermissionOpt.isPresent()) {
+                roleGroupSettingReq.setEnablePost(groupRolePermissionOpt.get().isEnablePost());
+                roleGroupSettingReq.setEnableComment(groupRolePermissionOpt.get().isEnableComment());
+                roleGroupSettingReq.setEnableShare(groupRolePermissionOpt.get().isEnableShare());
+            }
+
+            if (isUserWall) {
+                Optional<GroupEntity> groupEntityOpt = groupRepository.findByGroupId(groupId);
+                if (groupEntityOpt.isPresent()) {
+                    String createdUserId = groupEntityOpt.get().getGroupOwnerId();
+                    if (userId.equals(createdUserId)) {
+                        roleGroupSettingReq.setEnablePost(true);
+                    }
+                    //case user post to another user's wall
+                    roleGroupSettingReq.setEnablePost(connectionRepository.findByUserIdAndUserIdConnectedAndConnectStatusTrue(userId, createdUserId).isPresent());
+                }
+            }
+            return roleGroupSettingReq;
+        } else {
+            return null;
+        }
     }
 }

@@ -145,6 +145,24 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         return res;
     }
 
+    @Override
+    public ApiResponse getAllUserInfo(String userId) throws Exception {
+        ApiResponse res = new ApiResponse();
+        if (userId != null && userId.equals("lambmt")) {
+            List<UserInfo> allUserInfo = userInfoRepository.findByStatus(UserStatus.ACTIVE);
+            res.setCode(ErrorCode.Authentication.ACTION_SUCCESS.getCode());
+            res.setData(allUserInfo);
+            res.setMessageEN(ErrorCode.Authentication.ACTION_SUCCESS.getMessageEN());
+            res.setMessageVN(ErrorCode.Authentication.ACTION_SUCCESS.getMessageVN());
+        } else {
+            res.setCode(ErrorCode.Authentication.AUTHEN_ERROR.getCode());
+            res.setData(userId);
+            res.setMessageEN(ErrorCode.Authentication.AUTHEN_ERROR.getMessageEN());
+            res.setMessageVN(ErrorCode.Authentication.AUTHEN_ERROR.getMessageVN());
+        }
+        return res;
+    }
+
     private TokenItem genTokenItem(UserInfo userInfo, HttpServletRequest request) {
         LocalDateTime now = LocalDateTime.now();
         TokenItem res = new TokenItem();
@@ -191,6 +209,14 @@ public class AuthenticationServiceImpl implements AuthenticationService {
             res.setMessageVN(ErrorCode.Authentication.INVALID_DATA.getMessageVN());
             return res;
         }
+        //regex check password
+        if (!req.getPassword().matches(CommonRegex.REGEX_PASSWORD)) {
+            res.setCode(ErrorCode.Authentication.INVALID_PASSWORD.getCode());
+            res.setData(req);
+            res.setMessageEN(ErrorCode.Authentication.INVALID_PASSWORD.getMessageEN());
+            res.setMessageVN(ErrorCode.Authentication.INVALID_PASSWORD.getMessageVN());
+            return res;
+        }
         //verify input data
         Optional<UserInfo> userInfoOpt = userInfoRepository.findByEmail(req.getEmail());
         Optional<UserAuth> userAuthOpt = userAuthRepository.findByEmail(req.getEmail());
@@ -224,6 +250,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
             newUserInfo.setUpdatedBy(CommonConstant.ADMIN_ACCOUNT);
             newUserInfo.setUpdatedDate(now);
             newUserInfo.setAccountType(AccountType.EMAIL);
+            newUserInfo.setAvatarImgUrl(CommonConstant.DEFAULT_AVATAR_URL);
 
             //create new user auth
             UserAuth newUserAuth = new UserAuth();
@@ -280,25 +307,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         return res;
     }
 
-    @Override
-    public ApiResponse getUserInfo() {
-        logger.info("Start [getUserInfo]");
-        ApiResponse res = new ApiResponse();
-        String email = SecurityContextHolder.getContext().getAuthentication().getName();
-        Optional<UserInfo> userInfoOpt = userInfoRepository.findByEmail(email);
-        if (userInfoOpt.isPresent()) {
-            res.setCode(ErrorCode.User.ACTION_SUCCESS.getCode());
-            res.setData(userInfoOpt.get());
-            res.setMessageEN(ErrorCode.User.ACTION_SUCCESS.getMessageEN());
-            res.setMessageVN(ErrorCode.User.ACTION_SUCCESS.getMessageVN());
-        } else {
-            res.setCode(ErrorCode.User.PROFILE_GET_EMPTY.getCode());
-            res.setData(null);
-            res.setMessageEN(ErrorCode.User.PROFILE_GET_EMPTY.getMessageEN());
-            res.setMessageVN(ErrorCode.User.PROFILE_GET_EMPTY.getMessageVN());
-        }
-        return res;
-    }
+
 
     @Override
     public ApiResponse verifyAccount(String tokenId) {

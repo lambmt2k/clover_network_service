@@ -1,5 +1,6 @@
 package com.socialmedia.clover_network.service.impl;
 
+import com.socialmedia.clover_network.config.AuthenticationHelper;
 import com.socialmedia.clover_network.entity.GroupEntity;
 import com.socialmedia.clover_network.entity.GroupMember;
 import com.socialmedia.clover_network.entity.GroupRolePermission;
@@ -17,6 +18,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
@@ -84,9 +86,9 @@ public class UserWallServiceImpl implements UserWallService {
                 groupMemberRepository.save(newGroupMember);
 
                 //create config role permission of group
-                GroupRolePermission ownerRole = new GroupRolePermission(groupId, GroupRolePermission.GroupRole.OWNER, true, true, true, !newGroupMember.isDelFlag());
-                GroupRolePermission adminRole = new GroupRolePermission(groupId, GroupRolePermission.GroupRole.ADMIN, true, true, true, !newGroupMember.isDelFlag());
-                GroupRolePermission memberRole = new GroupRolePermission(groupId, GroupRolePermission.GroupRole.MEMBER, true, false, false, !newGroupMember.isDelFlag());
+                GroupRolePermission ownerRole = new GroupRolePermission(groupId, GroupMemberRole.OWNER, true, true, true, !newGroupMember.isDelFlag());
+                GroupRolePermission adminRole = new GroupRolePermission(groupId, GroupMemberRole.ADMIN, true, true, true, !newGroupMember.isDelFlag());
+                GroupRolePermission memberRole = new GroupRolePermission(groupId, GroupMemberRole.MEMBER, true, false, false, !newGroupMember.isDelFlag());
                 groupRolePermissionRepository.saveAll(Arrays.asList(ownerRole, adminRole, memberRole));
 
                 return newUserWall.getGroupId();
@@ -107,5 +109,28 @@ public class UserWallServiceImpl implements UserWallService {
             }
         }
         return false;
+    }
+
+    @Override
+    public boolean isUserWall(String groupId) {
+        Optional<GroupEntity> groupEntity = groupRepository.findByGroupIdAndGroupType(groupId, GroupEntity.GroupType.USER_WALL);
+        return groupEntity.isPresent();
+    }
+
+    @Override
+    public GroupEntity getUserWallByUserId(String userId) {
+        logger.info("Start get user wall of userId: {}", userId);
+        String currentUserId = AuthenticationHelper.getUserIdFromContext();
+        GroupEntity res = null;
+        if (userId != null) {
+            UserInfo userInfo = userInfoRepository.findByUserId(userId).orElse(null);
+            if (hasUserWall(userId, userInfo)) {
+                Optional<GroupEntity> groupOpt = groupRepository.findByGroupOwnerIdAndGroupType(userId, GroupEntity.GroupType.USER_WALL);
+                if(groupOpt.isPresent()) {
+                    res = groupOpt.get();
+                }
+            } 
+        }
+        return res;
     }
 }
