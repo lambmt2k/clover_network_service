@@ -3,7 +3,7 @@ package com.socialmedia.clover_network.enumuration;
 public enum GroupMemberRole {
     OWNER(0, "OWNER"),
     ADMIN(1,"ADMIN"),
-    MEMBER(2,"MEMBER"),;
+    MEMBER(2,"MEMBER");
 
     int role;
     String roleName;
