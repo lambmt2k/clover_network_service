@@ -1,5 +1,6 @@
 package com.socialmedia.clover_network.entity;
 
+import com.socialmedia.clover_network.constant.CommonConstant;
 import com.socialmedia.clover_network.enumuration.AccountType;
 import com.socialmedia.clover_network.enumuration.Gender;
 import com.socialmedia.clover_network.enumuration.UserRole;
@@ -9,9 +10,12 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import javax.persistence.*;
-import java.util.Date;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.Id;
+import javax.persistence.Table;
 import java.time.LocalDateTime;
+import java.util.Date;
 
 @Getter
 @Setter

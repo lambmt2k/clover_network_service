@@ -9,9 +9,14 @@ import java.util.List;
 import java.util.Optional;
 
 @Repository
-public interface UserInfoRepository extends JpaRepository<UserInfo, Long> {
+public interface UserInfoRepository extends JpaRepository<UserInfo, String> {
     Optional<UserInfo> findByEmail(String email);
+
     Optional<UserInfo> findByUserId(String userId);
+
     List<UserInfo> findByUserIdIn(List<String> userIds);
+
     List<UserInfo> findByStatus(UserStatus userStatus);
+
+    List<UserInfo> findByDisplayNameContaining(String displayName);
 }
