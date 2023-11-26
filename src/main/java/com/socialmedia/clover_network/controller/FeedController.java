@@ -45,4 +45,9 @@ public class FeedController {
         }
     }
 
+    @PostMapping("/detail")
+    public ResponseEntity<ApiResponse> postFeed(@RequestParam(name = "postId") String postId) {
+        return null;
+    }
+
 }
