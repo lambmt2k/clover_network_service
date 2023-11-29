@@ -166,18 +166,22 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     private TokenItem genTokenItem(UserInfo userInfo, HttpServletRequest request) {
         LocalDateTime now = LocalDateTime.now();
         TokenItem res = new TokenItem();
+        HttpHelper httpHelper = new HttpHelper(request);
         if (userInfo != null) {
             List<TokenItem> tokenItems = tokenItemRepository.findByUserId(userInfo.getUserId())
                     .stream()
                     .filter(tokenItem -> !tokenItem.isDelFlag())
                     .sorted(Comparator.comparing(TokenItem::getExpireTime).reversed())
                     .collect(Collectors.toList());
-            if (tokenItems.size() > 0 && tokenItems.get(0).getExpireTime().isAfter(now) && !tokenItems.get(0).isDelFlag()) {
+            if (tokenItems.size() > 0
+                    && tokenItems.get(0).getExpireTime().isAfter(now)
+                    && tokenItems.get(0).getUserAgent().equals(httpHelper.getUserAgent())
+                    && !tokenItems.get(0).isDelFlag()
+            ) {
                 //get old token
                 res = tokenItems.get(0);
             } else {
                 //gen new token
-                HttpHelper httpHelper = new HttpHelper(request);
                 String tokenId = jwtTokenUtil.generateToken(userInfo.getUserId());
                 res = TokenItem
                         .builder()
