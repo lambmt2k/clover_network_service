@@ -44,7 +44,7 @@ public class GroupMember {
     private boolean delFlag;
 
     public enum GroupMemberStatus {
-        WAITTING_FOR_APPROVE,
+        WAITING_FOR_APPROVE,
         APPROVED;
     }
 }

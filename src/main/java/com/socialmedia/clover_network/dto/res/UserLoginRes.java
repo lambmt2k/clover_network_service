@@ -17,6 +17,5 @@ public class UserLoginRes {
     private String userId;
     private String tokenId;
     private UserRole userRole;
-    private UserStatus userStatus;
     private LocalDateTime expireTime;
 }
