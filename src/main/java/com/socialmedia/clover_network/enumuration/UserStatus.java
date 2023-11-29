@@ -4,7 +4,7 @@ public enum UserStatus {
     INACTIVE(0, "Inactive"),
     ACTIVE(1,"Active"),
     DELETED(2, "Deleted"),
-    OTHER(10,"Other"),;
+    OTHER(10,"Other");
 
     int statusCode;
     String statusName;

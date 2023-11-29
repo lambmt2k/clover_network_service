@@ -327,7 +327,7 @@ public class GroupServiceImpl implements GroupService {
         if (groupMemberOpt.isPresent() && groupMemberOpt.get().isDelFlag()) {
             groupMemberOpt.get().setDelFlag(false);
             groupMemberOpt.get().setJoinTime(now);
-            groupMemberOpt.get().setStatus(GroupMember.GroupMemberStatus.WAITTING_FOR_APPROVE);
+            groupMemberOpt.get().setStatus(GroupMember.GroupMemberStatus.WAITING_FOR_APPROVE);
             groupMemberRepository.save(groupMemberOpt.get());
         } else if (groupMemberOpt.isEmpty()) {
             //add new member into new group
@@ -339,7 +339,7 @@ public class GroupServiceImpl implements GroupService {
                     .groupRoleId(GroupMemberRole.MEMBER)
                     .joinTime(now)
                     .leaveTime(null)
-                    .status(GroupMember.GroupMemberStatus.WAITTING_FOR_APPROVE)
+                    .status(GroupMember.GroupMemberStatus.WAITING_FOR_APPROVE)
                     .delFlag(false)
                     .build();
             groupMemberRepository.save(newMember);
