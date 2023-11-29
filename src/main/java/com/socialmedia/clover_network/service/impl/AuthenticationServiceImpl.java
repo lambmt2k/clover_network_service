@@ -1,5 +1,6 @@
 package com.socialmedia.clover_network.service.impl;
 
+import com.socialmedia.clover_network.config.AuthenticationHelper;
 import com.socialmedia.clover_network.constant.CommonConstant;
 import com.socialmedia.clover_network.constant.CommonRegex;
 import com.socialmedia.clover_network.constant.ErrorCode;
@@ -27,7 +28,6 @@ import com.socialmedia.clover_network.util.HttpHelper;
 import com.socialmedia.clover_network.util.JwtTokenUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import javax.servlet.http.HttpServletRequest;
@@ -190,7 +190,8 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                         .userRole(userInfo.getUserRole())
                         .userIp(httpHelper.getClientIp())
                         .userAgent(httpHelper.getUserAgent())
-                        .os(TokenItem.OS.WINDOWS)
+                        .os(this.getOSUSerInfo(httpHelper))
+                        .platform(this.getPlatformUSerInfo(httpHelper))
                         .createdTime(now)
                         .expireTime(now.plus(90, ChronoUnit.DAYS))
                         .delFlag(false)
@@ -199,6 +200,27 @@ public class AuthenticationServiceImpl implements AuthenticationService {
             }
         }
         return res;
+    }
+
+    private TokenItem.OS getOSUSerInfo(HttpHelper httpHelper) {
+        if (httpHelper.getUserAgent().contains("Windows")) {
+            return TokenItem.OS.WINDOWS;
+        }
+        if (httpHelper.getUserAgent().contains("Android")) {
+            return TokenItem.OS.ANDROID;
+        }
+        if (httpHelper.getUserAgent().contains("Iphone")) {
+            return TokenItem.OS.IOS;
+        }
+        return TokenItem.OS.WINDOWS;
+    }
+
+    private TokenItem.PLATFORM getPlatformUSerInfo(HttpHelper httpHelper) {
+        if (httpHelper.getUserAgent().contains("Mobile")) {
+            return TokenItem.PLATFORM.MOBILE;
+        } else {
+            return TokenItem.PLATFORM.WEB;
+        }
     }
 
     @Override
@@ -312,7 +334,6 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     }
 
 
-
     @Override
     public ApiResponse verifyAccount(String tokenId) {
         logger.info("Start [verifyAccount]");
@@ -350,5 +371,37 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         logger.info("[getTokenItem] Start get token: " + tokenId);
         Optional<TokenItem> tokenItem = tokenItemRepository.findByTokenId(tokenId);
         return tokenItem.orElse(null);
+    }
+
+    @Override
+    public ApiResponse logout(String tokenId, HttpServletRequest request) {
+        ApiResponse res = new ApiResponse();
+        logger.info("Start API [logout]");
+        String currentUserId = AuthenticationHelper.getUserIdFromContext();
+        Optional<TokenItem> tokenItemOpt = tokenItemRepository.findByTokenId(tokenId);
+        if (tokenItemOpt.isEmpty()) {
+            res.setCode(ErrorCode.Token.FORBIDDEN.getCode());
+            res.setData(null);
+            res.setMessageEN(ErrorCode.Token.FORBIDDEN.getMessageEN());
+            res.setMessageVN(ErrorCode.Token.FORBIDDEN.getMessageVN());
+            return res;
+        }
+        TokenItem tokenItem = tokenItemOpt.get();
+        HttpHelper httpHelper = new HttpHelper(request);
+        String currentTokenId = httpHelper.getBearer();
+        if (!tokenId.equals(currentTokenId)) {
+            res.setCode(ErrorCode.Token.FORBIDDEN.getCode());
+            res.setData(null);
+            res.setMessageEN(ErrorCode.Token.FORBIDDEN.getMessageEN());
+            res.setMessageVN(ErrorCode.Token.FORBIDDEN.getMessageVN());
+            return res;
+        }
+        tokenItem.setDelFlag(true);
+        tokenItemRepository.save(tokenItem);
+        res.setCode(ErrorCode.Token.ACTION_SUCCESS.getCode());
+        res.setData(null);
+        res.setMessageEN(ErrorCode.Token.ACTION_SUCCESS.getMessageEN());
+        res.setMessageVN(ErrorCode.Token.ACTION_SUCCESS.getMessageVN());
+        return res;
     }
 }

@@ -26,7 +26,7 @@ public abstract class TokenAuthenticationFilter extends OncePerRequestFilter {
         if (tokenId != null) {
             TokenItem tokenItem = getTokenItem(tokenId);
 
-            if (tokenItem == null) {
+            if (tokenItem == null || (tokenItem.isValidTokenItem()) && tokenItem.isDelFlag()) {
                 sendUnauthorized(response);
                 return;
             }
