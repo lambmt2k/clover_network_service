@@ -28,13 +28,22 @@ public class ErrorCode {
     }
 
     /**
-     * Code from 100 => 199
+     * Code from 100 => 150
      */
     public static class User {
         public static ErrorCode ACTION_SUCCESS = of(100, "Action success", "Thành công.");
         public static ErrorCode PROFILE_GET_EMPTY = of(101, "Profile empty", "Không tìm thấy dữ liệu user.");
         public static ErrorCode EXISTED_USER = of(102, "Existed user", "User đã tồn tại.");
     }
+
+    /**
+     * Code from 151 => 199
+     */
+    public static class Connection {
+        public static ErrorCode ACTION_SUCCESS = of(150, "Action success", "Thành công.");
+        public static ErrorCode ALREADY_CONNECTED = of(151, "User already connected", "Người dùng đã được kết nối trước đó.");
+    }
+
     /**
      * Code from 200 => 299
      */

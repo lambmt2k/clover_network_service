@@ -293,8 +293,8 @@ public class GroupServiceImpl implements GroupService {
         }
         return res;
     }
-
-    private void addMemberList(String groupId, String userId, boolean isInvited) {
+    @Override
+    public void addMemberList(String groupId, String userId, boolean isInvited) {
         logger.info("[addMemberList] Start add member group: " + groupId + "/Member:" + userId);
         LocalDateTime now = LocalDateTime.now();
         Optional<GroupMember> groupMemberOpt = groupMemberRepository.findByUserIdAndGroupId(userId, groupId);
@@ -319,8 +319,8 @@ public class GroupServiceImpl implements GroupService {
             groupMemberRepository.save(newMember);
         }
     }
-
-    private void addWaitingMemberList(String groupId, String userId) {
+    @Override
+    public void addWaitingMemberList(String groupId, String userId) {
         logger.info("[addWaitingList] Start add waiting group: " + groupId + "/Member:" + userId);
         LocalDateTime now = LocalDateTime.now();
         Optional<GroupMember> groupMemberOpt = groupMemberRepository.findByUserIdAndGroupId(userId, groupId);

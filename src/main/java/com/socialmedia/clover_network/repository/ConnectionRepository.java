@@ -9,4 +9,6 @@ import java.util.Optional;
 @Repository
 public interface ConnectionRepository extends JpaRepository<Connection, Long> {
     Optional<Connection> findByUserIdAndUserIdConnectedAndConnectStatusTrue(String userId, String userIdConnected);
+
+    Connection findByUserIdAndUserIdConnected(String userId, String userIdConnected);
 }
