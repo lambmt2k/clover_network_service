@@ -2,6 +2,7 @@ package com.socialmedia.clover_network.service;
 
 import com.google.auth.oauth2.GoogleCredentials;
 import com.google.cloud.storage.*;
+import com.google.firebase.cloud.StorageClient;
 import com.socialmedia.clover_network.enumuration.ImageType;
 import com.socialmedia.clover_network.util.GenIDUtil;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,6 +18,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 
 @Service
 public class FirebaseService {
@@ -66,12 +68,12 @@ public class FirebaseService {
                 .setContentType(file.getContentType())
                 .build();
         storage.create(blobInfo, file.getInputStream());
-        return getStorageUrl(fileName);
+        String imagePath = prefixPath + fileName;
+        return imagePath;
     }
 
     public String getImageUrl(String imagePath) {
-        Blob blob = storage.get(bucketName, imagePath);
-        return blob.getMediaLink();
+        return StorageClient.getInstance().bucket().get(imagePath).signUrl(1, TimeUnit.DAYS).toString();
     }
 
     private String generateUniqueFileName(String originalFileName) {
