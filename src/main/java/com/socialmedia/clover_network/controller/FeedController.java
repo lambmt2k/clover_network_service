@@ -38,15 +38,19 @@ public class FeedController {
     }
 
     @PostMapping("/post")
-    public ResponseEntity<ApiResponse> postFeed(@RequestBody FeedItem feedItem,
-                                                @RequestPart List<MultipartFile> files) {
+    public ResponseEntity<ApiResponse> postFeed(@RequestBody FeedItem feedItem) {
         try {
-            ApiResponse res = feedService.post(feedItem, files);
+            ApiResponse res = feedService.post(feedItem);
             return ResponseEntity.ok().body(res);
         } catch (Exception e) {
             logger.error(e.getMessage());
             return ResponseEntity.internalServerError().body(null);
         }
+    }
+
+    @PostMapping("/detail")
+    public ResponseEntity<ApiResponse> detailFeed(@RequestParam(name = "postId") String postId) {
+        return null;
     }
 
 }

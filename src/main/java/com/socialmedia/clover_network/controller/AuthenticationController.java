@@ -2,6 +2,7 @@ package com.socialmedia.clover_network.controller;
 
 import com.socialmedia.clover_network.constant.CommonRegex;
 import com.socialmedia.clover_network.constant.ErrorCode;
+import com.socialmedia.clover_network.dto.FeedItem;
 import com.socialmedia.clover_network.dto.req.UserLoginReq;
 import com.socialmedia.clover_network.dto.req.UserSignUpReq;
 import com.socialmedia.clover_network.dto.res.ApiResponse;
@@ -47,6 +48,16 @@ public class AuthenticationController {
         ApiResponse res = authenticationService.signUpNewUser(request, req);
         //validate req
         return ResponseEntity.status(HttpStatus.OK).body(res);
+    }
+
+    @DeleteMapping("/logout")
+    public ResponseEntity<ApiResponse> logout(@RequestParam(name = "tokenId") String tokenId, HttpServletRequest request) {
+        try {
+            ApiResponse res = authenticationService.logout(tokenId, request);
+            return ResponseEntity.ok().body(res);
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().body(null);
+        }
     }
 
 }

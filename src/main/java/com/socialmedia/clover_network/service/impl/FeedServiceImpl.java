@@ -31,7 +31,6 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
-import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDateTime;
 import java.util.*;
@@ -83,7 +82,7 @@ public class FeedServiceImpl implements FeedService {
     }
 
     @Override
-    public ApiResponse post(FeedItem feedItem, List<MultipartFile> files) {
+    public ApiResponse post(FeedItem feedItem) {
         logger.info("Start api [post]");
         ApiResponse res = new ApiResponse();
         String currentUserId = AuthenticationHelper.getUserIdFromContext();
@@ -101,7 +100,7 @@ public class FeedServiceImpl implements FeedService {
                             //check owner or post permission
                             if (currentUserId.equals(groupEntity.getGroupOwnerId()) || canPost) {
                                 feedItem.setPostToUserWall(false);
-                                feedItem = this.postFeed(feedItem, files);
+                                feedItem = this.postFeed(feedItem);
                                 logger.info("[FeedController] postFeed: " + feedItem + " | userId: " + currentUserId);
                                 res.setCode(ErrorCode.Feed.ACTION_SUCCESS.getCode());
                                 res.setData(feedItem);
@@ -124,7 +123,7 @@ public class FeedServiceImpl implements FeedService {
                                 feedItem.setToUserId(groupEntity.getGroupOwnerId());
                             }
                             if (canPost) {
-                                feedItem = this.postFeed(feedItem, files);
+                                feedItem = this.postFeed(feedItem);
                                 logger.info("[FeedController] postFeed: " + feedItem + " | userId: " + currentUserId);
                                 res.setCode(ErrorCode.Feed.ACTION_SUCCESS.getCode());
                                 res.setData(feedItem);
@@ -273,7 +272,7 @@ public class FeedServiceImpl implements FeedService {
         });
     }
 
-    private FeedItem postFeed(FeedItem feedItem, List<MultipartFile> files) {
+    private FeedItem postFeed(FeedItem feedItem) {
         String postId = genIDUtil.genId();
         if (postId.isEmpty()) {
             logger.info("[postFeed] error: " + ErrorCode.Feed.GENERATE_POST_ID_ERROR + " | feedItem: " + feedItem);
@@ -293,8 +292,7 @@ public class FeedServiceImpl implements FeedService {
             //step 1: insert feedItem to postgres
             PostItem postItem = postItemMapper.toEntity(feedItem);
             feedRepository.save(postItem);
-            //step 2: upload file to firebase
-
+            //step 2: insert feedItem to redis
             //step 3: insert feed home & group for owner cache and db
             this.insertPostForFeedUser(feedItem.getAuthorId(), feedItem.getPostId());
             this.insertPostForFeedGroup(feedItem);

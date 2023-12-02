@@ -16,6 +16,6 @@ public interface AuthenticationService {
     ApiResponse getAllUserInfo(String userId) throws Exception;
     ApiResponse signUpNewUser(HttpServletRequest request, UserSignUpReq req) throws Exception;
     ApiResponse verifyAccount(String tokenId);
-
     TokenItem getTokenItem(String tokenId);
+    ApiResponse logout(String tokenId, HttpServletRequest request);
 }

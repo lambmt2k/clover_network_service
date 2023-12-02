@@ -21,4 +21,8 @@ public class CommonConstant {
     public class Feed {
         public static final int MAX_CHARACTER_CONTENT_FEED = 4000;
     }
+
+    public class Indices {
+        public static final String USER_INDEX = "user";
+    }
 }
