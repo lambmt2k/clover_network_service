@@ -8,6 +8,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.Date;
 
@@ -34,6 +35,28 @@ public class UserController {
                                                    @RequestParam(name = "dayOfBirth", required = false) Date dayOfBirth) {
         try {
             ApiResponse res = userService.editProfile(firstname, lastname, phoneNo, gender, dayOfBirth);
+            return ResponseEntity.ok().body(res);
+        } catch (Exception e) {
+            logger.error(e.getMessage());
+            return ResponseEntity.internalServerError().body(null);
+        }
+    }
+
+    @PostMapping("/change-user-avatar")
+    public ResponseEntity<ApiResponse> changeUserAvatar(@RequestPart MultipartFile imageFile) {
+        try {
+            ApiResponse res = userService.changeUserAvatar(imageFile);
+            return ResponseEntity.ok().body(res);
+        } catch (Exception e) {
+            logger.error(e.getMessage());
+            return ResponseEntity.internalServerError().body(null);
+        }
+    }
+
+    @PostMapping("/change-user-banner")
+    public ResponseEntity<ApiResponse> changeUserBanner(@RequestPart MultipartFile bannerFile) {
+        try {
+            ApiResponse res = userService.changeUserBanner(bannerFile);
             return ResponseEntity.ok().body(res);
         } catch (Exception e) {
             logger.error(e.getMessage());
