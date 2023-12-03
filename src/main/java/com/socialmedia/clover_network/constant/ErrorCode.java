@@ -34,6 +34,7 @@ public class ErrorCode {
         public static ErrorCode ACTION_SUCCESS = of(100, "Action success", "Thành công.");
         public static ErrorCode PROFILE_GET_EMPTY = of(101, "Profile empty", "Không tìm thấy dữ liệu user.");
         public static ErrorCode EXISTED_USER = of(102, "Existed user", "User đã tồn tại.");
+        public static ErrorCode INVALID_IMAGE_FILE = of(103, "Invalid image file", "Hình ảnh truyền vào không hợp lệ.");
     }
     /**
      * Code from 200 => 299
@@ -63,4 +64,6 @@ public class ErrorCode {
         public static ErrorCode GENERATE_POST_ID_ERROR = of(403, "Can't generate post Id", "Không thể khởi tạo postId.");
         public static ErrorCode EMPTY_FEED = of(404, "Empty feed", "Không có bài viết nào.");
     }
+
+
 }

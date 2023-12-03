@@ -4,6 +4,7 @@ import com.socialmedia.clover_network.dto.BaseProfile;
 import com.socialmedia.clover_network.dto.res.ApiResponse;
 import com.socialmedia.clover_network.entity.UserInfo;
 import com.socialmedia.clover_network.enumuration.Gender;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.Date;
 import java.util.List;
@@ -16,4 +17,6 @@ public interface UserService {
     BaseProfile mapUserInfoToBaseProfile(UserInfo userInfo);
     ApiResponse getUserInfo();
     ApiResponse editProfile(String firstname, String lastname, String phoneNo, Gender gender, Date dayOfBirth);
+    ApiResponse changeUserAvatar(MultipartFile imageFile);
+    ApiResponse changeUserBanner(MultipartFile bannerFile);
 }

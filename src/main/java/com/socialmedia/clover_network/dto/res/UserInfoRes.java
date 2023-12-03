@@ -14,7 +14,7 @@ public class UserInfoRes {
     private String email;
     private String firstname;
     private String lastname;
-    private String avatarImgUrl;
+    private String avatar;
     private String phoneNo;
     private String gender;
     private String userRole;
