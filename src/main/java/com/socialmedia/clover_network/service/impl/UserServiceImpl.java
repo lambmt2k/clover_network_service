@@ -112,7 +112,8 @@ public class UserServiceImpl implements UserService {
                 data.setEmail(userInfo.getEmail());
                 data.setFirstname(userInfo.getFirstname());
                 data.setLastname(userInfo.getLastname());
-                data.setAvatar(userInfo.getAvatarImgUrl());
+                String imageUrlPublic = firebaseService.getImageUrl(userInfo.getAvatarImgUrl());
+                data.setAvatar(imageUrlPublic);
                 data.setPhoneNo(userInfo.getPhoneNo());
                 data.setGender(userInfo.getGender().equals(Gender.MALE) ? "MALE"
                         : (userInfo.getGender().equals(Gender.FEMALE) ? "FEMALE" : "OTHER"));
