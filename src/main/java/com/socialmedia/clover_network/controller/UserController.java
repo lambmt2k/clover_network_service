@@ -23,8 +23,13 @@ public class UserController {
 
     @GetMapping("/get-user-info")
     public ResponseEntity<ApiResponse> getInfo(){
-        ApiResponse res = userService.getUserInfo();
-        return ResponseEntity.ok(res);
+        try {
+            ApiResponse res = userService.getUserInfo();
+            return ResponseEntity.ok().body(res);
+        } catch (Exception e) {
+            logger.error(e.getMessage());
+            return ResponseEntity.internalServerError().body(null);
+        }
     }
 
     @PostMapping("/edit-profile")

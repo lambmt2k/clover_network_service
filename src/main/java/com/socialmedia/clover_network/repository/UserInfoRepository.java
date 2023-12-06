@@ -18,5 +18,5 @@ public interface UserInfoRepository extends JpaRepository<UserInfo, String> {
 
     List<UserInfo> findByStatus(UserStatus userStatus);
 
-    List<UserInfo> findByDisplayNameContaining(String displayName);
+    List<UserInfo> findByDisplayNameContainingIgnoreCase(String displayName);
 }

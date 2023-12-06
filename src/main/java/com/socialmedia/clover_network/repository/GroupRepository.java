@@ -19,5 +19,5 @@ public interface GroupRepository extends JpaRepository<GroupEntity, Long> {
 
     Optional<GroupEntity> findByGroupId(String groupId);
 
-    List<GroupEntity> findByDelFlagFalseAndGroupNameContaining(String keyword);
+    List<GroupEntity> findByDelFlagFalseAndGroupNameContainingIgnoreCase(String keyword);
 }
