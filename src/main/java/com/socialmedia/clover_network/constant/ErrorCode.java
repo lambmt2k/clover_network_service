@@ -44,6 +44,7 @@ public class ErrorCode {
         public static ErrorCode DISABLE_JOIN = of(201, "Can't join group", "Không được quyền truy cập nhóm.");
         public static ErrorCode GROUP_NOT_FOUND = of(202, "There is no group", "Không tìm được nhóm nào.");
         public static ErrorCode ALREADY_MEMBER = of(203, "User already is member of group", "User đã là thành viên của nhóm.");
+        public static ErrorCode DISABLE_COMMENT = of(204, "Group disable comment", "Bình luận trong nhóm bị khóa.");
     }
 
     /**
@@ -63,6 +64,14 @@ public class ErrorCode {
         public static ErrorCode FORBIDDEN = of(402, "Not permission to post in group", "Không có quyền đăng bài viết.");
         public static ErrorCode GENERATE_POST_ID_ERROR = of(403, "Can't generate post Id", "Không thể khởi tạo postId.");
         public static ErrorCode EMPTY_FEED = of(404, "Empty feed", "Không có bài viết nào.");
+    }
+
+    /**
+     * Code from 500 => 599
+     */
+    public static class Comment {
+        public static ErrorCode ACTION_SUCCESS = of(500, "Action success", "Thành công.");
+        public static ErrorCode INPUT_INVALID = of(501, "Input invalid", "Thông tin truyền vào không hợp lệ.");
     }
 
 

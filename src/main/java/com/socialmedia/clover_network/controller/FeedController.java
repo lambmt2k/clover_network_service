@@ -1,5 +1,6 @@
 package com.socialmedia.clover_network.controller;
 
+import com.socialmedia.clover_network.dto.CommentDTO;
 import com.socialmedia.clover_network.dto.FeedItem;
 import com.socialmedia.clover_network.dto.res.ApiResponse;
 import com.socialmedia.clover_network.enumuration.GroupMemberRole;
@@ -51,6 +52,17 @@ public class FeedController {
     @PostMapping("/detail")
     public ResponseEntity<ApiResponse> detailFeed(@RequestParam(name = "postId") String postId) {
         return null;
+    }
+
+    @PostMapping("/comment")
+    public ResponseEntity<ApiResponse> commentToFeed(@RequestBody CommentDTO commentDTO) {
+        try {
+            ApiResponse res = feedService.commentToFeed(commentDTO);
+            return ResponseEntity.ok().body(res);
+        } catch (Exception e) {
+            logger.error(e.getMessage());
+            return ResponseEntity.internalServerError().body(null);
+        }
     }
 
 }

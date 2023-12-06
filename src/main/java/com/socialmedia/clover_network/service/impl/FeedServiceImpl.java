@@ -5,18 +5,18 @@ import com.socialmedia.clover_network.constant.CommonConstant;
 import com.socialmedia.clover_network.constant.CommonRegex;
 import com.socialmedia.clover_network.constant.ErrorCode;
 import com.socialmedia.clover_network.dto.BaseProfile;
+import com.socialmedia.clover_network.dto.CommentDTO;
 import com.socialmedia.clover_network.dto.FeedItem;
 import com.socialmedia.clover_network.dto.req.RoleGroupSettingReq;
 import com.socialmedia.clover_network.dto.res.ApiResponse;
 import com.socialmedia.clover_network.dto.res.ListFeedRes;
+import com.socialmedia.clover_network.entity.CommentItem;
 import com.socialmedia.clover_network.entity.GroupEntity;
 import com.socialmedia.clover_network.entity.GroupMember;
 import com.socialmedia.clover_network.entity.PostItem;
+import com.socialmedia.clover_network.mapper.CommentItemMapper;
 import com.socialmedia.clover_network.mapper.PostItemMapper;
-import com.socialmedia.clover_network.repository.ConnectionRepository;
-import com.socialmedia.clover_network.repository.FeedRepository;
-import com.socialmedia.clover_network.repository.GroupMemberRepository;
-import com.socialmedia.clover_network.repository.GroupRepository;
+import com.socialmedia.clover_network.repository.*;
 import com.socialmedia.clover_network.service.FeedService;
 import com.socialmedia.clover_network.service.GroupService;
 import com.socialmedia.clover_network.service.UserService;
@@ -50,6 +50,8 @@ public class FeedServiceImpl implements FeedService {
     private final FeedRepository feedRepository;
     @Autowired
     GroupMemberRepository groupMemberRepository;
+    @Autowired
+    CommentItemRepository commentItemRepository;
 
     /*@Autowired
     FeedItemRepositoryRedis feedItemRedis;
@@ -62,6 +64,8 @@ public class FeedServiceImpl implements FeedService {
 
     @Autowired
     PostItemMapper postItemMapper;
+    @Autowired
+    CommentItemMapper commentItemMapper;
 
     private final GenIDUtil genIDUtil;
 
@@ -344,6 +348,105 @@ public class FeedServiceImpl implements FeedService {
         }
 
         return false;
+    }
+
+    @Override
+    public ApiResponse commentToFeed(CommentDTO commentDTO) {
+        logger.info("Start API [commentToFeed]");
+        ApiResponse res = new ApiResponse();
+        String currentUserId = AuthenticationHelper.getUserIdFromContext();
+        if (StringUtils.isEmpty(currentUserId)) {
+            res.setCode(ErrorCode.Token.FORBIDDEN.getCode());
+            res.setData(null);
+            res.setMessageEN(ErrorCode.Token.FORBIDDEN.getMessageEN());
+            res.setMessageVN(ErrorCode.Token.FORBIDDEN.getMessageVN());
+            return res;
+        }
+        //check post existed
+        PostItem postItem = feedRepository.findByPostIdAndDelFlagFalse(commentDTO.getPostId());
+        if (postItem == null) {
+            res.setCode(ErrorCode.Feed.EMPTY_FEED.getCode());
+            res.setData(null);
+            res.setMessageEN(ErrorCode.Feed.EMPTY_FEED.getMessageEN());
+            res.setMessageVN(ErrorCode.Feed.EMPTY_FEED.getMessageVN());
+            return res;
+        }
+        //check group existed
+        GroupEntity groupEntity = groupRepository.findByGroupIdAndDelFlagFalse(postItem.getPrivacyGroupId());
+        if (groupEntity == null) {
+            res.setCode(ErrorCode.Group.GROUP_NOT_FOUND.getCode());
+            res.setData(null);
+            res.setMessageEN(ErrorCode.Group.GROUP_NOT_FOUND.getMessageEN());
+            res.setMessageVN(ErrorCode.Group.GROUP_NOT_FOUND.getMessageVN());
+            return res;
+        }
+
+        //validate input comment
+        boolean validComment = this.validatedComment(commentDTO);
+        if (!validComment) {
+            res.setCode(ErrorCode.Comment.INPUT_INVALID.getCode());
+            res.setData(null);
+            res.setMessageEN(ErrorCode.Comment.INPUT_INVALID.getMessageEN());
+            res.setMessageVN(ErrorCode.Comment.INPUT_INVALID.getMessageVN());
+            return res;
+        }
+
+        //check comment permission
+        RoleGroupSettingReq currentUserRole = groupService.getMemberRolePermission(
+                currentUserId,
+                groupEntity.getGroupId(),
+                groupEntity.getGroupType().equals(GroupEntity.GroupType.USER_WALL));
+        if (currentUserRole == null || !currentUserRole.isEnableComment()) {
+            res.setCode(ErrorCode.Group.DISABLE_COMMENT.getCode());
+            res.setData(null);
+            res.setMessageEN(ErrorCode.Group.DISABLE_COMMENT.getMessageEN());
+            res.setMessageVN(ErrorCode.Group.DISABLE_COMMENT.getMessageVN());
+            return res;
+        }
+
+        CommentDTO.CommentInfo commentRes = this.commentToPost(currentUserId, commentDTO, postItem, currentUserRole);
+
+        res.setCode(ErrorCode.Comment.ACTION_SUCCESS.getCode());
+        res.setData(commentRes);
+        res.setMessageEN(ErrorCode.Comment.ACTION_SUCCESS.getMessageEN());
+        res.setMessageVN(ErrorCode.Comment.ACTION_SUCCESS.getMessageVN());
+        logger.info("Finish API [commentToFeed]");
+        return res;
+    }
+
+    private CommentDTO.CommentInfo commentToPost(String authorId, CommentDTO commentDTO, PostItem postItem, RoleGroupSettingReq currentUserRole) {
+        CommentDTO.CommentInfo res = new CommentDTO.CommentInfo();
+        commentDTO.setAuthorId(authorId);
+        LocalDateTime now = LocalDateTime.now();
+        commentDTO.setCreatedTime(now);
+        commentDTO.setUpdatedTime(now);
+        commentDTO.setDelFlag(false);
+        CommentItem commentItem = commentItemMapper.toEntity(commentDTO);
+        CommentItem data = commentItemRepository.save(commentItem);
+
+        postItem.setLastActive(now);
+        feedRepository.save(postItem);
+
+        res.setCommentId(data.getCommentId());
+        res.setPostId(data.getPostId());
+        Map<String, BaseProfile> authorProfile = userService.multiGetBaseProfileByUserIds(Collections.singletonList(authorId));
+        res.setUserProfile(authorProfile.get(authorId));
+        res.setContent(data.getContent());
+        res.setCreatedTime(data.getCreatedTime());
+        res.setUpdatedTime(data.getUpdatedTime());
+        res.setAuthor(true);
+        res.setCurrentUserRole(currentUserRole);
+        return res;
+    }
+
+    private boolean validatedComment(CommentDTO commentDTO) {
+        if (commentDTO == null) {
+            return false;
+        }
+        if (commentDTO.getContent() == null || commentDTO.getContent().isEmpty()) {
+            return false;
+        }
+        return true;
     }
 
     private boolean validatedFeed(FeedItem feedItem) {
