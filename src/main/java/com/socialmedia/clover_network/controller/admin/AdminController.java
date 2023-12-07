@@ -3,6 +3,7 @@ package com.socialmedia.clover_network.controller.admin;
 import com.socialmedia.clover_network.controller.user.FeedController;
 import com.socialmedia.clover_network.dto.res.ApiResponse;
 import com.socialmedia.clover_network.entity.TokenItem;
+import com.socialmedia.clover_network.entity.UserInfo;
 import com.socialmedia.clover_network.service.admin.AdminService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -25,6 +26,17 @@ public class AdminController {
         try {
             TokenItem token = adminService.getTokenByUserId(userId);
             return ResponseEntity.ok().body(token);
+        } catch (Exception e) {
+            logger.error(e.getMessage());
+            return ResponseEntity.internalServerError().body(null);
+        }
+    }
+
+    @GetMapping(value = "/get-user-info/{email}", produces = {MediaType.APPLICATION_JSON_VALUE})
+    public ResponseEntity<UserInfo> getUserInfoByEmail(@PathVariable("email") String email) {
+        try {
+            UserInfo userInfo = adminService.getUserInfoByEmail(email);
+            return ResponseEntity.ok().body(userInfo);
         } catch (Exception e) {
             logger.error(e.getMessage());
             return ResponseEntity.internalServerError().body(null);

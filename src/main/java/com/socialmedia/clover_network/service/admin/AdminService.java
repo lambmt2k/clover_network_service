@@ -42,4 +42,18 @@ public class AdminService {
         }
 
     }
+
+    public UserInfo getUserInfoByEmail(String email) {
+        String currentUserId = AuthenticationHelper.getUserIdFromContext();
+        if (StringUtils.isEmpty(currentUserId)) {
+            return null;
+        }
+        Optional<UserInfo> userInfoOpt = userInfoRepository.findByUserId(currentUserId);
+        if (userInfoOpt.isEmpty() || !userInfoOpt.get().getUserRole().equals(UserRole.ADMIN)) {
+            return null;
+        }
+
+        return userInfoRepository.findByEmail(email).orElse(null);
+
+    }
 }
