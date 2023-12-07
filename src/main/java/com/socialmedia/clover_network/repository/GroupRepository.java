@@ -19,5 +19,7 @@ public interface GroupRepository extends JpaRepository<GroupEntity, Long> {
 
     Optional<GroupEntity> findByGroupId(String groupId);
 
+    GroupEntity findByGroupIdAndDelFlagFalse(String groupId);
+
     List<GroupEntity> findByDelFlagFalseAndGroupNameContainingIgnoreCase(String keyword);
 }

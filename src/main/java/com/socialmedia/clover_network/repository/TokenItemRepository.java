@@ -11,5 +11,6 @@ import java.util.Optional;
 @Repository
 public interface TokenItemRepository extends JpaRepository<TokenItem, String> {
     List<TokenItem> findByUserId(String userId);
+    List<TokenItem> findByUserIdAndDelFlagFalseOrderByCreatedTimeDesc(String userId);
     Optional<TokenItem> findByTokenId(String tokenId);
 }

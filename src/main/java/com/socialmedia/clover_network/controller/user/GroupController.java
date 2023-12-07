@@ -1,4 +1,4 @@
-package com.socialmedia.clover_network.controller;
+package com.socialmedia.clover_network.controller.user;
 
 import com.socialmedia.clover_network.config.AuthenticationHelper;
 import com.socialmedia.clover_network.dto.req.GroupReq;
@@ -46,7 +46,7 @@ public class GroupController {
         }
     }
 
-    @GetMapping(value = "/join", produces = {MediaType.APPLICATION_JSON_VALUE})
+    @PostMapping(value = "/join", produces = {MediaType.APPLICATION_JSON_VALUE})
     public ResponseEntity<ApiResponse> joinGroup(@RequestParam(name = "groupId") String groupId) {
         String currentUserId = AuthenticationHelper.getUserIdFromContext();
         if (currentUserId != null) {

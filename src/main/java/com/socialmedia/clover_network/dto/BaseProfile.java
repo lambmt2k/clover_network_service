@@ -13,7 +13,6 @@ import java.io.Serializable;
 @Data
 public class BaseProfile implements Serializable {
     private String userId;
-    private GroupMemberRole groupRole;
     private String displayName;
     private String avatarImgUrl;
     private String phoneNo;

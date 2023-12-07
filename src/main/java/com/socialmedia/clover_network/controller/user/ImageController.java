@@ -1,4 +1,4 @@
-package com.socialmedia.clover_network.controller;
+package com.socialmedia.clover_network.controller.user;
 
 import com.socialmedia.clover_network.enumuration.ImageType;
 import com.socialmedia.clover_network.service.FirebaseService;
