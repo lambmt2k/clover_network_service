@@ -1,4 +1,4 @@
-package com.socialmedia.clover_network.controller;
+package com.socialmedia.clover_network.controller.user;
 
 import com.socialmedia.clover_network.constant.CommonRegex;
 import com.socialmedia.clover_network.constant.ErrorCode;

@@ -356,7 +356,6 @@ public class GroupServiceImpl implements GroupService {
 
     @Override
     public RoleGroupSettingReq getMemberRolePermission(String userId, String groupId, boolean isUserWall) {
-        logger.info("Start get role permission of userId: " + userId + " in groupId: " + groupId);
         Optional<GroupMember> groupMemberOpt = groupMemberRepository.findFirstByUserIdAndGroupIdAndDelFlagFalse(userId, groupId);
         if (groupMemberOpt.isPresent()) {
             RoleGroupSettingReq roleGroupSettingReq = new RoleGroupSettingReq();

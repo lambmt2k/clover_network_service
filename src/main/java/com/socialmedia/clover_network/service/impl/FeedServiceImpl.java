@@ -7,13 +7,11 @@ import com.socialmedia.clover_network.constant.ErrorCode;
 import com.socialmedia.clover_network.dto.BaseProfile;
 import com.socialmedia.clover_network.dto.CommentDTO;
 import com.socialmedia.clover_network.dto.FeedItem;
+import com.socialmedia.clover_network.dto.ReactDTO;
 import com.socialmedia.clover_network.dto.req.RoleGroupSettingReq;
 import com.socialmedia.clover_network.dto.res.ApiResponse;
 import com.socialmedia.clover_network.dto.res.ListFeedRes;
-import com.socialmedia.clover_network.entity.CommentItem;
-import com.socialmedia.clover_network.entity.GroupEntity;
-import com.socialmedia.clover_network.entity.GroupMember;
-import com.socialmedia.clover_network.entity.PostItem;
+import com.socialmedia.clover_network.entity.*;
 import com.socialmedia.clover_network.mapper.CommentItemMapper;
 import com.socialmedia.clover_network.mapper.PostItemMapper;
 import com.socialmedia.clover_network.repository.*;
@@ -92,7 +90,7 @@ public class FeedServiceImpl implements FeedService {
         String currentUserId = AuthenticationHelper.getUserIdFromContext();
         if (currentUserId != null) {
             boolean validatedInput = this.validatedFeed(feedItem);
-            if(validatedInput) {
+            if (validatedInput) {
                 if (StringUtils.isNotEmpty(feedItem.getPrivacyGroupId())) {
                     boolean canPost = this.checkUserCanPostFeedToGroup(feedItem.getPrivacyGroupId(), currentUserId);
                     boolean isUserWall = userWallService.isUserWall(feedItem.getPrivacyGroupId());
@@ -169,91 +167,103 @@ public class FeedServiceImpl implements FeedService {
     }
 
     @Override
-    public ApiResponse listFeed(int limit, int offset) {
+    public ApiResponse listFeedUserHome(int limit, int offset) {
         logger.info("Start API [listFeed]");
         ApiResponse res = new ApiResponse();
         String currentUserId = AuthenticationHelper.getUserIdFromContext();
-        if (currentUserId != null) {
-            logger.info("Get list group of userId {}", currentUserId);
-            List<String> groupIds = groupMemberRepository.findByUserIdAndDelFlagFalse(currentUserId)
-                    .stream()
-                    .map(GroupMember::getGroupId)
-                    .distinct()
-                    .collect(Collectors.toList());
-            List<String> userWallIds = groupRepository.findByGroupTypeAndGroupIdIn(GroupEntity.GroupType.USER_WALL, groupIds)
-                    .stream()
-                    .map(GroupEntity::getGroupId)
-                    .distinct()
-                    .collect(Collectors.toList());
-            Map<String, GroupEntity> mapGroups = new ConcurrentHashMap<>(10);
-
-            this.multiGetGroupItem(groupIds, mapGroups);
-            List<GroupEntity> listGroups = new ArrayList<>(mapGroups.values());
-            Pageable pageable = PageRequest.of(offset, limit);
-            List<PostItem> postItems = feedRepository.findAllByPrivacyGroupIdInAndDelFlagFalseAndLastActiveIsNotNullOrderByLastActiveDesc(groupIds, pageable)
-                    .stream()
-                    .sorted(Comparator.comparing(PostItem::getLastActive).reversed())
-                    .collect(Collectors.toList());
-            if (CollectionUtils.isEmpty(postItems)) {
-                res.setCode(ErrorCode.Feed.EMPTY_FEED.getCode());
-                res.setData(null);
-                res.setMessageEN(ErrorCode.Feed.EMPTY_FEED.getMessageEN());
-                res.setMessageVN(ErrorCode.Feed.EMPTY_FEED.getMessageVN());
-                return res;
-            } else {
-                List<FeedItem> feedItems = new ArrayList<>();
-                for (PostItem postItem: postItems) {
-                    FeedItem feedItem = postItemMapper.toDTO(postItem);
-                    feedItems.add(feedItem);
-                }
-                Map<String, FeedItem> mapFeedItem = feedItems.stream().collect(Collectors.toMap(FeedItem::getPostId, feedItem -> feedItem));
-                Map<String, RoleGroupSettingReq> mapCurrentUserRole = new LinkedHashMap<>();
-                Map<String, GroupEntity> mapGroupItem = new LinkedHashMap<>();
-
-                for (Map.Entry<String, FeedItem> feedItemEntry : mapFeedItem.entrySet()) {
-                    FeedItem feedItem = feedItemEntry.getValue();
-
-                    //check is userwall
-                    if (null != feedItem.getPrivacyGroupId()) {
-                        feedItem.setPostToUserWall(userWallService.isUserWall(feedItem.getPrivacyGroupId()));
-                    }
-                    //check role of author in group
-                    feedItem.setAuthorRoleGroup(
-                            groupService.getMemberRolePermission(
-                                    feedItem.getAuthorId(),
-                                    feedItem.getPrivacyGroupId(),
-                                    feedItem.isPostToUserWall()
-                            ).getRoleId()
-                    );
-
-                    //check role of current user in group
-                    RoleGroupSettingReq currentUserRole = groupService.getMemberRolePermission(currentUserId, feedItem.getPrivacyGroupId(), feedItem.isPostToUserWall());
-                    mapCurrentUserRole.put(feedItem.getPostId(), currentUserRole);
-
-                    //get info group
-                    mapGroupItem.put(feedItem.getPostId(), mapGroups.get(feedItem.getPrivacyGroupId()));
-                }
-                List<String> feedIds = new ArrayList<>(mapFeedItem.keySet());
-                //get userIds
-                List<String> listUserIds = new ArrayList<>();
-                this.extractMetadata(feedIds, mapFeedItem, listUserIds);
-
-                // get userId => profile
-                Map<String, BaseProfile> mapBaseProfile = userService.multiGetBaseProfileByUserIds(listUserIds);
-                res.setCode(ErrorCode.Feed.ACTION_SUCCESS.getCode());
-                res.setData(ListFeedRes.of(feedIds, mapFeedItem, null, mapBaseProfile, mapGroupItem, mapCurrentUserRole, false));
-                res.setMessageEN(ErrorCode.Feed.ACTION_SUCCESS.getMessageEN());
-                res.setMessageVN(ErrorCode.Feed.ACTION_SUCCESS.getMessageVN());
-                return res;
-            }
-        } else {
+        if (StringUtils.isEmpty(currentUserId)) {
             res.setCode(ErrorCode.Token.FORBIDDEN.getCode());
             res.setData(null);
             res.setMessageEN(ErrorCode.Token.FORBIDDEN.getMessageEN());
             res.setMessageVN(ErrorCode.Token.FORBIDDEN.getMessageVN());
+            return res;
         }
+        logger.info("Get list group of userId {}", currentUserId);
+        List<String> groupIds = groupMemberRepository.findByUserIdAndDelFlagFalse(currentUserId)
+                .stream()
+                .map(GroupMember::getGroupId)
+                .distinct()
+                .collect(Collectors.toList());
+        /*List<String> userWallIds = groupRepository.findByGroupTypeAndGroupIdIn(GroupEntity.GroupType.USER_WALL, groupIds)
+                .stream()
+                .map(GroupEntity::getGroupId)
+                .distinct()
+                .collect(Collectors.toList());*/
+        Map<String, GroupEntity> mapGroups = new ConcurrentHashMap<>(10);
+
+        this.multiGetGroupItem(groupIds, mapGroups);
+        Pageable pageable = PageRequest.of(offset, limit);
+        List<PostItem> postItems = feedRepository.findAllByPrivacyGroupIdInAndDelFlagFalseAndLastActiveIsNotNullOrderByLastActiveDesc(groupIds, pageable)
+                .stream()
+                .sorted(Comparator.comparing(PostItem::getLastActive).reversed())
+                .collect(Collectors.toList());
+        if (CollectionUtils.isEmpty(postItems)) {
+            res.setCode(ErrorCode.Feed.EMPTY_FEED.getCode());
+            res.setData(null);
+            res.setMessageEN(ErrorCode.Feed.EMPTY_FEED.getMessageEN());
+            res.setMessageVN(ErrorCode.Feed.EMPTY_FEED.getMessageVN());
+            return res;
+        }
+        List<FeedItem> feedItems = new ArrayList<>();
+        for (PostItem postItem : postItems) {
+            FeedItem feedItem = postItemMapper.toDTO(postItem);
+            feedItems.add(feedItem);
+        }
+        Map<String, FeedItem> mapFeedItem = feedItems.stream().collect(Collectors.toMap(FeedItem::getPostId, feedItem -> feedItem));
+        Map<String, RoleGroupSettingReq> mapCurrentUserRole = new LinkedHashMap<>();
+        Map<String, GroupEntity> mapGroupItem = new LinkedHashMap<>();
+        Map<String, List<CommentDTO.CommentInfo>> mapComment = new LinkedHashMap<>();
+        Map<String, ReactionItem.ReactType> mapReaction = new LinkedHashMap<>();
+
+        for (Map.Entry<String, FeedItem> feedItemEntry : mapFeedItem.entrySet()) {
+            FeedItem feedItem = feedItemEntry.getValue();
+
+            //check is userwall
+            if (null != feedItem.getPrivacyGroupId()) {
+                feedItem.setPostToUserWall(userWallService.isUserWall(feedItem.getPrivacyGroupId()));
+            }
+            //check role of author in group
+            feedItem.setAuthorRoleGroup(
+                    groupService.getMemberRolePermission(
+                            feedItem.getAuthorId(),
+                            feedItem.getPrivacyGroupId(),
+                            feedItem.isPostToUserWall()
+                    ).getRoleId()
+            );
+
+            //check role of current user in group
+            RoleGroupSettingReq currentUserRole = groupService.getMemberRolePermission(currentUserId, feedItem.getPrivacyGroupId(), feedItem.isPostToUserWall());
+            mapCurrentUserRole.put(feedItem.getPostId(), currentUserRole);
+
+            //get info group
+            mapGroupItem.put(feedItem.getPostId(), mapGroups.get(feedItem.getPrivacyGroupId()));
+
+            //get info comments
+            Pageable pageableComment = PageRequest.of(0, 5);
+            List<CommentItem> commentItems = commentItemRepository.findByPostIdAndDelFlagFalseOrderByUpdatedTimeDesc(feedItem.getPostId(), pageableComment);
+            if (!commentItems.isEmpty()) {
+                List<CommentDTO.CommentInfo> commentInfos = new ArrayList<>();
+                commentItems.forEach(commentItem -> {
+                    commentInfos.add(this.convertCommentItemToCommentInfo(commentItem, currentUserId));
+                });
+                mapComment.put(feedItem.getPostId(), commentInfos);
+            }
+
+        }
+        List<String> feedIds = new ArrayList<>(mapFeedItem.keySet());
+        //get userIds
+        List<String> listUserIds = new ArrayList<>();
+        this.extractMetadata(feedIds, mapFeedItem, listUserIds);
+
+        // get userId => profile
+        Map<String, BaseProfile> mapBaseProfile = userService.multiGetBaseProfileByUserIds(listUserIds);
+        res.setCode(ErrorCode.Feed.ACTION_SUCCESS.getCode());
+        res.setData(ListFeedRes.of(feedIds, mapFeedItem, mapReaction,null, mapBaseProfile, mapGroupItem, mapComment, mapCurrentUserRole, false));
+        res.setMessageEN(ErrorCode.Feed.ACTION_SUCCESS.getMessageEN());
+        res.setMessageVN(ErrorCode.Feed.ACTION_SUCCESS.getMessageVN());
         logger.info("End API [listFeed]");
         return res;
+
     }
 
     private void extractMetadata(List<String> feedIds, Map<String, FeedItem> mapFeedItem, List<String> listUserIds) {
@@ -404,7 +414,7 @@ public class FeedServiceImpl implements FeedService {
             return res;
         }
 
-        CommentDTO.CommentInfo commentRes = this.commentToPost(currentUserId, commentDTO, postItem, currentUserRole);
+        CommentDTO.CommentInfo commentRes = this.commentToPost(currentUserId, commentDTO, postItem);
 
         res.setCode(ErrorCode.Comment.ACTION_SUCCESS.getCode());
         res.setData(commentRes);
@@ -414,8 +424,45 @@ public class FeedServiceImpl implements FeedService {
         return res;
     }
 
-    private CommentDTO.CommentInfo commentToPost(String authorId, CommentDTO commentDTO, PostItem postItem, RoleGroupSettingReq currentUserRole) {
-        CommentDTO.CommentInfo res = new CommentDTO.CommentInfo();
+    @Override
+    public ApiResponse reactToFeed(ReactDTO reactDTO) {
+        logger.info("Start API [reactToFeed]");
+        ApiResponse res = new ApiResponse();
+        String currentUserId = AuthenticationHelper.getUserIdFromContext();
+        if (StringUtils.isEmpty(currentUserId)) {
+            res.setCode(ErrorCode.Token.FORBIDDEN.getCode());
+            res.setData(null);
+            res.setMessageEN(ErrorCode.Token.FORBIDDEN.getMessageEN());
+            res.setMessageVN(ErrorCode.Token.FORBIDDEN.getMessageVN());
+            return res;
+        }
+        //check post existed
+        PostItem postItem = feedRepository.findByPostIdAndDelFlagFalse(reactDTO.getPostId());
+        if (postItem == null) {
+            res.setCode(ErrorCode.Feed.EMPTY_FEED.getCode());
+            res.setData(null);
+            res.setMessageEN(ErrorCode.Feed.EMPTY_FEED.getMessageEN());
+            res.setMessageVN(ErrorCode.Feed.EMPTY_FEED.getMessageVN());
+            return res;
+        }
+        //check group existed
+        GroupEntity groupEntity = groupRepository.findByGroupIdAndDelFlagFalse(postItem.getPrivacyGroupId());
+        if (groupEntity == null) {
+            res.setCode(ErrorCode.Group.GROUP_NOT_FOUND.getCode());
+            res.setData(null);
+            res.setMessageEN(ErrorCode.Group.GROUP_NOT_FOUND.getMessageEN());
+            res.setMessageVN(ErrorCode.Group.GROUP_NOT_FOUND.getMessageVN());
+            return res;
+        }
+
+
+        ReactionItem reactionItem = new ReactionItem();
+        reactionItem.setAuthorId(currentUserId);
+
+        return res;
+    }
+
+    private CommentDTO.CommentInfo commentToPost(String authorId, CommentDTO commentDTO, PostItem postItem) {
         commentDTO.setAuthorId(authorId);
         LocalDateTime now = LocalDateTime.now();
         commentDTO.setCreatedTime(now);
@@ -427,15 +474,21 @@ public class FeedServiceImpl implements FeedService {
         postItem.setLastActive(now);
         feedRepository.save(postItem);
 
-        res.setCommentId(data.getCommentId());
-        res.setPostId(data.getPostId());
-        Map<String, BaseProfile> authorProfile = userService.multiGetBaseProfileByUserIds(Collections.singletonList(authorId));
-        res.setUserProfile(authorProfile.get(authorId));
-        res.setContent(data.getContent());
-        res.setCreatedTime(data.getCreatedTime());
-        res.setUpdatedTime(data.getUpdatedTime());
-        res.setAuthor(true);
-        res.setCurrentUserRole(currentUserRole);
+        return this.convertCommentItemToCommentInfo(data, authorId);
+    }
+
+    private CommentDTO.CommentInfo convertCommentItemToCommentInfo(CommentItem commentItem, String currentUserId){
+        CommentDTO.CommentInfo res = new CommentDTO.CommentInfo();
+        res.setCommentId(commentItem.getCommentId());
+        res.setPostId(commentItem.getPostId());
+        Map<String, BaseProfile> authorProfile = userService.multiGetBaseProfileByUserIds(Collections.singletonList(commentItem.getAuthorId()));
+        res.setAuthorProfile(authorProfile.get(commentItem.getAuthorId()));
+        res.setContent(commentItem.getContent());
+        res.setCreatedTime(commentItem.getCreatedTime());
+        res.setUpdatedTime(commentItem.getUpdatedTime());
+        res.setParentCommentId(commentItem.getParentCommentId());
+        res.setLevel(commentItem.getLevel());
+        res.setAuthor(currentUserId.equals(commentItem.getAuthorId()));
         return res;
     }
 

@@ -5,6 +5,8 @@ import com.socialmedia.clover_network.entity.CommentItem;
 import org.mapstruct.Mapper;
 import org.mapstruct.factory.Mappers;
 
+import java.util.List;
+
 @Mapper(componentModel = "spring")
 public interface CommentItemMapper {
     CommentItemMapper INSTANCE = Mappers.getMapper(CommentItemMapper.class);
@@ -12,5 +14,7 @@ public interface CommentItemMapper {
     CommentItem toEntity(CommentDTO commentDTO);
 
     CommentDTO toDTO(CommentItem commentItem);
+
+    List<CommentDTO> toDTOS(List<CommentItem> commentItems);
 
 }

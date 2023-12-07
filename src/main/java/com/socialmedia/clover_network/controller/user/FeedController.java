@@ -1,18 +1,15 @@
-package com.socialmedia.clover_network.controller;
+package com.socialmedia.clover_network.controller.user;
 
 import com.socialmedia.clover_network.dto.CommentDTO;
 import com.socialmedia.clover_network.dto.FeedItem;
+import com.socialmedia.clover_network.dto.ReactDTO;
 import com.socialmedia.clover_network.dto.res.ApiResponse;
-import com.socialmedia.clover_network.enumuration.GroupMemberRole;
 import com.socialmedia.clover_network.service.FeedService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
-
-import java.util.List;
 
 @RestController
 @RequestMapping(path = "/api/feed")
@@ -30,7 +27,7 @@ public class FeedController {
     public ResponseEntity<ApiResponse> listFeedUserHome(@RequestParam(name = "offset") int offset,
                                                         @RequestParam(name = "limit") int limit) {
         try {
-            ApiResponse res = feedService.listFeed(limit, offset);
+            ApiResponse res = feedService.listFeedUserHome(limit, offset);
             return ResponseEntity.ok().body(res);
         } catch (Exception e) {
             logger.error(e.getMessage());
@@ -58,6 +55,17 @@ public class FeedController {
     public ResponseEntity<ApiResponse> commentToFeed(@RequestBody CommentDTO commentDTO) {
         try {
             ApiResponse res = feedService.commentToFeed(commentDTO);
+            return ResponseEntity.ok().body(res);
+        } catch (Exception e) {
+            logger.error(e.getMessage());
+            return ResponseEntity.internalServerError().body(null);
+        }
+    }
+
+    @PostMapping("/react")
+    public ResponseEntity<ApiResponse> reactToFeed(@RequestBody ReactDTO reactDTO) {
+        try {
+            ApiResponse res = feedService.reactToFeed(reactDTO);
             return ResponseEntity.ok().body(res);
         } catch (Exception e) {
             logger.error(e.getMessage());

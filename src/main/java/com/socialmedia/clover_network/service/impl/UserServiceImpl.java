@@ -89,7 +89,8 @@ public class UserServiceImpl implements UserService {
         if (userInfo != null) {
             baseProfile.setUserId(userInfo.getUserId());
             baseProfile.setDisplayName(userInfo.getDisplayName());
-            baseProfile.setAvatarImgUrl(userInfo.getAvatarImgUrl());
+            String imageUrlPublic = firebaseService.getImageUrl(userInfo.getAvatarImgUrl());
+            baseProfile.setAvatarImgUrl(imageUrlPublic);
             baseProfile.setPhoneNo(userInfo.getPhoneNo());
             baseProfile.setEmail(userInfo.getEmail());
         }
