@@ -18,7 +18,7 @@ spring:
           auth: 'true'
     password: ohrxnidvjxdjvjwx
   datasource:
-    username: clover
+    username: clover_admin1
     password: lambmt0910
     url: jdbc:postgresql://clover-network-database.ck32a9mfyksb.ap-southeast-1.rds.amazonaws.com/db_clover_network
     continue-on-error: 'true'
