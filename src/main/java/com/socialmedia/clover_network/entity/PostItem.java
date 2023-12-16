@@ -1,6 +1,5 @@
 package com.socialmedia.clover_network.entity;
 
-import com.socialmedia.clover_network.enumuration.Favorite;
 import com.socialmedia.clover_network.enumuration.GroupMemberRole;
 import com.socialmedia.clover_network.enumuration.PrivacyPostType;
 import lombok.AllArgsConstructor;
@@ -10,6 +9,7 @@ import lombok.Setter;
 
 import javax.persistence.*;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Getter
 @Setter
@@ -45,6 +45,9 @@ public class PostItem {
 
     @Column(name = "privacy_type")
     private PrivacyPostType privacyType;
+
+    @OneToMany(mappedBy = "postItem", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<ImageFeedItem> images;
 
     @Column(name = "created_time")
     private LocalDateTime createdTime;

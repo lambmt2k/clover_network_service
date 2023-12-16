@@ -14,10 +14,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Objects;
-import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 @Service
@@ -72,7 +68,7 @@ public class FirebaseService {
         return imagePath;
     }
 
-    public String getImageUrl(String imagePath) {
+    public String getImagePublicUrl(String imagePath) {
         return StorageClient.getInstance().bucket().get(imagePath).signUrl(1, TimeUnit.HOURS).toString();
     }
 

@@ -89,7 +89,7 @@ public class UserServiceImpl implements UserService {
         if (userInfo != null) {
             baseProfile.setUserId(userInfo.getUserId());
             baseProfile.setDisplayName(userInfo.getFirstname() + CommonRegex.REGEX_SPACE + userInfo.getLastname());
-            String imageUrlPublic = firebaseService.getImageUrl(userInfo.getAvatarImgUrl());
+            String imageUrlPublic = firebaseService.getImagePublicUrl(userInfo.getAvatarImgUrl());
             baseProfile.setAvatarImgUrl(imageUrlPublic);
             baseProfile.setPhoneNo(userInfo.getPhoneNo());
             baseProfile.setEmail(userInfo.getEmail());
@@ -113,7 +113,7 @@ public class UserServiceImpl implements UserService {
                 data.setEmail(userInfo.getEmail());
                 data.setFirstname(userInfo.getFirstname());
                 data.setLastname(userInfo.getLastname());
-                String imageUrlPublic = firebaseService.getImageUrl(userInfo.getAvatarImgUrl());
+                String imageUrlPublic = firebaseService.getImagePublicUrl(userInfo.getAvatarImgUrl());
                 data.setAvatar(imageUrlPublic);
                 data.setPhoneNo(userInfo.getPhoneNo());
                 data.setGender(userInfo.getGender().equals(Gender.MALE) ? "MALE"
@@ -245,7 +245,7 @@ public class UserServiceImpl implements UserService {
             userInfoRepository.save(userInfo);
 
             UserInfoRes data = UserInfoMapper.INSTANCE.toDTO(userInfo);
-            String imageUrlPublic = firebaseService.getImageUrl(userInfo.getAvatarImgUrl());
+            String imageUrlPublic = firebaseService.getImagePublicUrl(userInfo.getAvatarImgUrl());
             data.setAvatar(imageUrlPublic);
             data.setGender(userInfo.getGender().equals(Gender.MALE) ? "MALE"
                     : (userInfo.getGender().equals(Gender.FEMALE) ? "FEMALE" : "OTHER"));
@@ -312,7 +312,7 @@ public class UserServiceImpl implements UserService {
         userInfoRepository.save(userInfo);
 
         UserInfoRes data = UserInfoMapper.INSTANCE.toDTO(userInfo);
-        String imageUrlPublic = firebaseService.getImageUrl(userInfo.getAvatarImgUrl());
+        String imageUrlPublic = firebaseService.getImagePublicUrl(userInfo.getAvatarImgUrl());
         data.setAvatar(imageUrlPublic);
         data.setGender(userInfo.getGender().equals(Gender.MALE) ? "MALE"
                 : (userInfo.getGender().equals(Gender.FEMALE) ? "FEMALE" : "OTHER"));

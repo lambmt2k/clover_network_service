@@ -1,7 +1,5 @@
 package com.socialmedia.clover_network.entity;
 
-import com.socialmedia.clover_network.enumuration.GroupMemberRole;
-import com.socialmedia.clover_network.enumuration.PrivacyPostType;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -22,11 +20,12 @@ public class ImageFeedItem {
     @Column(name = "id")
     private Long id;
 
-    @Column(name = "post_id")
-    private String postId;
-
     @Column(name = "image_url", columnDefinition = "TEXT")
     private String imageUrl;
+
+    @ManyToOne
+    @JoinColumn(name = "post_id")
+    private PostItem postItem;
 
     @Column(name = "created_by")
     private String createdBy;
