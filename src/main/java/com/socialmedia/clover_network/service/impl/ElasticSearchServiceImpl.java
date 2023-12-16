@@ -49,7 +49,7 @@ public class ElasticSearchServiceImpl implements ElasticSearchService {
         }
 
         SearchRes data = new SearchRes();
-        List<UserInfoRes> userInfoRes = UserInfoMapper.INSTANCE.toDTOS(userInfoRepository.findByDisplayNameContainingIgnoreCase(keyword));
+        List<UserInfoRes> userInfoRes = UserInfoMapper.INSTANCE.toDTOS(userInfoRepository.findByFirstNameOrLastNameContainingIgnoreCase(keyword));
         if (!userInfoRes.isEmpty()) {
             data.setUsers((userInfoRes));
         }

@@ -1,6 +1,7 @@
 package com.socialmedia.clover_network.service.impl;
 
 import com.socialmedia.clover_network.config.AuthenticationHelper;
+import com.socialmedia.clover_network.constant.CommonRegex;
 import com.socialmedia.clover_network.entity.GroupEntity;
 import com.socialmedia.clover_network.entity.GroupMember;
 import com.socialmedia.clover_network.entity.GroupRolePermission;
@@ -61,8 +62,8 @@ public class UserWallServiceImpl implements UserWallService {
                 GroupEntity newUserWall = new GroupEntity();
                 newUserWall.setGroupId(groupId);
                 newUserWall.setGroupOwnerId(userId);
-                newUserWall.setGroupName(existedUserInfo.getDisplayName());
-                newUserWall.setGroupDesc(existedUserInfo.getDisplayName() + "'s Wall");
+                newUserWall.setGroupName(existedUserInfo.getFirstname() + CommonRegex.REGEX_SPACE + existedUserInfo.getLastname());
+                newUserWall.setGroupDesc(existedUserInfo.getFirstname() + CommonRegex.REGEX_SPACE + existedUserInfo.getLastname() + "'s Wall");
                 newUserWall.setGroupType(GroupEntity.GroupType.USER_WALL);
                 newUserWall.setGroupPrivacy(GroupEntity.GroupPrivacy.PUBLIC);
                 newUserWall.setEnableComment(true);
@@ -76,7 +77,7 @@ public class UserWallServiceImpl implements UserWallService {
                 GroupMember newGroupMember = GroupMember.builder()
                         .groupId(newUserWall.getGroupId())
                         .userId(newUserWall.getGroupOwnerId())
-                        .displayName(existedUserInfo.getDisplayName())
+                        .displayName(existedUserInfo.getFirstname() + CommonRegex.REGEX_SPACE + existedUserInfo.getLastname())
                         .groupRoleId(GroupMemberRole.OWNER)
                         .joinTime(now)
                         .leaveTime(null)
