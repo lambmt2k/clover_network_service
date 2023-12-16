@@ -216,7 +216,7 @@ public class FeedServiceImpl implements FeedService {
                 postItem.getImages().forEach(image -> {
                     imageFeeds.add(firebaseService.getImagePublicUrl(image.getImageUrl()));
                 });
-                feedItem.setImages(imageFeeds);
+                feedItem.setFeedImages(imageFeeds);
             }
             feedItems.add(feedItem);
         }
@@ -346,7 +346,7 @@ public class FeedServiceImpl implements FeedService {
                 successData.getImages().forEach(image -> {
                     imageFeeds.add(firebaseService.getImagePublicUrl(image.getImageUrl()));
                 });
-                feedItem.setImages(imageFeeds);
+                feedItem.setFeedImages(imageFeeds);
             }
             //step 2: insert feedItem to redis
             //step 3: insert feed home & group for owner cache and db

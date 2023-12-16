@@ -35,7 +35,7 @@ public class FeedItem {
     private LocalDateTime updatedTime;
     private LocalDateTime lastActive;
     private Map<ReactionItem.ReactType, Integer> totalReaction;
-    private List<String> images;
+    private List<String> feedImages;
     private ReactionItem.ReactType currentUserReact;
     private boolean postToUserWall = false;
     private boolean delFlag = false;
