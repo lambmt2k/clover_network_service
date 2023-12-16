@@ -10,6 +10,9 @@ import org.slf4j.LoggerFactory;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.util.List;
 
 @RestController
 @RequestMapping(path = "/api/feed")
@@ -36,9 +39,10 @@ public class FeedController {
     }
 
     @PostMapping("/post")
-    public ResponseEntity<ApiResponse> postFeed(@RequestBody FeedItem feedItem) {
+    public ResponseEntity<ApiResponse> postFeed(@RequestPart(name = "feedItem") FeedItem feedItem,
+                                                @RequestPart(name = "images", required = false)List<MultipartFile> images) {
         try {
-            ApiResponse res = feedService.post(feedItem);
+            ApiResponse res = feedService.post(feedItem, images);
             return ResponseEntity.ok().body(res);
         } catch (Exception e) {
             logger.error(e.getMessage());

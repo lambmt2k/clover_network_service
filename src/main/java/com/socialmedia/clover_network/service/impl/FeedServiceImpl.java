@@ -12,13 +12,11 @@ import com.socialmedia.clover_network.dto.req.RoleGroupSettingReq;
 import com.socialmedia.clover_network.dto.res.ApiResponse;
 import com.socialmedia.clover_network.dto.res.ListFeedRes;
 import com.socialmedia.clover_network.entity.*;
+import com.socialmedia.clover_network.enumuration.ImageType;
 import com.socialmedia.clover_network.mapper.CommentItemMapper;
 import com.socialmedia.clover_network.mapper.PostItemMapper;
 import com.socialmedia.clover_network.repository.*;
-import com.socialmedia.clover_network.service.FeedService;
-import com.socialmedia.clover_network.service.GroupService;
-import com.socialmedia.clover_network.service.UserService;
-import com.socialmedia.clover_network.service.UserWallService;
+import com.socialmedia.clover_network.service.*;
 import com.socialmedia.clover_network.util.GenIDUtil;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -29,7 +27,9 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -61,6 +61,8 @@ public class FeedServiceImpl implements FeedService {
     private final UserService userService;
     private final GroupService groupService;
     private final UserWallService userWallService;
+    @Autowired
+    FirebaseService firebaseService;
 
     @Autowired
     PostItemMapper postItemMapper;
@@ -86,7 +88,7 @@ public class FeedServiceImpl implements FeedService {
     }
 
     @Override
-    public ApiResponse post(FeedItem feedItem) {
+    public ApiResponse post(FeedItem feedItem, List<MultipartFile> images) {
         logger.info("Start api [post]");
         ApiResponse res = new ApiResponse();
         String currentUserId = AuthenticationHelper.getUserIdFromContext();
@@ -104,7 +106,7 @@ public class FeedServiceImpl implements FeedService {
                             //check owner or post permission
                             if (currentUserId.equals(groupEntity.getGroupOwnerId()) || canPost) {
                                 feedItem.setPostToUserWall(false);
-                                feedItem = this.postFeed(feedItem);
+                                feedItem = this.postFeed(feedItem, images);
                                 logger.info("[FeedController] postFeed: " + feedItem + " | userId: " + currentUserId);
                                 res.setCode(ErrorCode.Feed.ACTION_SUCCESS.getCode());
                                 res.setData(feedItem);
@@ -127,7 +129,7 @@ public class FeedServiceImpl implements FeedService {
                                 feedItem.setToUserId(groupEntity.getGroupOwnerId());
                             }
                             if (canPost) {
-                                feedItem = this.postFeed(feedItem);
+                                feedItem = this.postFeed(feedItem, images);
                                 logger.info("[FeedController] postFeed: " + feedItem + " | userId: " + currentUserId);
                                 res.setCode(ErrorCode.Feed.ACTION_SUCCESS.getCode());
                                 res.setData(feedItem);
@@ -209,6 +211,13 @@ public class FeedServiceImpl implements FeedService {
         List<FeedItem> feedItems = new ArrayList<>();
         for (PostItem postItem : postItems) {
             FeedItem feedItem = postItemMapper.toDTO(postItem);
+            if (postItem.getImages().size() > 0) {
+                List<String> imageFeeds = new ArrayList<>();
+                postItem.getImages().forEach(image -> {
+                    imageFeeds.add(firebaseService.getImagePublicUrl(image.getImageUrl()));
+                });
+                feedItem.setImages(imageFeeds);
+            }
             feedItems.add(feedItem);
         }
         Map<String, FeedItem> mapFeedItem = feedItems.stream().collect(Collectors.toMap(FeedItem::getPostId, feedItem -> feedItem));
@@ -288,7 +297,7 @@ public class FeedServiceImpl implements FeedService {
         });
     }
 
-    private FeedItem postFeed(FeedItem feedItem) {
+    private FeedItem postFeed(FeedItem feedItem, List<MultipartFile> images) {
         String postId = genIDUtil.genId();
         if (postId.isEmpty()) {
             logger.info("[postFeed] error: " + ErrorCode.Feed.GENERATE_POST_ID_ERROR + " | feedItem: " + feedItem);
@@ -307,7 +316,38 @@ public class FeedServiceImpl implements FeedService {
         try {
             //step 1: insert feedItem to postgres
             PostItem postItem = postItemMapper.toEntity(feedItem);
-            feedRepository.save(postItem);
+            if (!images.isEmpty()) {
+                List<ImageFeedItem> imageFeedItems = new ArrayList<>();
+                images.forEach(image -> {
+                    if (!image.isEmpty()) {
+                        ImageFeedItem newImage = new ImageFeedItem();
+                        String imagePath;
+                        try {
+                            imagePath = firebaseService.uploadImage(image, ImageType.FEED_IMAGES);
+                        } catch (IOException e) {
+                            throw new RuntimeException(e);
+                        }
+                        newImage.setImageUrl(imagePath);
+                        newImage.setPostItem(postItem);
+                        newImage.setCreatedBy(feedItem.getAuthorId());
+                        newImage.setCreatedTime(now);
+                        newImage.setUpdatedBy(feedItem.getAuthorId());
+                        newImage.setUpdatedTime(now);
+                        imageFeedItems.add(newImage);
+                    }
+                });
+                if (imageFeedItems.size() > 0 ) {
+                    postItem.setImages(imageFeedItems);
+                }
+            }
+            PostItem successData = feedRepository.save(postItem);
+            if (successData.getImages().size() > 0) {
+                List<String> imageFeeds = new ArrayList<>();
+                successData.getImages().forEach(image -> {
+                    imageFeeds.add(firebaseService.getImagePublicUrl(image.getImageUrl()));
+                });
+                feedItem.setImages(imageFeeds);
+            }
             //step 2: insert feedItem to redis
             //step 3: insert feed home & group for owner cache and db
             this.insertPostForFeedUser(feedItem.getAuthorId(), feedItem.getPostId());
@@ -317,10 +357,12 @@ public class FeedServiceImpl implements FeedService {
             //step 5: insert post for user in group & notification
             this.broadcastGroup(feedItem, true);
 
-        } catch (Exception ex) {
+        } catch (Exception ex ) {
             logger.error("[postFeed] " + ex.getMessage() + " | feedItem: " + feedItem);
             ex.printStackTrace();
         }
+
+
 
         return feedItem;
     }

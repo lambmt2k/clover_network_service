@@ -24,7 +24,7 @@ public class ImageController {
 
     @GetMapping("/get-image-url")
     public ResponseEntity<String> getImageUrl(@RequestParam("imagePath") String imagePath){
-        String imageUrl = firebaseService.getImageUrl(imagePath);
+        String imageUrl = firebaseService.getImagePublicUrl(imagePath);
         return ResponseEntity.ok(imageUrl);
     }
 }

@@ -8,6 +8,7 @@ import lombok.*;
 
 import javax.persistence.Id;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Map;
 
 @Getter
@@ -34,6 +35,7 @@ public class FeedItem {
     private LocalDateTime updatedTime;
     private LocalDateTime lastActive;
     private Map<ReactionItem.ReactType, Integer> totalReaction;
+    private List<String> images;
     private ReactionItem.ReactType currentUserReact;
     private boolean postToUserWall = false;
     private boolean delFlag = false;
