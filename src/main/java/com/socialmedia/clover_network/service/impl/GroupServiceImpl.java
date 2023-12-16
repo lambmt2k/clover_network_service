@@ -1,6 +1,7 @@
 package com.socialmedia.clover_network.service.impl;
 
 import com.socialmedia.clover_network.config.AuthenticationHelper;
+import com.socialmedia.clover_network.constant.CommonRegex;
 import com.socialmedia.clover_network.constant.ErrorCode;
 import com.socialmedia.clover_network.dto.BaseProfile;
 import com.socialmedia.clover_network.dto.req.GroupReq;
@@ -87,7 +88,7 @@ public class GroupServiceImpl implements GroupService {
                 GroupMember newGroupMember = GroupMember.builder()
                         .groupId(groupEntity.getGroupId())
                         .userId(groupEntity.getGroupOwnerId())
-                        .displayName(existedUserInfo.getDisplayName())
+                        .displayName(existedUserInfo.getFirstname() + CommonRegex.REGEX_SPACE + existedUserInfo.getLastname())
                         .groupRoleId(GroupMemberRole.OWNER)
                         .joinTime(now)
                         .leaveTime(null)
@@ -309,7 +310,7 @@ public class GroupServiceImpl implements GroupService {
             GroupMember newMember = GroupMember.builder()
                     .groupId(groupId)
                     .userId(userId)
-                    .displayName(memberInfo != null ? memberInfo.getDisplayName() : null)
+                    .displayName(memberInfo != null ? (memberInfo.getFirstname() + CommonRegex.REGEX_SPACE + memberInfo.getLastname()) : null)
                     .groupRoleId(GroupMemberRole.MEMBER)
                     .joinTime(now)
                     .leaveTime(null)
@@ -335,7 +336,7 @@ public class GroupServiceImpl implements GroupService {
             GroupMember newMember = GroupMember.builder()
                     .groupId(groupId)
                     .userId(userId)
-                    .displayName(memberInfo != null ? memberInfo.getDisplayName() : null)
+                    .displayName(memberInfo != null ? (memberInfo.getFirstname() + CommonRegex.REGEX_SPACE + memberInfo.getLastname()) : null)
                     .groupRoleId(GroupMemberRole.MEMBER)
                     .joinTime(now)
                     .leaveTime(null)

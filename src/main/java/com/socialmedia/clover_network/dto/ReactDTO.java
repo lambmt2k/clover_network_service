@@ -11,6 +11,6 @@ import lombok.*;
 @Builder
 public class ReactDTO {
     private String postId;
-    private String authorId;
     private ReactionItem.ReactType reactType;
+    private boolean status;
 }

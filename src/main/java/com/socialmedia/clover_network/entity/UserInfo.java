@@ -31,9 +31,6 @@ public class UserInfo {
     @Column(name = "avatar_img_url", columnDefinition = "TEXT")
     private String avatarImgUrl;
 
-    @Column(name = "banner_img_url", columnDefinition = "TEXT")
-    private String bannerImgUrl;
-
     @Column(name = "email")
     private String email;
 
@@ -42,9 +39,6 @@ public class UserInfo {
 
     @Column(name = "lastname")
     private String lastname;
-
-    @Column(name = "display_name")
-    private String displayName;
 
     @Column(name = "day_of_birth")
     private Date dayOfBirth;

@@ -88,7 +88,7 @@ public class UserServiceImpl implements UserService {
         BaseProfile baseProfile = new BaseProfile();
         if (userInfo != null) {
             baseProfile.setUserId(userInfo.getUserId());
-            baseProfile.setDisplayName(userInfo.getDisplayName());
+            baseProfile.setDisplayName(userInfo.getFirstname() + CommonRegex.REGEX_SPACE + userInfo.getLastname());
             String imageUrlPublic = firebaseService.getImageUrl(userInfo.getAvatarImgUrl());
             baseProfile.setAvatarImgUrl(imageUrlPublic);
             baseProfile.setPhoneNo(userInfo.getPhoneNo());
@@ -304,35 +304,29 @@ public class UserServiceImpl implements UserService {
             res.setMessageVN(ErrorCode.User.PROFILE_GET_EMPTY.getMessageVN());
             return res;
         }
-        try {
-            LocalDateTime now = LocalDateTime.now();
-            SimpleDateFormat dateFormat = new SimpleDateFormat(CommonRegex.PATTERN_DATE.pattern());
-            UserInfo userInfo = userInfoOpt.get();
-            String imageFbUrl = firebaseService.uploadImage(bannerFile, ImageType.USER_BANNER);
-            userInfo.setBannerImgUrl(imageFbUrl);
-            userInfo.setUpdatedBy(currentUserId);
-            userInfo.setUpdatedDate(now);
-            userInfoRepository.save(userInfo);
+        LocalDateTime now = LocalDateTime.now();
+        SimpleDateFormat dateFormat = new SimpleDateFormat(CommonRegex.PATTERN_DATE.pattern());
+        UserInfo userInfo = userInfoOpt.get();
+        userInfo.setUpdatedBy(currentUserId);
+        userInfo.setUpdatedDate(now);
+        userInfoRepository.save(userInfo);
 
-            UserInfoRes data = UserInfoMapper.INSTANCE.toDTO(userInfo);
-            String imageUrlPublic = firebaseService.getImageUrl(userInfo.getAvatarImgUrl());
-            data.setAvatar(imageUrlPublic);
-            data.setGender(userInfo.getGender().equals(Gender.MALE) ? "MALE"
-                    : (userInfo.getGender().equals(Gender.FEMALE) ? "FEMALE" : "OTHER"));
-            data.setUserRole(userInfo.getUserRole().getRoleName());
-            data.setDayOfBirth(dateFormat.format(userInfo.getDayOfBirth()));
-            data.setStatus(userInfo.getStatus().getStatusName());
-            //get user's wall info
-            GroupEntity userWall = userWallService.getUserWallByUserId(currentUserId);
-            data.setUserWallId(userWall.getGroupId());
+        UserInfoRes data = UserInfoMapper.INSTANCE.toDTO(userInfo);
+        String imageUrlPublic = firebaseService.getImageUrl(userInfo.getAvatarImgUrl());
+        data.setAvatar(imageUrlPublic);
+        data.setGender(userInfo.getGender().equals(Gender.MALE) ? "MALE"
+                : (userInfo.getGender().equals(Gender.FEMALE) ? "FEMALE" : "OTHER"));
+        data.setUserRole(userInfo.getUserRole().getRoleName());
+        data.setDayOfBirth(dateFormat.format(userInfo.getDayOfBirth()));
+        data.setStatus(userInfo.getStatus().getStatusName());
+        //get user's wall info
+        GroupEntity userWall = userWallService.getUserWallByUserId(currentUserId);
+        data.setUserWallId(userWall.getGroupId());
 
-            res.setCode(ErrorCode.User.ACTION_SUCCESS.getCode());
-            res.setData(data);
-            res.setMessageEN(ErrorCode.User.ACTION_SUCCESS.getMessageEN());
-            res.setMessageVN(ErrorCode.User.ACTION_SUCCESS.getMessageVN());
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+        res.setCode(ErrorCode.User.ACTION_SUCCESS.getCode());
+        res.setData(data);
+        res.setMessageEN(ErrorCode.User.ACTION_SUCCESS.getMessageEN());
+        res.setMessageVN(ErrorCode.User.ACTION_SUCCESS.getMessageVN());
 
         logger.info("End API [changeUserBanner]");
         return res;

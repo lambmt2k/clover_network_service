@@ -260,11 +260,9 @@ public class AuthenticationServiceImpl implements AuthenticationService {
             UserInfo newUserInfo = new UserInfo();
             newUserInfo.setUserId(newUserId);
             newUserInfo.setAvatarImgUrl(null);
-            newUserInfo.setBannerImgUrl(null);
             newUserInfo.setEmail(req.getEmail());
             newUserInfo.setFirstname(req.getFirstname());
             newUserInfo.setLastname(req.getLastname());
-            newUserInfo.setDisplayName(req.getFirstname() + CommonRegex.REGEX_SPACE + req.getLastname());
             newUserInfo.setDayOfBirth(req.getDayOfBirth());
             newUserInfo.setPhoneNo(null);
             newUserInfo.setGender(req.getGender());

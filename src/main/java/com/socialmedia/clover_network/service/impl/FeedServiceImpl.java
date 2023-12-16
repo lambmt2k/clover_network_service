@@ -50,6 +50,8 @@ public class FeedServiceImpl implements FeedService {
     GroupMemberRepository groupMemberRepository;
     @Autowired
     CommentItemRepository commentItemRepository;
+    @Autowired
+    ReactionItemRepository reactionItemRepository;
 
     /*@Autowired
     FeedItemRepositoryRedis feedItemRedis;
@@ -239,7 +241,7 @@ public class FeedServiceImpl implements FeedService {
             mapGroupItem.put(feedItem.getPostId(), mapGroups.get(feedItem.getPrivacyGroupId()));
 
             //get info comments
-            Pageable pageableComment = PageRequest.of(0, 5);
+            /*Pageable pageableComment = PageRequest.of(0, 5);
             List<CommentItem> commentItems = commentItemRepository.findByPostIdAndDelFlagFalseOrderByUpdatedTimeDesc(feedItem.getPostId(), pageableComment);
             if (!commentItems.isEmpty()) {
                 List<CommentDTO.CommentInfo> commentInfos = new ArrayList<>();
@@ -247,7 +249,7 @@ public class FeedServiceImpl implements FeedService {
                     commentInfos.add(this.convertCommentItemToCommentInfo(commentItem, currentUserId));
                 });
                 mapComment.put(feedItem.getPostId(), commentInfos);
-            }
+            }*/
 
         }
         List<String> feedIds = new ArrayList<>(mapFeedItem.keySet());
@@ -455,10 +457,31 @@ public class FeedServiceImpl implements FeedService {
             return res;
         }
 
+        ReactionItem existedReact = reactionItemRepository.findByAuthorIdAndPostIdAndDelFlagFalse(currentUserId, reactDTO.getPostId());
+        Long reactionId;
+        LocalDateTime now = LocalDateTime.now();
+        if (existedReact != null) {
+            existedReact.setReactType(reactDTO.getReactType());
+            existedReact.setUpdatedTime(now);
+            existedReact.setDelFlag(!reactDTO.isStatus());
+            reactionItemRepository.save(existedReact);
+            reactionId = existedReact.getReactionId();
+        } else {
+            ReactionItem newReactionItem = new ReactionItem();
+            newReactionItem.setAuthorId(currentUserId);
+            newReactionItem.setReactType(reactDTO.getReactType());
+            newReactionItem.setGroupId(groupEntity.getGroupId());
+            newReactionItem.setPostId(postItem.getPostId());
+            newReactionItem.setCreatedTime(now);
+            newReactionItem.setUpdatedTime(now);
+            newReactionItem.setDelFlag(!reactDTO.isStatus());
+            reactionId = reactionItemRepository.save(newReactionItem).getReactionId();
+        }
 
-        ReactionItem reactionItem = new ReactionItem();
-        reactionItem.setAuthorId(currentUserId);
-
+        res.setCode(ErrorCode.Reaction.ACTION_SUCCESS.getCode());
+        res.setData(reactionId);
+        res.setMessageEN(ErrorCode.Reaction.ACTION_SUCCESS.getMessageEN());
+        res.setMessageVN(ErrorCode.Reaction.ACTION_SUCCESS.getMessageVN());
         return res;
     }
 

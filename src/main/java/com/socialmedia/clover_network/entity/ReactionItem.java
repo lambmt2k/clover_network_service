@@ -18,7 +18,7 @@ public class ReactionItem {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id")
-    private Long reaction_id;
+    private Long reactionId;
 
     @Column(name = "author_id")
     private String authorId;
@@ -27,10 +27,10 @@ public class ReactionItem {
     private ReactType reactType;
 
     @Column(name = "group_id")
-    private String group_id;
+    private String groupId;
 
     @Column(name = "post_id")
-    private String post_id;
+    private String postId;
 
     @Column(name = "created_time")
     private LocalDateTime createdTime;
@@ -42,6 +42,7 @@ public class ReactionItem {
     private boolean delFlag;
 
     public enum ReactType {
+        NULL,
         LIKE;
     }
 }
