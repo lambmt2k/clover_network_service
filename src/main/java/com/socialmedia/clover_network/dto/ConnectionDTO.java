@@ -20,7 +20,7 @@ public class ConnectionDTO {
 
     @Getter
     @Setter
-    public class ConnectUserItem {
+    public static class ConnectUserItem {
         private String targetUserId;
         private boolean status;
     }

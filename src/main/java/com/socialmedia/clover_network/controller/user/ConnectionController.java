@@ -1,10 +1,8 @@
-package com.socialmedia.clover_network.controller;
+package com.socialmedia.clover_network.controller.user;
 
 import com.socialmedia.clover_network.dto.ConnectionDTO;
-import com.socialmedia.clover_network.dto.FeedItem;
 import com.socialmedia.clover_network.dto.res.ApiResponse;
 import com.socialmedia.clover_network.service.ConnectionService;
-import com.socialmedia.clover_network.service.FeedService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
