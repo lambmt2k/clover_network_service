@@ -1,10 +1,7 @@
 package com.socialmedia.clover_network.entity;
 
 import com.socialmedia.clover_network.enumuration.Favorite;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
 import javax.persistence.*;
 import java.time.LocalDateTime;
@@ -14,6 +11,8 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @NoArgsConstructor
 @Entity
+@Data
+@Builder
 @Table(name = "connection")
 public class Connection {
     @Id

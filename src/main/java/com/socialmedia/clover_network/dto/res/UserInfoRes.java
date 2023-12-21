@@ -21,4 +21,5 @@ public class UserInfoRes {
     private String dayOfBirth;
     private String status;
     private String userWallId;
+    private boolean isConnected = false;
 }

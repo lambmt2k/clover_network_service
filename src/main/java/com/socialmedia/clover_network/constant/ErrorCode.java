@@ -28,7 +28,7 @@ public class ErrorCode {
     }
 
     /**
-     * Code from 100 => 199
+     * Code from 100 => 150
      */
     public static class
     User {
@@ -37,6 +37,15 @@ public class ErrorCode {
         public static ErrorCode EXISTED_USER = of(102, "Existed user", "User đã tồn tại.");
         public static ErrorCode INVALID_IMAGE_FILE = of(103, "Invalid image file", "Hình ảnh truyền vào không hợp lệ.");
     }
+
+    /**
+     * Code from 151 => 199
+     */
+    public static class Connection {
+        public static ErrorCode ACTION_SUCCESS = of(150, "Action success", "Thành công.");
+        public static ErrorCode ALREADY_CONNECTED = of(151, "User already connected", "Người dùng đã được kết nối trước đó.");
+    }
+
     /**
      * Code from 200 => 299
      */

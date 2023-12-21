@@ -16,5 +16,7 @@ public interface GroupService {
     ApiResponse searchMemberOfGroup(String groupId, GroupMemberRole roleId, int page, int size, String searchKey);
     Map<String, String> getUserWallIdByUserId(List<String> userIds);
     RoleGroupSettingReq getMemberRolePermission(String userId, String groupId, boolean isUserWall);
+    void addMemberList(String groupId, String userId, boolean isInvited);
+    void addWaitingMemberList(String groupId, String userId);
 
 }
