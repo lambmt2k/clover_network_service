@@ -13,36 +13,32 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @NoArgsConstructor
 @Entity
-@Table(name = "reaction_item")
-public class ReactionItem {
+@Table(name = "image_feed_item")
+public class ImageFeedItem {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id")
-    private Long reactionId;
+    private Long id;
 
-    @Column(name = "author_id")
-    private String authorId;
+    @Column(name = "image_url", columnDefinition = "TEXT")
+    private String imageUrl;
 
-    @Column(name = "react_type")
-    private ReactType reactType;
+    @ManyToOne
+    @JoinColumn(name = "post_id")
+    private PostItem postItem;
 
-    @Column(name = "group_id")
-    private String groupId;
-
-    @Column(name = "post_id")
-    private String postId;
+    @Column(name = "created_by")
+    private String createdBy;
 
     @Column(name = "created_time")
     private LocalDateTime createdTime;
+
+    @Column(name = "updated_by")
+    private String updatedBy;
 
     @Column(name = "updated_time")
     private LocalDateTime updatedTime;
 
     @Column(name = "del_flag")
     private boolean delFlag;
-
-    public enum ReactType {
-        NULL,
-        LIKE;
-    }
 }

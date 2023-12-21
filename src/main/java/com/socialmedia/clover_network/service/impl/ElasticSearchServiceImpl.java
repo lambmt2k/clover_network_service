@@ -49,16 +49,16 @@ public class ElasticSearchServiceImpl implements ElasticSearchService {
         }
 
         SearchRes data = new SearchRes();
-        List<UserInfoRes> userInfoRes = UserInfoMapper.INSTANCE.toDTOS(userInfoRepository.findByDisplayNameContaining(keyword));
+        List<UserInfoRes> userInfoRes = UserInfoMapper.INSTANCE.toDTOS(userInfoRepository.findByFirstNameOrLastNameContainingIgnoreCase(keyword));
         if (!userInfoRes.isEmpty()) {
             data.setUsers((userInfoRes));
         }
-        List<GroupEntity> groupEntities = groupRepository.findByDelFlagFalseAndGroupNameContaining(keyword);
+        List<GroupEntity> groupEntities = groupRepository.findByDelFlagFalseAndGroupNameContainingIgnoreCase(keyword);
         groupEntities.removeIf(groupEntity -> groupEntity.getGroupType().equals(GroupEntity.GroupType.USER_WALL));
         if (!groupEntities.isEmpty()) {
             data.setGroups(groupEntities);
         }
-        List<FeedItem> feedItems = PostItemMapper.INSTANCE.toDTOS(feedRepository.findByDelFlagFalseAndContentContaining(keyword));
+        List<FeedItem> feedItems = PostItemMapper.INSTANCE.toDTOS(feedRepository.findByDelFlagFalseAndContentContainingIgnoreCase(keyword));
         if (!feedItems.isEmpty()) {
             data.setFeeds(feedItems);
         }

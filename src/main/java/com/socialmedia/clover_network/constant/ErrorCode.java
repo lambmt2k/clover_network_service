@@ -30,10 +30,12 @@ public class ErrorCode {
     /**
      * Code from 100 => 150
      */
-    public static class User {
+    public static class
+    User {
         public static ErrorCode ACTION_SUCCESS = of(100, "Action success", "Thành công.");
         public static ErrorCode PROFILE_GET_EMPTY = of(101, "Profile empty", "Không tìm thấy dữ liệu user.");
         public static ErrorCode EXISTED_USER = of(102, "Existed user", "User đã tồn tại.");
+        public static ErrorCode INVALID_IMAGE_FILE = of(103, "Invalid image file", "Hình ảnh truyền vào không hợp lệ.");
     }
 
     /**
@@ -52,6 +54,7 @@ public class ErrorCode {
         public static ErrorCode DISABLE_JOIN = of(201, "Can't join group", "Không được quyền truy cập nhóm.");
         public static ErrorCode GROUP_NOT_FOUND = of(202, "There is no group", "Không tìm được nhóm nào.");
         public static ErrorCode ALREADY_MEMBER = of(203, "User already is member of group", "User đã là thành viên của nhóm.");
+        public static ErrorCode DISABLE_COMMENT = of(204, "Group disable comment", "Bình luận trong nhóm bị khóa.");
     }
 
     /**
@@ -72,4 +75,22 @@ public class ErrorCode {
         public static ErrorCode GENERATE_POST_ID_ERROR = of(403, "Can't generate post Id", "Không thể khởi tạo postId.");
         public static ErrorCode EMPTY_FEED = of(404, "Empty feed", "Không có bài viết nào.");
     }
+
+    /**
+     * Code from 500 => 549
+     */
+    public static class Comment {
+        public static ErrorCode ACTION_SUCCESS = of(500, "Action success", "Thành công.");
+        public static ErrorCode INPUT_INVALID = of(501, "Input invalid", "Thông tin truyền vào không hợp lệ.");
+    }
+
+    /**
+     * Code from 550 => 599
+     */
+    public static class Reaction {
+        public static ErrorCode ACTION_SUCCESS = of(550, "Action success", "Thành công.");
+        public static ErrorCode INPUT_INVALID = of(551, "Input invalid", "Thông tin truyền vào không hợp lệ.");
+    }
+
+
 }

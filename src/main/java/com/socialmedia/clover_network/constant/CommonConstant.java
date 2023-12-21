@@ -10,7 +10,7 @@ public class CommonConstant {
     public static final String SECRET_KEY = "clovernetwork@23";
     public static final String VECTOR_VALUE = "clovernetwork@23";
     public static final String LOGIN_PAGE_URL = "https://clover-network-web.vercel.app/login";
-    public static final String DEFAULT_AVATAR_URL = "https://firebasestorage.googleapis.com/v0/b/clover-network-afd47.appspot.com/o/default_avatar.jpg?alt=media&token=07959b46-9cfa-4e5c-8b82-5e8d6b05336a&_gl=1*akeqku*_ga*MTk4Mzg4ODQyNy4xNjk2NTMzMzMw*_ga_CW55HF8NVT*MTY5OTI5NDYyNC40LjEuMTY5OTI5NDgwNy41Mi4wLjA.";
+    public static final String DEFAULT_AVATAR_URL = "images/user_avatar/default_avatar.jpg";
 
     public class API {
         public static final String API_LOGIN = "/api/authenticate/login-by-email";
