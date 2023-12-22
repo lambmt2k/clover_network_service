@@ -19,7 +19,7 @@ public interface UserInfoRepository extends JpaRepository<UserInfo, String> {
 
     List<UserInfo> findByStatus(UserStatus userStatus);
 
-    @Query(value = "SELECT u FROM UserInfo u " +
+    @Query(value = "SELECT u FROM user_info u " +
             "WHERE LOWER(CONCAT(u.firstname, ' ' , u.lastname)) LIKE LOWER(CONCAT('%', :keyword, '%'))", nativeQuery = true)
     List<UserInfo> findByFirstNameOrLastNameContainingIgnoreCase(String keyword);
 }
