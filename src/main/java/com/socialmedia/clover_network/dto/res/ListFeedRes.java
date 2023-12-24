@@ -26,4 +26,16 @@ public class ListFeedRes {
     private Map<String, List<CommentDTO.CommentInfo>> comments;
     private Map<String, RoleGroupSettingReq> currentUserRoles;
     private boolean canPost;
+
+    @Getter
+    @Setter
+    public static class FeedInfoHome {
+        private FeedItem feedItem;
+        private BaseProfile authorProfile;
+        private GroupEntity groupItem;
+        private RoleGroupSettingReq currentUserRole;
+        private Integer totalReact;
+        private Integer totalComment;
+        private ReactionItem.ReactType currentUserReact;
+    }
 }

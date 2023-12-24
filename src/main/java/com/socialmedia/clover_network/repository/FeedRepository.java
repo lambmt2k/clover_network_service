@@ -14,4 +14,6 @@ public interface FeedRepository extends JpaRepository<PostItem, String> {
     List<PostItem> findByDelFlagFalseAndContentContainingIgnoreCase(String keyword);
 
     PostItem findByPostIdAndDelFlagFalse(String postId);
+
+    List<PostItem> findAllByPostIdInAndDelFlagFalseAndLastActiveIsNotNullOrderByLastActiveDesc(List<String> postId, Pageable pageable);
 }

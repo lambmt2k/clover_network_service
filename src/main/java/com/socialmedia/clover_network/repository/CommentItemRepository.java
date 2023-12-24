@@ -10,4 +10,5 @@ import java.util.List;
 @Repository
 public interface CommentItemRepository extends JpaRepository<CommentItem, Long> {
     List<CommentItem> findByPostIdAndDelFlagFalseOrderByUpdatedTimeDesc(String postId, Pageable pageable);
+    List<CommentItem> findByPostIdAndDelFlagFalseOrderByUpdatedTimeDesc(String postId);
 }
