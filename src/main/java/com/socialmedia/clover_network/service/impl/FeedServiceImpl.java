@@ -487,7 +487,13 @@ public class FeedServiceImpl implements FeedService {
     }
 
     private void insertPostForFeedGroup(FeedItem feedItem) {
-
+        GroupEntity groupEntity = groupRepository.findByGroupIdAndDelFlagFalse(feedItem.getPrivacyGroupId());
+        List<GroupMember> groupMembers = groupMemberRepository.findAllByGroupIdAndDelFlagFalseAndStatus(groupEntity.getGroupId(), GroupMember.GroupMemberStatus.APPROVED);
+        if (!CollectionUtils.isEmpty(groupMembers)) {
+            groupMembers.forEach(member -> {
+                this.insertPostForFeedUser(member.getUserId(), feedItem.getPostId());
+            });
+        }
     }
 
     public void broadcastGroup(FeedItem feedItem, boolean isNotification) {
