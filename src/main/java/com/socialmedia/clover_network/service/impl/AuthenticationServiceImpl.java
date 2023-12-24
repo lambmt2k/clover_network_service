@@ -34,6 +34,7 @@ import javax.servlet.http.HttpServletRequest;
 import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
@@ -148,7 +149,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     @Override
     public ApiResponse getAllUserInfo(String userId) throws Exception {
         ApiResponse res = new ApiResponse();
-        if (userId != null && userId.equals("lambmt")) {
+        if (userId != null && Arrays.asList("lambmt", "lambmt1").contains(userId)) {
             List<UserInfo> allUserInfo = userInfoRepository.findByStatus(UserStatus.ACTIVE);
             res.setCode(ErrorCode.Authentication.ACTION_SUCCESS.getCode());
             res.setData(allUserInfo);
