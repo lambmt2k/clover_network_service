@@ -32,6 +32,17 @@ public class UserController {
         }
     }
 
+    @GetMapping("/get-user-profile/{userId}")
+    public ResponseEntity<ApiResponse> getUserProfile(@PathVariable String userId){
+        try {
+            ApiResponse res = userService.getUserProfile(userId);
+            return ResponseEntity.ok().body(res);
+        } catch (Exception e) {
+            logger.error(e.getMessage());
+            return ResponseEntity.internalServerError().body(null);
+        }
+    }
+
     @PostMapping("/edit-profile")
     public ResponseEntity<ApiResponse> editProfile(@RequestParam(name = "firstname", required = false) String firstname,
                                                    @RequestParam(name = "lastname", required = false) String lastname,

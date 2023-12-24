@@ -16,6 +16,7 @@ public interface UserService {
     Map<String, BaseProfile> multiGetBaseProfileByUserIds(List<String> userIds);
     BaseProfile mapUserInfoToBaseProfile(UserInfo userInfo);
     ApiResponse getUserInfo();
+    ApiResponse getUserProfile(String userId);
     ApiResponse editProfile(String firstname, String lastname, String phoneNo, Gender gender, Date dayOfBirth);
     ApiResponse changeUserAvatar(MultipartFile imageFile);
     ApiResponse changeUserBanner(MultipartFile bannerFile);

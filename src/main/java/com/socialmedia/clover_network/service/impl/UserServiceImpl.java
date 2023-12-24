@@ -6,12 +6,14 @@ import com.socialmedia.clover_network.constant.ErrorCode;
 import com.socialmedia.clover_network.dto.BaseProfile;
 import com.socialmedia.clover_network.dto.res.ApiResponse;
 import com.socialmedia.clover_network.dto.res.UserInfoRes;
+import com.socialmedia.clover_network.entity.Connection;
 import com.socialmedia.clover_network.entity.GroupEntity;
 import com.socialmedia.clover_network.entity.UserInfo;
 import com.socialmedia.clover_network.enumuration.Gender;
 import com.socialmedia.clover_network.enumuration.ImageType;
 import com.socialmedia.clover_network.enumuration.UserStatus;
 import com.socialmedia.clover_network.mapper.UserInfoMapper;
+import com.socialmedia.clover_network.repository.ConnectionRepository;
 import com.socialmedia.clover_network.repository.UserInfoRepository;
 import com.socialmedia.clover_network.service.FirebaseService;
 import com.socialmedia.clover_network.service.GroupService;
@@ -40,6 +42,8 @@ public class UserServiceImpl implements UserService {
 
     @Autowired
     UserInfoRepository userInfoRepository;
+    @Autowired
+    ConnectionRepository connectionRepository;
 
     @Autowired
     GroupService groupService;
@@ -142,6 +146,59 @@ public class UserServiceImpl implements UserService {
             res.setMessageVN(ErrorCode.Token.FORBIDDEN.getMessageVN());
         }
         logger.info("End api [getUserInfo]");
+        return res;
+
+    }
+
+    @Override
+    public ApiResponse getUserProfile(String userId) {
+        logger.info("Start [getUserProfile]");
+        ApiResponse res = new ApiResponse();
+        SimpleDateFormat dateFormat = new SimpleDateFormat(CommonRegex.PATTERN_DATE.pattern());
+        String currentUserId = AuthenticationHelper.getUserIdFromContext();
+        if (currentUserId != null) {
+            logger.info("Get info of userId: {}", userId);
+            Optional<UserInfo> userInfoOpt = userInfoRepository.findByUserId(userId);
+            if (userInfoOpt.isPresent()) {
+                UserInfo userInfo = userInfoOpt.get();
+                UserInfoRes data = new UserInfoRes();
+                data.setUserId(userInfo.getUserId());
+                data.setEmail(userInfo.getEmail());
+                data.setFirstname(userInfo.getFirstname());
+                data.setLastname(userInfo.getLastname());
+                String imageUrlPublic = firebaseService.getImagePublicUrl(userInfo.getAvatarImgUrl());
+                data.setAvatar(imageUrlPublic);
+                data.setPhoneNo(userInfo.getPhoneNo());
+                data.setGender(userInfo.getGender().equals(Gender.MALE) ? "MALE"
+                        : (userInfo.getGender().equals(Gender.FEMALE) ? "FEMALE" : "OTHER"));
+                data.setUserRole(userInfo.getUserRole().getRoleName());
+                data.setDayOfBirth(dateFormat.format(userInfo.getDayOfBirth()));
+                data.setStatus(userInfo.getStatus().getStatusName());
+                //get user's wall info
+                GroupEntity userWall = userWallService.getUserWallByUserId(userId);
+                data.setUserWallId(userWall.getGroupId());
+                Connection checkConnectAtoB = connectionRepository.findByUserIdAndUserIdConnected(currentUserId, userId);
+                if (checkConnectAtoB != null && checkConnectAtoB.isConnectStatus()) {
+                    data.setConnected(true);
+                }
+
+                res.setCode(ErrorCode.User.ACTION_SUCCESS.getCode());
+                res.setData(data);
+                res.setMessageEN(ErrorCode.User.ACTION_SUCCESS.getMessageEN());
+                res.setMessageVN(ErrorCode.User.ACTION_SUCCESS.getMessageVN());
+            } else {
+                res.setCode(ErrorCode.User.PROFILE_GET_EMPTY.getCode());
+                res.setData(null);
+                res.setMessageEN(ErrorCode.User.PROFILE_GET_EMPTY.getMessageEN());
+                res.setMessageVN(ErrorCode.User.PROFILE_GET_EMPTY.getMessageVN());
+            }
+        } else {
+            res.setCode(ErrorCode.Token.FORBIDDEN.getCode());
+            res.setData(null);
+            res.setMessageEN(ErrorCode.Token.FORBIDDEN.getMessageEN());
+            res.setMessageVN(ErrorCode.Token.FORBIDDEN.getMessageVN());
+        }
+        logger.info("End api [getUserProfile]");
         return res;
 
     }
