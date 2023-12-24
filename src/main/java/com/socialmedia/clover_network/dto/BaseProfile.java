@@ -18,4 +18,5 @@ public class BaseProfile implements Serializable {
     private String phoneNo;
     private String email;
     private String userWallId;
+    private boolean isConnected = false;
 }

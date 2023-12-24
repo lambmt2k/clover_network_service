@@ -11,6 +11,8 @@ import java.util.Optional;
 public interface GroupRepository extends JpaRepository<GroupEntity, Long> {
     List<GroupEntity> findByGroupOwnerId(String groupOwnerId);
 
+    List<GroupEntity> findAllByGroupIdInAndDelFlagFalse(List<String> groupIds);
+
     Optional<GroupEntity> findByGroupOwnerIdAndGroupType(String groupOwnerId, GroupEntity.GroupType groupType);
 
     Optional<GroupEntity> findByGroupIdAndGroupType(String groupId, GroupEntity.GroupType groupType);

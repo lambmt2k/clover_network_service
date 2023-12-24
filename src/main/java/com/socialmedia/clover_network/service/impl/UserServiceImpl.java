@@ -88,6 +88,28 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    public BaseProfile getBaseProfileByUserId(String userId) {
+        BaseProfile baseProfile = new BaseProfile();
+        String currentUserId = AuthenticationHelper.getUserIdFromContext();
+        UserInfo userInfo = userInfoRepository.findByUserId(userId).orElse(null);
+        if (userInfo != null) {
+            baseProfile.setUserId(userInfo.getUserId());
+            baseProfile.setDisplayName(userInfo.getFirstname() + CommonRegex.REGEX_SPACE + userInfo.getLastname());
+            String imageUrlPublic = firebaseService.getImagePublicUrl(userInfo.getAvatarImgUrl());
+            baseProfile.setAvatarImgUrl(imageUrlPublic);
+            baseProfile.setPhoneNo(userInfo.getPhoneNo());
+            baseProfile.setEmail(userInfo.getEmail());
+            GroupEntity userWall = userWallService.getUserWallByUserId(userId);
+            baseProfile.setUserWallId(userWall.getGroupId());
+            Connection checkConnectAtoB = connectionRepository.findByUserIdAndUserIdConnected(currentUserId, userId);
+            if (checkConnectAtoB != null && checkConnectAtoB.isConnectStatus()) {
+                baseProfile.setConnected(true);
+            }
+        }
+        return baseProfile;
+    }
+
+    @Override
     public BaseProfile mapUserInfoToBaseProfile(UserInfo userInfo) {
         BaseProfile baseProfile = new BaseProfile();
         if (userInfo != null) {
@@ -128,7 +150,6 @@ public class UserServiceImpl implements UserService {
                 //get user's wall info
                 GroupEntity userWall = userWallService.getUserWallByUserId(currentUserId);
                 data.setUserWallId(userWall.getGroupId());
-
                 res.setCode(ErrorCode.User.ACTION_SUCCESS.getCode());
                 res.setData(data);
                 res.setMessageEN(ErrorCode.User.ACTION_SUCCESS.getMessageEN());

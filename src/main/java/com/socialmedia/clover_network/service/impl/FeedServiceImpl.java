@@ -1,5 +1,6 @@
 package com.socialmedia.clover_network.service.impl;
 
+import com.google.gson.Gson;
 import com.socialmedia.clover_network.config.AuthenticationHelper;
 import com.socialmedia.clover_network.constant.CommonConstant;
 import com.socialmedia.clover_network.constant.CommonRegex;
@@ -11,6 +12,7 @@ import com.socialmedia.clover_network.dto.ReactDTO;
 import com.socialmedia.clover_network.dto.req.RoleGroupSettingReq;
 import com.socialmedia.clover_network.dto.res.ApiResponse;
 import com.socialmedia.clover_network.dto.res.ListFeedRes;
+import com.socialmedia.clover_network.dto.res.UserInfoRes;
 import com.socialmedia.clover_network.entity.*;
 import com.socialmedia.clover_network.enumuration.ImageType;
 import com.socialmedia.clover_network.mapper.CommentItemMapper;
@@ -29,6 +31,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 import org.springframework.web.multipart.MultipartFile;
 
+import javax.transaction.Transactional;
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.*;
@@ -39,7 +42,7 @@ import java.util.stream.Collectors;
 public class FeedServiceImpl implements FeedService {
 
     private final Logger logger = LoggerFactory.getLogger(FeedServiceImpl.class);
-
+    private static Gson gson = new Gson();
     @Value("${clover.server_host}")
     private String serverHost;
 
@@ -52,6 +55,8 @@ public class FeedServiceImpl implements FeedService {
     CommentItemRepository commentItemRepository;
     @Autowired
     ReactionItemRepository reactionItemRepository;
+    @Autowired
+    FeedUserRepository feedUserDAO;
 
     /*@Autowired
     FeedItemRepositoryRedis feedItemRedis;
@@ -277,6 +282,105 @@ public class FeedServiceImpl implements FeedService {
 
     }
 
+    @Override
+    public ApiResponse listFeedUserHomeV2(int page, int size) {
+        logger.info("Start API [listFeedUserHomeV2]");
+        ApiResponse res = new ApiResponse();
+        String currentUserId = AuthenticationHelper.getUserIdFromContext();
+        if (StringUtils.isEmpty(currentUserId)) {
+            res.setCode(ErrorCode.Token.FORBIDDEN.getCode());
+            res.setData(null);
+            res.setMessageEN(ErrorCode.Token.FORBIDDEN.getMessageEN());
+            res.setMessageVN(ErrorCode.Token.FORBIDDEN.getMessageVN());
+            return res;
+        }
+        List<String> enableFeedIds = this.getEnableFeedIdOfUser(currentUserId);
+        List<ListFeedRes.FeedInfoHome> data = this.listFeed(currentUserId, enableFeedIds, page, size, null);
+        if (CollectionUtils.isEmpty(data)) {
+            res.setCode(ErrorCode.Feed.EMPTY_FEED.getCode());
+            res.setData(null);
+            res.setMessageEN(ErrorCode.Feed.EMPTY_FEED.getMessageEN());
+            res.setMessageVN(ErrorCode.Feed.EMPTY_FEED.getMessageVN());
+            return res;
+        }
+        res.setCode(ErrorCode.Feed.ACTION_SUCCESS.getCode());
+        res.setData(data);
+        res.setMessageEN(ErrorCode.Feed.ACTION_SUCCESS.getMessageEN());
+        res.setMessageVN(ErrorCode.Feed.ACTION_SUCCESS.getMessageVN());
+        logger.info("End API [listFeedUserHomeV2]");
+        return res;
+
+    }
+
+    public List<ListFeedRes.FeedInfoHome> listFeed(String userId, List<String> feedIds, int page, int size, String groupId) {
+        if (CollectionUtils.isEmpty(feedIds)) {
+            return null;
+        }
+
+        List<ListFeedRes.FeedInfoHome> res = new ArrayList<>();
+        Pageable pageable = PageRequest.of(page, size);
+        if (StringUtils.isEmpty(groupId)) { //list user home
+            List<PostItem> postItems = feedRepository.findAllByPostIdInAndDelFlagFalseAndLastActiveIsNotNullOrderByLastActiveDesc(feedIds, pageable);
+            List<String> groupIds = postItems.stream().map(PostItem::getPrivacyGroupId).distinct().collect(Collectors.toList());
+            List<GroupEntity> groupEntities = groupRepository.findAllByGroupIdInAndDelFlagFalse(groupIds);
+            postItems.forEach(postItem -> {
+                ListFeedRes.FeedInfoHome feedInfoHome = new ListFeedRes.FeedInfoHome();
+
+                //FeedItem
+                FeedItem feedItem = PostItemMapper.INSTANCE.toDTO(postItem);
+                if (postItem.getImages().size() > 0) {
+                    List<String> imageFeeds = new ArrayList<>();
+                    postItem.getImages().forEach(image -> {
+                        imageFeeds.add(firebaseService.getImagePublicUrl(image.getImageUrl()));
+                    });
+                    feedItem.setFeedImages(imageFeeds);
+                }
+                feedInfoHome.setFeedItem(feedItem);
+
+                //authorProfile
+                BaseProfile authorProfile = userService.getBaseProfileByUserId(feedItem.getAuthorId());
+                feedInfoHome.setAuthorProfile(authorProfile);
+
+                //groupItem
+                GroupEntity groupEntity = groupEntities
+                        .stream()
+                        .filter(group -> group.getGroupId().equals(feedItem.getPrivacyGroupId()))
+                        .findFirst().orElse(null);
+                feedInfoHome.setGroupItem(groupEntity);
+
+                //currentUserRole
+                RoleGroupSettingReq currentUserRole = groupService.getMemberRolePermission(userId, feedItem.getPrivacyGroupId(), feedItem.isPostToUserWall());
+                feedInfoHome.setCurrentUserRole(currentUserRole);
+
+                //totalReact
+                List<ReactionItem> reactionItems = reactionItemRepository.findByPostIdAndDelFlagFalse(feedItem.getPostId());
+                Integer totalReact = reactionItems.size();
+                feedInfoHome.setTotalReact(totalReact);
+                //currentUserReact
+                ReactionItem currentUserReactionItem = reactionItems.stream().filter(reactionItem -> reactionItem.getAuthorId().equals(userId)).findFirst().orElse(null);
+                ReactionItem.ReactType currentUserReactType = currentUserReactionItem != null && !currentUserReactionItem.isDelFlag()
+                        ? currentUserReactionItem.getReactType() : null;
+                feedInfoHome.setCurrentUserReact(currentUserReactType);
+                //totalComment
+                Integer totalComment = commentItemRepository.findByPostIdAndDelFlagFalseOrderByUpdatedTimeDesc(feedItem.getPostId()).size();
+                feedInfoHome.setTotalComment(totalComment);
+
+                res.add(feedInfoHome);
+            });
+        }
+
+        return res;
+    }
+
+    private List<String> getEnableFeedIdOfUser(String userId) {
+        List<String> feedIds = new ArrayList<>();;
+        FeedUserEntity feedUserEntity = feedUserDAO.findById(userId).orElse(null);
+        if (feedUserEntity != null) {
+            feedIds = feedUserEntity.getListFeedId();
+        }
+        return feedIds;
+    }
+
     private void extractMetadata(List<String> feedIds, Map<String, FeedItem> mapFeedItem, List<String> listUserIds) {
         for (String feedId : feedIds) {
             FeedItem feedItem = mapFeedItem.get(feedId);
@@ -297,6 +401,7 @@ public class FeedServiceImpl implements FeedService {
         });
     }
 
+    @Transactional
     private FeedItem postFeed(FeedItem feedItem, List<MultipartFile> images) {
         String postId = genIDUtil.genId();
         if (postId.isEmpty()) {
@@ -341,7 +446,7 @@ public class FeedServiceImpl implements FeedService {
                 }
             }
             PostItem successData = feedRepository.save(postItem);
-            if (successData.getImages().size() > 0) {
+            if (Objects.nonNull(successData.getImages()) && successData.getImages().size() > 0) {
                 List<String> imageFeeds = new ArrayList<>();
                 successData.getImages().forEach(image -> {
                     imageFeeds.add(firebaseService.getImagePublicUrl(image.getImageUrl()));
@@ -368,7 +473,17 @@ public class FeedServiceImpl implements FeedService {
     }
 
     private void insertPostForFeedUser(String userId, String feedId) {
-
+        FeedUserEntity feedUserEntity = feedUserDAO.findById(userId).orElse(null);
+        if (feedUserEntity != null) {
+            List<String> feedIds = feedUserEntity.getListFeedId();
+            feedIds.add(feedId);
+            feedIds = feedIds.stream().distinct().collect(Collectors.toList());
+            feedUserEntity.setValue(gson.toJson(feedIds));
+            feedUserDAO.save(feedUserEntity);
+        } else {
+            FeedUserEntity feedUserEntityCreate = FeedUserEntity.builder().key(userId).value(gson.toJson(Collections.singletonList(feedId))).build();
+            feedUserDAO.save(feedUserEntityCreate);
+        }
     }
 
     private void insertPostForFeedGroup(FeedItem feedItem) {
