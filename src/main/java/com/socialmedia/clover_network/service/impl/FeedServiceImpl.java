@@ -229,8 +229,9 @@ public class FeedServiceImpl implements FeedService {
         Map<String, FeedItem> mapFeedItem = feedItems.stream().collect(Collectors.toMap(FeedItem::getPostId, feedItem -> feedItem));
         Map<String, RoleGroupSettingReq> mapCurrentUserRole = new LinkedHashMap<>();
         Map<String, GroupEntity> mapGroupItem = new LinkedHashMap<>();
-        Map<String, List<CommentDTO.CommentInfo>> mapComment = new LinkedHashMap<>();
-        Map<String, ReactionItem.ReactType> mapReaction = new LinkedHashMap<>();
+        Map<String, Integer> mapTotalComments = new LinkedHashMap<>();
+        Map<String, Integer> mapTotalReacts = new LinkedHashMap<>();
+        Map<String, ReactionItem.ReactType> mapCurrentUserReacts = new LinkedHashMap<>();
 
         for (Map.Entry<String, FeedItem> feedItemEntry : mapFeedItem.entrySet()) {
             FeedItem feedItem = feedItemEntry.getValue();
@@ -255,16 +256,18 @@ public class FeedServiceImpl implements FeedService {
             //get info group
             mapGroupItem.put(feedItem.getPostId(), mapGroups.get(feedItem.getPrivacyGroupId()));
 
-            //get info comments
-            /*Pageable pageableComment = PageRequest.of(0, 5);
-            List<CommentItem> commentItems = commentItemRepository.findByPostIdAndDelFlagFalseOrderByUpdatedTimeDesc(feedItem.getPostId(), pageableComment);
-            if (!commentItems.isEmpty()) {
-                List<CommentDTO.CommentInfo> commentInfos = new ArrayList<>();
-                commentItems.forEach(commentItem -> {
-                    commentInfos.add(this.convertCommentItemToCommentInfo(commentItem, currentUserId));
-                });
-                mapComment.put(feedItem.getPostId(), commentInfos);
-            }*/
+            //totalReact
+            List<ReactionItem> reactionItems = reactionItemRepository.findByPostIdAndDelFlagFalse(feedItem.getPostId());
+            Integer totalReact = reactionItems.size();
+            mapTotalReacts.put(feedItem.getPostId(), totalReact);
+            //currentUserReact
+            ReactionItem currentUserReactionItem = reactionItems.stream().filter(reactionItem -> reactionItem.getAuthorId().equals(currentUserId)).findFirst().orElse(null);
+            ReactionItem.ReactType currentUserReactType = currentUserReactionItem != null && !currentUserReactionItem.isDelFlag()
+                    ? currentUserReactionItem.getReactType() : null;
+            mapCurrentUserReacts.put(feedItem.getPostId(), currentUserReactType);
+            //totalComment
+            Integer totalComment = commentItemRepository.findByPostIdAndDelFlagFalseOrderByUpdatedTimeDesc(feedItem.getPostId()).size();
+            mapTotalComments.put(feedItem.getPostId(), totalComment);
 
         }
         List<String> feedIds = new ArrayList<>(mapFeedItem.keySet());
@@ -275,7 +278,7 @@ public class FeedServiceImpl implements FeedService {
         // get userId => profile
         Map<String, BaseProfile> mapBaseProfile = userService.multiGetBaseProfileByUserIds(listUserIds);
         res.setCode(ErrorCode.Feed.ACTION_SUCCESS.getCode());
-        res.setData(ListFeedRes.of(feedIds, mapFeedItem, mapReaction, null, mapBaseProfile, mapGroupItem, mapComment, mapCurrentUserRole, false));
+        res.setData(ListFeedRes.of(feedIds, mapFeedItem, mapBaseProfile, mapGroupItem, mapCurrentUserReacts, mapTotalReacts, mapTotalComments, mapCurrentUserRole, true));
         res.setMessageEN(ErrorCode.Feed.ACTION_SUCCESS.getMessageEN());
         res.setMessageVN(ErrorCode.Feed.ACTION_SUCCESS.getMessageVN());
         logger.info("End API [listFeed]");
