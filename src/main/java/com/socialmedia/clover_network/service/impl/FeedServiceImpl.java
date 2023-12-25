@@ -57,6 +57,8 @@ public class FeedServiceImpl implements FeedService {
     ReactionItemRepository reactionItemRepository;
     @Autowired
     FeedUserRepository feedUserDAO;
+    @Autowired
+    FeedGroupRepository feedGroupDAO;
 
     /*@Autowired
     FeedItemRepositoryRedis feedItemRedis;
@@ -488,6 +490,18 @@ public class FeedServiceImpl implements FeedService {
 
     private void insertPostForFeedGroup(FeedItem feedItem) {
         GroupEntity groupEntity = groupRepository.findByGroupIdAndDelFlagFalse(feedItem.getPrivacyGroupId());
+        FeedGroupEntity feedGroupEntity = feedGroupDAO.findById(feedItem.getPrivacyGroupId()).orElse(null);
+        if (feedGroupEntity != null) {
+            List<String> feedIds = feedGroupEntity.getListFeedId();
+            feedIds.add(feedItem.getPostId());
+            feedIds = feedIds.stream().distinct().collect(Collectors.toList());
+            feedGroupEntity.setValue(gson.toJson(feedIds));
+            feedGroupDAO.save(feedGroupEntity);
+        } else {
+            FeedGroupEntity feedGroupEntityCreate = FeedGroupEntity.builder().key(feedItem.getAuthorId()).value(gson.toJson(Arrays.asList(feedItem.getPostId()))).build();
+            feedGroupDAO.save(feedGroupEntityCreate);
+        }
+
         List<GroupMember> groupMembers = groupMemberRepository.findAllByGroupIdAndDelFlagFalseAndStatus(groupEntity.getGroupId(), GroupMember.GroupMemberStatus.APPROVED);
         if (!CollectionUtils.isEmpty(groupMembers)) {
             groupMembers.forEach(member -> {
