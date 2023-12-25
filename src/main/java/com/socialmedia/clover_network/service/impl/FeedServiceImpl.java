@@ -12,7 +12,6 @@ import com.socialmedia.clover_network.dto.ReactDTO;
 import com.socialmedia.clover_network.dto.req.RoleGroupSettingReq;
 import com.socialmedia.clover_network.dto.res.ApiResponse;
 import com.socialmedia.clover_network.dto.res.ListFeedRes;
-import com.socialmedia.clover_network.dto.res.UserInfoRes;
 import com.socialmedia.clover_network.entity.*;
 import com.socialmedia.clover_network.enumuration.ImageType;
 import com.socialmedia.clover_network.mapper.CommentItemMapper;
@@ -276,7 +275,7 @@ public class FeedServiceImpl implements FeedService {
         // get userId => profile
         Map<String, BaseProfile> mapBaseProfile = userService.multiGetBaseProfileByUserIds(listUserIds);
         res.setCode(ErrorCode.Feed.ACTION_SUCCESS.getCode());
-        res.setData(ListFeedRes.of(feedIds, mapFeedItem, mapReaction,null, mapBaseProfile, mapGroupItem, mapComment, mapCurrentUserRole, false));
+        res.setData(ListFeedRes.of(feedIds, mapFeedItem, mapReaction, null, mapBaseProfile, mapGroupItem, mapComment, mapCurrentUserRole, false));
         res.setMessageEN(ErrorCode.Feed.ACTION_SUCCESS.getMessageEN());
         res.setMessageVN(ErrorCode.Feed.ACTION_SUCCESS.getMessageVN());
         logger.info("End API [listFeed]");
@@ -314,6 +313,36 @@ public class FeedServiceImpl implements FeedService {
 
     }
 
+    @Override
+    public ApiResponse listFeedGroupHome(String groupId, int page, int size) {
+        logger.info("Start API [listFeedGroupHome]");
+        ApiResponse res = new ApiResponse();
+        String currentUserId = AuthenticationHelper.getUserIdFromContext();
+        if (StringUtils.isEmpty(currentUserId)) {
+            res.setCode(ErrorCode.Token.FORBIDDEN.getCode());
+            res.setData(null);
+            res.setMessageEN(ErrorCode.Token.FORBIDDEN.getMessageEN());
+            res.setMessageVN(ErrorCode.Token.FORBIDDEN.getMessageVN());
+            return res;
+        }
+        List<String> enableFeedGroupIds = this.getEnableFeedIdOfGroup(groupId);
+        List<ListFeedRes.FeedInfoHome> data = this.listFeed(currentUserId, enableFeedGroupIds, page, size, groupId);
+        if (CollectionUtils.isEmpty(data)) {
+            res.setCode(ErrorCode.Feed.EMPTY_FEED.getCode());
+            res.setData(null);
+            res.setMessageEN(ErrorCode.Feed.EMPTY_FEED.getMessageEN());
+            res.setMessageVN(ErrorCode.Feed.EMPTY_FEED.getMessageVN());
+            return res;
+        }
+        res.setCode(ErrorCode.Feed.ACTION_SUCCESS.getCode());
+        res.setData(data);
+        res.setMessageEN(ErrorCode.Feed.ACTION_SUCCESS.getMessageEN());
+        res.setMessageVN(ErrorCode.Feed.ACTION_SUCCESS.getMessageVN());
+        logger.info("End API [listFeedGroupHome]");
+        return res;
+
+    }
+
     public List<ListFeedRes.FeedInfoHome> listFeed(String userId, List<String> feedIds, int page, int size, String groupId) {
         if (CollectionUtils.isEmpty(feedIds)) {
             return null;
@@ -321,66 +350,76 @@ public class FeedServiceImpl implements FeedService {
 
         List<ListFeedRes.FeedInfoHome> res = new ArrayList<>();
         Pageable pageable = PageRequest.of(page, size);
-        if (StringUtils.isEmpty(groupId)) { //list user home
-            List<PostItem> postItems = feedRepository.findAllByPostIdInAndDelFlagFalseAndLastActiveIsNotNullOrderByLastActiveDesc(feedIds, pageable);
-            List<String> groupIds = postItems.stream().map(PostItem::getPrivacyGroupId).distinct().collect(Collectors.toList());
-            List<GroupEntity> groupEntities = groupRepository.findAllByGroupIdInAndDelFlagFalse(groupIds);
-            postItems.forEach(postItem -> {
-                ListFeedRes.FeedInfoHome feedInfoHome = new ListFeedRes.FeedInfoHome();
+        List<PostItem> postItems = feedRepository.findAllByPostIdInAndDelFlagFalseAndLastActiveIsNotNullOrderByLastActiveDesc(feedIds, pageable);
+        List<String> groupIds = postItems.stream().map(PostItem::getPrivacyGroupId).distinct().collect(Collectors.toList());
+        List<GroupEntity> groupEntities = groupRepository.findAllByGroupIdInAndDelFlagFalse(groupIds);
+        postItems.forEach(postItem -> {
+            ListFeedRes.FeedInfoHome feedInfoHome = new ListFeedRes.FeedInfoHome();
 
-                //FeedItem
-                FeedItem feedItem = PostItemMapper.INSTANCE.toDTO(postItem);
-                if (postItem.getImages().size() > 0) {
-                    List<String> imageFeeds = new ArrayList<>();
-                    postItem.getImages().forEach(image -> {
-                        imageFeeds.add(firebaseService.getImagePublicUrl(image.getImageUrl()));
-                    });
-                    feedItem.setFeedImages(imageFeeds);
-                }
-                feedInfoHome.setFeedItem(feedItem);
+            //FeedItem
+            FeedItem feedItem = PostItemMapper.INSTANCE.toDTO(postItem);
+            if (postItem.getImages().size() > 0) {
+                List<String> imageFeeds = new ArrayList<>();
+                postItem.getImages().forEach(image -> {
+                    imageFeeds.add(firebaseService.getImagePublicUrl(image.getImageUrl()));
+                });
+                feedItem.setFeedImages(imageFeeds);
+            }
+            feedInfoHome.setFeedItem(feedItem);
 
-                //authorProfile
-                BaseProfile authorProfile = userService.getBaseProfileByUserId(feedItem.getAuthorId());
-                feedInfoHome.setAuthorProfile(authorProfile);
+            //authorProfile
+            BaseProfile authorProfile = userService.getBaseProfileByUserId(feedItem.getAuthorId());
+            feedInfoHome.setAuthorProfile(authorProfile);
 
-                //groupItem
-                GroupEntity groupEntity = groupEntities
-                        .stream()
-                        .filter(group -> group.getGroupId().equals(feedItem.getPrivacyGroupId()))
-                        .findFirst().orElse(null);
-                feedInfoHome.setGroupItem(groupEntity);
+            //groupItem
+            GroupEntity groupEntity = groupEntities
+                    .stream()
+                    .filter(group -> group.getGroupId().equals(feedItem.getPrivacyGroupId()))
+                    .findFirst().orElse(null);
+            feedInfoHome.setGroupItem(groupEntity);
 
-                //currentUserRole
-                RoleGroupSettingReq currentUserRole = groupService.getMemberRolePermission(userId, feedItem.getPrivacyGroupId(), feedItem.isPostToUserWall());
-                feedInfoHome.setCurrentUserRole(currentUserRole);
+            //currentUserRole
+            RoleGroupSettingReq currentUserRole = groupService.getMemberRolePermission(userId, feedItem.getPrivacyGroupId(), feedItem.isPostToUserWall());
+            feedInfoHome.setCurrentUserRole(currentUserRole);
 
-                //totalReact
-                List<ReactionItem> reactionItems = reactionItemRepository.findByPostIdAndDelFlagFalse(feedItem.getPostId());
-                Integer totalReact = reactionItems.size();
-                feedInfoHome.setTotalReact(totalReact);
-                //currentUserReact
-                ReactionItem currentUserReactionItem = reactionItems.stream().filter(reactionItem -> reactionItem.getAuthorId().equals(userId)).findFirst().orElse(null);
-                ReactionItem.ReactType currentUserReactType = currentUserReactionItem != null && !currentUserReactionItem.isDelFlag()
-                        ? currentUserReactionItem.getReactType() : null;
-                feedInfoHome.setCurrentUserReact(currentUserReactType);
-                //totalComment
-                Integer totalComment = commentItemRepository.findByPostIdAndDelFlagFalseOrderByUpdatedTimeDesc(feedItem.getPostId()).size();
-                feedInfoHome.setTotalComment(totalComment);
+            //totalReact
+            List<ReactionItem> reactionItems = reactionItemRepository.findByPostIdAndDelFlagFalse(feedItem.getPostId());
+            Integer totalReact = reactionItems.size();
+            feedInfoHome.setTotalReact(totalReact);
+            //currentUserReact
+            ReactionItem currentUserReactionItem = reactionItems.stream().filter(reactionItem -> reactionItem.getAuthorId().equals(userId)).findFirst().orElse(null);
+            ReactionItem.ReactType currentUserReactType = currentUserReactionItem != null && !currentUserReactionItem.isDelFlag()
+                    ? currentUserReactionItem.getReactType() : null;
+            feedInfoHome.setCurrentUserReact(currentUserReactType);
+            //totalComment
+            Integer totalComment = commentItemRepository.findByPostIdAndDelFlagFalseOrderByUpdatedTimeDesc(feedItem.getPostId()).size();
+            feedInfoHome.setTotalComment(totalComment);
 
-                res.add(feedInfoHome);
-            });
-        }
+            res.add(feedInfoHome);
+        });
+
 
         return res;
     }
 
     private List<String> getEnableFeedIdOfUser(String userId) {
-        List<String> feedIds = new ArrayList<>();;
+        List<String> feedIds = new ArrayList<>();
+        ;
         FeedUserEntity feedUserEntity = feedUserDAO.findById(userId).orElse(null);
         if (feedUserEntity != null) {
             feedIds = feedUserEntity.getListFeedId();
         }
         return feedIds;
+    }
+
+    private List<String> getEnableFeedIdOfGroup(String groupId) {
+        List<String> feedGroupIds = new ArrayList<>();
+        if (groupId == null || groupId.trim().equals(CommonRegex.REGEX_BLANK)) return feedGroupIds;
+        FeedGroupEntity feedGroupEntity = feedGroupDAO.findById(groupId).orElse(null);
+        if (feedGroupEntity != null) {
+            feedGroupIds = feedGroupEntity.getListFeedId();
+        }
+        return feedGroupIds;
     }
 
     private void extractMetadata(List<String> feedIds, Map<String, FeedItem> mapFeedItem, List<String> listUserIds) {
@@ -443,7 +482,7 @@ public class FeedServiceImpl implements FeedService {
                         imageFeedItems.add(newImage);
                     }
                 });
-                if (imageFeedItems.size() > 0 ) {
+                if (imageFeedItems.size() > 0) {
                     postItem.setImages(imageFeedItems);
                 }
             }
@@ -464,11 +503,10 @@ public class FeedServiceImpl implements FeedService {
             //step 5: insert post for user in group & notification
             this.broadcastGroup(feedItem, true);
 
-        } catch (Exception ex ) {
+        } catch (Exception ex) {
             logger.error("[postFeed] " + ex.getMessage() + " | feedItem: " + feedItem);
             ex.printStackTrace();
         }
-
 
 
         return feedItem;
@@ -498,7 +536,7 @@ public class FeedServiceImpl implements FeedService {
             feedGroupEntity.setValue(gson.toJson(feedIds));
             feedGroupDAO.save(feedGroupEntity);
         } else {
-            FeedGroupEntity feedGroupEntityCreate = FeedGroupEntity.builder().key(feedItem.getAuthorId()).value(gson.toJson(Arrays.asList(feedItem.getPostId()))).build();
+            FeedGroupEntity feedGroupEntityCreate = FeedGroupEntity.builder().key(feedItem.getPrivacyGroupId()).value(gson.toJson(Collections.singletonList(feedItem.getPostId()))).build();
             feedGroupDAO.save(feedGroupEntityCreate);
         }
 
@@ -677,7 +715,7 @@ public class FeedServiceImpl implements FeedService {
         return this.convertCommentItemToCommentInfo(data, authorId);
     }
 
-    private CommentDTO.CommentInfo convertCommentItemToCommentInfo(CommentItem commentItem, String currentUserId){
+    private CommentDTO.CommentInfo convertCommentItemToCommentInfo(CommentItem commentItem, String currentUserId) {
         CommentDTO.CommentInfo res = new CommentDTO.CommentInfo();
         res.setCommentId(commentItem.getCommentId());
         res.setPostId(commentItem.getPostId());
