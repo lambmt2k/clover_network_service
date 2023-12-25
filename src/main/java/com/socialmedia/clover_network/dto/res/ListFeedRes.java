@@ -19,11 +19,11 @@ import java.util.Map;
 public class ListFeedRes {
     private List<String> postIds;
     private Map<String, FeedItem> feeds;
-    private Map<String, ReactionItem.ReactType> reactions;
-    private Map<String, Integer> like_number;
     private Map<String, BaseProfile> users;
     private Map<String, GroupEntity> groups;
-    private Map<String, List<CommentDTO.CommentInfo>> comments;
+    private Map<String, ReactionItem.ReactType> currentUserReacts;
+    private Map<String, Integer> totalReacts;
+    private Map<String, Integer> totalComments;
     private Map<String, RoleGroupSettingReq> currentUserRoles;
     private boolean canPost;
 
