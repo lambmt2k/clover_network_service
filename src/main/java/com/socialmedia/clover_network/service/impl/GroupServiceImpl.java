@@ -4,17 +4,21 @@ import com.socialmedia.clover_network.config.AuthenticationHelper;
 import com.socialmedia.clover_network.constant.CommonRegex;
 import com.socialmedia.clover_network.constant.ErrorCode;
 import com.socialmedia.clover_network.dto.BaseProfile;
+import com.socialmedia.clover_network.dto.GroupItem;
 import com.socialmedia.clover_network.dto.req.GroupReq;
 import com.socialmedia.clover_network.dto.req.RoleGroupSettingReq;
 import com.socialmedia.clover_network.dto.res.ApiResponse;
+import com.socialmedia.clover_network.dto.res.GroupRes;
 import com.socialmedia.clover_network.dto.res.MemberGroupResDTO;
 import com.socialmedia.clover_network.entity.GroupEntity;
 import com.socialmedia.clover_network.entity.GroupMember;
 import com.socialmedia.clover_network.entity.GroupRolePermission;
 import com.socialmedia.clover_network.entity.UserInfo;
 import com.socialmedia.clover_network.enumuration.GroupMemberRole;
+import com.socialmedia.clover_network.mapper.GroupEntityMapper;
 import com.socialmedia.clover_network.repository.*;
 import com.socialmedia.clover_network.service.FeedService;
+import com.socialmedia.clover_network.service.FirebaseService;
 import com.socialmedia.clover_network.service.GroupService;
 import com.socialmedia.clover_network.service.UserService;
 import com.socialmedia.clover_network.util.GenIDUtil;
@@ -51,6 +55,8 @@ public class GroupServiceImpl implements GroupService {
     UserInfoRepository userInfoRepository;
     @Autowired
     ConnectionRepository connectionRepository;
+    @Autowired
+    GroupEntityMapper groupEntityMapper;
 
     @Lazy
     @Autowired
@@ -58,6 +64,8 @@ public class GroupServiceImpl implements GroupService {
     @Lazy
     @Autowired
     FeedService feedService;
+    @Autowired
+    FirebaseService firebaseService;
 
     @Override
     public ApiResponse createNewGroup(GroupReq groupReq) {
@@ -162,6 +170,44 @@ public class GroupServiceImpl implements GroupService {
             res.setMessageVN(ErrorCode.Token.FORBIDDEN.getMessageVN());
         }
         logger.info("End api [getListAllGroupOfUser]");
+        return res;
+    }
+
+    @Override
+    public ApiResponse getGroupInfo(String groupId) {
+        logger.info("Start api [getGroupInfo]");
+        ApiResponse res = new ApiResponse();
+        String currentUserId = AuthenticationHelper.getUserIdFromContext();
+        if (currentUserId != null) {
+            GroupEntity groupEntity = groupRepository.findByGroupIdAndDelFlagFalse(groupId);
+            if (Objects.isNull(groupEntity)) {
+                res.setCode(ErrorCode.Group.GROUP_NOT_FOUND.getCode());
+                res.setData(groupId);
+                res.setMessageEN(ErrorCode.Group.GROUP_NOT_FOUND.getMessageEN());
+                res.setMessageVN(ErrorCode.Group.GROUP_NOT_FOUND.getMessageVN());
+                return res;
+            }
+            GroupItem groupItem = groupEntityMapper.toDTO(groupEntity);
+            if (groupEntity.getAvatarImgUrl() != null) {
+                String avatarUrl = firebaseService.getImagePublicUrl(groupEntity.getAvatarImgUrl());
+                groupItem.setAvatarUrl(avatarUrl);
+            }
+            if (groupEntity.getBannerImgUrl() != null) {
+                String bannerUrl = firebaseService.getImagePublicUrl(groupEntity.getBannerImgUrl());
+                groupItem.setBannerUrl(bannerUrl);
+            }
+            RoleGroupSettingReq currentUserRole = this.getMemberRolePermission(currentUserId, groupId, groupEntity.getGroupType().equals(GroupEntity.GroupType.USER_WALL));
+            res.setCode(ErrorCode.Group.ACTION_SUCCESS.getCode());
+            res.setData(GroupRes.GroupInfo.of(groupItem, currentUserRole));
+            res.setMessageEN(ErrorCode.Group.ACTION_SUCCESS.getMessageEN());
+            res.setMessageVN(ErrorCode.Group.ACTION_SUCCESS.getMessageVN());
+        } else {
+            res.setCode(ErrorCode.Token.FORBIDDEN.getCode());
+            res.setData(null);
+            res.setMessageEN(ErrorCode.Token.FORBIDDEN.getMessageEN());
+            res.setMessageVN(ErrorCode.Token.FORBIDDEN.getMessageVN());
+        }
+        logger.info("End api [getGroupInfo]");
         return res;
     }
 

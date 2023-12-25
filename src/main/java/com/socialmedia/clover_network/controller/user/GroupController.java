@@ -46,6 +46,16 @@ public class GroupController {
         }
     }
 
+    @GetMapping("/get-group-info/{groupId}")
+    public ResponseEntity<ApiResponse> getGroupInfo(@PathVariable String groupId) throws Exception {
+        ApiResponse res = groupService.getGroupInfo(groupId);
+        if (Objects.nonNull(res)) {
+            return ResponseEntity.ok().body(res);
+        } else {
+            return ResponseEntity.internalServerError().body(null);
+        }
+    }
+
     @PostMapping(value = "/join", produces = {MediaType.APPLICATION_JSON_VALUE})
     public ResponseEntity<ApiResponse> joinGroup(@RequestParam(name = "groupId") String groupId) {
         String currentUserId = AuthenticationHelper.getUserIdFromContext();

@@ -11,6 +11,7 @@ import java.util.Map;
 public interface GroupService {
     ApiResponse createNewGroup(GroupReq groupReq);
     ApiResponse getListAllGroupOfUser();
+    ApiResponse getGroupInfo(String groupId);
     ApiResponse joinGroup(String groupId, String userId);
     ApiResponse getListMemberOfGroup(String groupId, GroupMemberRole roleId, int page, int size);
     ApiResponse searchMemberOfGroup(String groupId, GroupMemberRole roleId, int page, int size, String searchKey);
