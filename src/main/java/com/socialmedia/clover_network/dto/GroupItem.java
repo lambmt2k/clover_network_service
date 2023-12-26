@@ -24,8 +24,6 @@ import java.util.Map;
 public class GroupItem {
     // gson
     private static Gson gson = new Gson();
-    @Id
-    private Long id;
     private String groupId;
     private String groupName;
     private String avatarUrl;
