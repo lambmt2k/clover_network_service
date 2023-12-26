@@ -346,6 +346,36 @@ public class FeedServiceImpl implements FeedService {
 
     }
 
+    @Override
+    public ApiResponse listFeedAllGroupHome(int page, int size) {
+        logger.info("Start API [listFeedAllGroupHome]");
+        ApiResponse res = new ApiResponse();
+        String currentUserId = AuthenticationHelper.getUserIdFromContext();
+        if (StringUtils.isEmpty(currentUserId)) {
+            res.setCode(ErrorCode.Token.FORBIDDEN.getCode());
+            res.setData(null);
+            res.setMessageEN(ErrorCode.Token.FORBIDDEN.getMessageEN());
+            res.setMessageVN(ErrorCode.Token.FORBIDDEN.getMessageVN());
+            return res;
+        }
+        List<String> enableFeedIds = this.getEnableFeedIdOfUser(currentUserId);
+        List<ListFeedRes.FeedInfoHome> data = this.listFeedAllGroup(currentUserId, enableFeedIds, page, size, null);
+        if (CollectionUtils.isEmpty(data)) {
+            res.setCode(ErrorCode.Feed.EMPTY_FEED.getCode());
+            res.setData(null);
+            res.setMessageEN(ErrorCode.Feed.EMPTY_FEED.getMessageEN());
+            res.setMessageVN(ErrorCode.Feed.EMPTY_FEED.getMessageVN());
+            return res;
+        }
+        res.setCode(ErrorCode.Feed.ACTION_SUCCESS.getCode());
+        res.setData(data);
+        res.setMessageEN(ErrorCode.Feed.ACTION_SUCCESS.getMessageEN());
+        res.setMessageVN(ErrorCode.Feed.ACTION_SUCCESS.getMessageVN());
+        logger.info("End API [listFeedAllGroupHome]");
+        return res;
+
+    }
+
     public List<ListFeedRes.FeedInfoHome> listFeed(String userId, List<String> feedIds, int page, int size, String groupId) {
         if (CollectionUtils.isEmpty(feedIds)) {
             return null;
@@ -354,6 +384,77 @@ public class FeedServiceImpl implements FeedService {
         List<ListFeedRes.FeedInfoHome> res = new ArrayList<>();
         Pageable pageable = PageRequest.of(page, size);
         List<PostItem> postItems = feedRepository.findAllByPostIdInAndDelFlagFalseAndLastActiveIsNotNullOrderByLastActiveDesc(feedIds, pageable);
+        List<String> groupIds = postItems.stream().map(PostItem::getPrivacyGroupId).distinct().collect(Collectors.toList());
+        List<GroupEntity> groupEntities = groupRepository.findAllByGroupIdInAndDelFlagFalse(groupIds);
+        postItems.forEach(postItem -> {
+            ListFeedRes.FeedInfoHome feedInfoHome = new ListFeedRes.FeedInfoHome();
+
+            //FeedItem
+            FeedItem feedItem = PostItemMapper.INSTANCE.toDTO(postItem);
+            if (postItem.getImages().size() > 0) {
+                List<String> imageFeeds = new ArrayList<>();
+                postItem.getImages().forEach(image -> {
+                    imageFeeds.add(firebaseService.getImagePublicUrl(image.getImageUrl()));
+                });
+                feedItem.setFeedImages(imageFeeds);
+            }
+            feedInfoHome.setFeedItem(feedItem);
+
+            //authorProfile
+            BaseProfile authorProfile = userService.getBaseProfileByUserId(feedItem.getAuthorId());
+            feedInfoHome.setAuthorProfile(authorProfile);
+
+            //groupItem
+            GroupEntity groupEntity = groupEntities
+                    .stream()
+                    .filter(group -> group.getGroupId().equals(feedItem.getPrivacyGroupId()))
+                    .findFirst().orElse(null);
+            feedInfoHome.setGroupItem(groupEntity);
+
+            //currentUserRole
+            RoleGroupSettingReq currentUserRole = groupService.getMemberRolePermission(userId, feedItem.getPrivacyGroupId(), feedItem.isPostToUserWall());
+            feedInfoHome.setCurrentUserRole(currentUserRole);
+
+            //totalReact
+            List<ReactionItem> reactionItems = reactionItemRepository.findByPostIdAndDelFlagFalse(feedItem.getPostId());
+            Integer totalReact = reactionItems.size();
+            feedInfoHome.setTotalReact(totalReact);
+            //currentUserReact
+            ReactionItem currentUserReactionItem = reactionItems.stream().filter(reactionItem -> reactionItem.getAuthorId().equals(userId)).findFirst().orElse(null);
+            ReactionItem.ReactType currentUserReactType = currentUserReactionItem != null && !currentUserReactionItem.isDelFlag()
+                    ? currentUserReactionItem.getReactType() : null;
+            feedInfoHome.setCurrentUserReact(currentUserReactType);
+            //totalComment
+            Integer totalComment = commentItemRepository.findByPostIdAndDelFlagFalseOrderByUpdatedTimeDesc(feedItem.getPostId()).size();
+            feedInfoHome.setTotalComment(totalComment);
+
+            res.add(feedInfoHome);
+        });
+
+
+        return res;
+    }
+
+    public List<ListFeedRes.FeedInfoHome> listFeedAllGroup(String userId, List<String> feedIds, int page, int size, String groupId) {
+        if (CollectionUtils.isEmpty(feedIds)) {
+            return null;
+        }
+
+        List<String> allGroupIds = groupMemberRepository.findByUserIdAndDelFlagFalse(userId)
+                .stream()
+                .map(GroupMember::getGroupId)
+                .distinct()
+                .collect(Collectors.toList());
+        List<String> userWallIds = groupRepository.findByGroupTypeAndGroupIdIn(GroupEntity.GroupType.USER_WALL, allGroupIds)
+                .stream()
+                .map(GroupEntity::getGroupId)
+                .distinct()
+                .collect(Collectors.toList());
+        allGroupIds.removeAll(userWallIds);
+
+        List<ListFeedRes.FeedInfoHome> res = new ArrayList<>();
+        Pageable pageable = PageRequest.of(page, size);
+        List<PostItem> postItems = feedRepository.findAllByPostIdInAndPrivacyGroupIdInAndDelFlagFalseAndLastActiveIsNotNullOrderByLastActiveDesc(feedIds, allGroupIds, pageable);
         List<String> groupIds = postItems.stream().map(PostItem::getPrivacyGroupId).distinct().collect(Collectors.toList());
         List<GroupEntity> groupEntities = groupRepository.findAllByGroupIdInAndDelFlagFalse(groupIds);
         postItems.forEach(postItem -> {
@@ -465,7 +566,7 @@ public class FeedServiceImpl implements FeedService {
         try {
             //step 1: insert feedItem to postgres
             PostItem postItem = postItemMapper.toEntity(feedItem);
-            if (!images.isEmpty()) {
+            if (!CollectionUtils.isEmpty(images)) {
                 List<ImageFeedItem> imageFeedItems = new ArrayList<>();
                 images.forEach(image -> {
                     if (!image.isEmpty()) {

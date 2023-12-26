@@ -63,6 +63,17 @@ public class FeedController {
         }
     }
 
+    @GetMapping(value = "/list-all-group-home", produces = {MediaType.APPLICATION_JSON_VALUE})
+    public ResponseEntity<ApiResponse> listFeedAllGroupHome(@RequestParam(name = "page") int page,
+                                                            @RequestParam(name = "size") int size) {
+        try {
+            ApiResponse res = feedService.listFeedAllGroupHome(page, size);
+            return ResponseEntity.ok().body(res);
+        } catch (Exception e) {
+            logger.error(e.getMessage());
+            return ResponseEntity.internalServerError().body(null);
+        }
+    }
     @PostMapping("/post")
     public ResponseEntity<ApiResponse> postFeed(@RequestPart(name = "feedItem") FeedItem feedItem,
                                                 @RequestPart(name = "images", required = false)List<MultipartFile> images) {
