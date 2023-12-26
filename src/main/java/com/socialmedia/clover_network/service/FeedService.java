@@ -17,5 +17,7 @@ public interface FeedService {
     ApiResponse checkUserLike(String feedId);
     boolean checkUserCanPostFeedToGroup(String groupId, String userId);
     ApiResponse commentToFeed(CommentDTO commentDTO);
+
+    ApiResponse getCommentOfPost(String postId, int page, int size);
     ApiResponse reactToFeed(ReactDTO reactDTO);
 }

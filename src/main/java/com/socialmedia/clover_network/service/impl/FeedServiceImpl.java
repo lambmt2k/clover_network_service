@@ -789,6 +789,41 @@ public class FeedServiceImpl implements FeedService {
     }
 
     @Override
+    public ApiResponse getCommentOfPost(String postId, int page, int size) {
+        logger.info("Start API [getCommentOfPost]");
+        ApiResponse res = new ApiResponse();
+        String currentUserId = AuthenticationHelper.getUserIdFromContext();
+        if (StringUtils.isEmpty(currentUserId)) {
+            res.setCode(ErrorCode.Token.FORBIDDEN.getCode());
+            res.setData(null);
+            res.setMessageEN(ErrorCode.Token.FORBIDDEN.getMessageEN());
+            res.setMessageVN(ErrorCode.Token.FORBIDDEN.getMessageVN());
+            return res;
+        }
+        PostItem postItem = feedRepository.findByPostIdAndDelFlagFalse(postId);
+        if (Objects.isNull(postItem)) {
+            res.setCode(ErrorCode.Feed.POST_NOT_FOUND.getCode());
+            res.setData(postId);
+            res.setMessageEN(ErrorCode.Feed.POST_NOT_FOUND.getMessageEN());
+            res.setMessageVN(ErrorCode.Feed.POST_NOT_FOUND.getMessageVN());
+            return res;
+        }
+        Pageable pageable = PageRequest.of(page, size);
+        List<CommentItem> commentItems = commentItemRepository.findByPostIdAndDelFlagFalseOrderByUpdatedTimeDesc(postId,pageable);
+        List<CommentDTO.CommentInfo> data = new ArrayList<>();
+        commentItems.forEach(commentItem -> {
+            CommentDTO.CommentInfo commentInfo = this.convertCommentItemToCommentInfo(commentItem, currentUserId);
+            data.add(commentInfo);
+        });
+        res.setCode(ErrorCode.Comment.ACTION_SUCCESS.getCode());
+        res.setData(data);
+        res.setMessageEN(ErrorCode.Comment.ACTION_SUCCESS.getMessageEN());
+        res.setMessageVN(ErrorCode.Comment.ACTION_SUCCESS.getMessageVN());
+        logger.info("Finish API [getCommentOfPost]");
+        return res;
+    }
+
+    @Override
     public ApiResponse reactToFeed(ReactDTO reactDTO) {
         logger.info("Start API [reactToFeed]");
         ApiResponse res = new ApiResponse();

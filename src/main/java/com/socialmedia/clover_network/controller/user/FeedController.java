@@ -114,6 +114,19 @@ public class FeedController {
         }
     }
 
+    @GetMapping("/get-list-comment")
+    public ResponseEntity<ApiResponse> getCommentOfPost(@RequestParam(name = "feedId") String feedId,
+                                                        @RequestParam(name = "page") int page,
+                                                        @RequestParam(name = "size") int size) {
+        try {
+            ApiResponse res = feedService.getCommentOfPost(feedId, page, size);
+            return ResponseEntity.ok().body(res);
+        } catch (Exception e) {
+            logger.error(e.getMessage());
+            return ResponseEntity.internalServerError().body(null);
+        }
+    }
+
     @PostMapping("/react")
     public ResponseEntity<ApiResponse> reactToFeed(@RequestBody ReactDTO reactDTO) {
         try {
