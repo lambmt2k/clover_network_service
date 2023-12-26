@@ -74,6 +74,18 @@ public class FeedController {
             return ResponseEntity.internalServerError().body(null);
         }
     }
+
+    @GetMapping(value = "/check-user-like", produces = {MediaType.APPLICATION_JSON_VALUE})
+    public ResponseEntity<ApiResponse> checkUserLike(@RequestParam(name = "feedId") String feedId) {
+        try {
+            ApiResponse res = feedService.checkUserLike(feedId);
+            return ResponseEntity.ok().body(res);
+        } catch (Exception e) {
+            logger.error(e.getMessage());
+            return ResponseEntity.internalServerError().body(null);
+        }
+    }
+
     @PostMapping("/post")
     public ResponseEntity<ApiResponse> postFeed(@RequestPart(name = "feedItem") FeedItem feedItem,
                                                 @RequestPart(name = "images", required = false)List<MultipartFile> images) {

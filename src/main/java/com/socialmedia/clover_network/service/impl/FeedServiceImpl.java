@@ -11,6 +11,7 @@ import com.socialmedia.clover_network.dto.FeedItem;
 import com.socialmedia.clover_network.dto.ReactDTO;
 import com.socialmedia.clover_network.dto.req.RoleGroupSettingReq;
 import com.socialmedia.clover_network.dto.res.ApiResponse;
+import com.socialmedia.clover_network.dto.res.CheckUserLikeDTO;
 import com.socialmedia.clover_network.dto.res.ListFeedRes;
 import com.socialmedia.clover_network.entity.*;
 import com.socialmedia.clover_network.enumuration.ImageType;
@@ -372,6 +373,48 @@ public class FeedServiceImpl implements FeedService {
         res.setMessageEN(ErrorCode.Feed.ACTION_SUCCESS.getMessageEN());
         res.setMessageVN(ErrorCode.Feed.ACTION_SUCCESS.getMessageVN());
         logger.info("End API [listFeedAllGroupHome]");
+        return res;
+
+    }
+
+    @Override
+    public ApiResponse checkUserLike(String feedId) {
+        logger.info("Start API [checkUserLike]");
+        ApiResponse res = new ApiResponse();
+        String currentUserId = AuthenticationHelper.getUserIdFromContext();
+        if (StringUtils.isEmpty(currentUserId)) {
+            res.setCode(ErrorCode.Token.FORBIDDEN.getCode());
+            res.setData(null);
+            res.setMessageEN(ErrorCode.Token.FORBIDDEN.getMessageEN());
+            res.setMessageVN(ErrorCode.Token.FORBIDDEN.getMessageVN());
+            return res;
+        }
+        PostItem postItem = feedRepository.findByPostIdAndDelFlagFalse(feedId);
+        if (Objects.isNull(postItem)) {
+            res.setCode(ErrorCode.Feed.POST_NOT_FOUND.getCode());
+            res.setData(feedId);
+            res.setMessageEN(ErrorCode.Feed.POST_NOT_FOUND.getMessageEN());
+            res.setMessageVN(ErrorCode.Feed.POST_NOT_FOUND.getMessageVN());
+            return res;
+        }
+        CheckUserLikeDTO data = new CheckUserLikeDTO();
+        data.setFeedId(postItem.getPostId());
+        //totalReact
+        List<ReactionItem> reactionItems = reactionItemRepository.findByPostIdAndDelFlagFalse(postItem.getPostId());
+        Integer totalReact = Math.toIntExact(reactionItems.stream().filter(reactionItem -> reactionItem.getReactType().equals(ReactionItem.ReactType.LIKE)).count());
+        data.setTotalLike(totalReact);
+        //currentUserReact
+        ReactionItem currentUserReactionItem = reactionItems.stream().filter(reactionItem -> reactionItem.getAuthorId().equals(currentUserId)).findFirst().orElse(null);
+        ReactionItem.ReactType currentUserReactType = currentUserReactionItem != null && !currentUserReactionItem.isDelFlag()
+                ? currentUserReactionItem.getReactType() : null;
+        if (currentUserReactType != null) {
+            data.setCurrentUserLike(currentUserReactType.equals(ReactionItem.ReactType.LIKE));
+        }
+        res.setCode(ErrorCode.Feed.ACTION_SUCCESS.getCode());
+        res.setData(data);
+        res.setMessageEN(ErrorCode.Feed.ACTION_SUCCESS.getMessageEN());
+        res.setMessageVN(ErrorCode.Feed.ACTION_SUCCESS.getMessageVN());
+        logger.info("End API [checkUserLike]");
         return res;
 
     }

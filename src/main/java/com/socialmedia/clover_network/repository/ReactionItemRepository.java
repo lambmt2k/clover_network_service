@@ -10,4 +10,5 @@ import java.util.List;
 public interface ReactionItemRepository extends JpaRepository<ReactionItem, Long> {
     ReactionItem findByAuthorIdAndPostIdAndDelFlagFalse(String authorId, String postId);
     List<ReactionItem> findByPostIdAndDelFlagFalse(String postId);
+    List<ReactionItem> findByPostIdAndReactTypeAndDelFlagFalse(String postId, ReactionItem.ReactType reactType);
 }
