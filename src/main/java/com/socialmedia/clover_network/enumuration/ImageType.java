@@ -4,7 +4,8 @@ public enum ImageType {
     NONE(0),
     USER_AVATAR(1),
     USER_BANNER(2),
-    FEED_IMAGES(3);
+    FEED_IMAGES(3),
+    GROUP_BANNER(4);
 
     final int type;
 

@@ -329,6 +329,17 @@ public class FeedServiceImpl implements FeedService {
             res.setMessageVN(ErrorCode.Token.FORBIDDEN.getMessageVN());
             return res;
         }
+        GroupEntity groupEntity = groupRepository.findByGroupIdAndDelFlagFalse(groupId);
+        if (groupEntity.getGroupPrivacy().equals(GroupEntity.GroupPrivacy.PRIVATE)) {
+            Optional<GroupMember> groupMember = groupMemberRepository.findByUserIdAndGroupId(currentUserId, groupId);
+            if (groupMember.isEmpty() || groupMember.get().getStatus().equals(GroupMember.GroupMemberStatus.WAITING_FOR_APPROVE)) {
+                res.setCode(ErrorCode.Feed.NOT_PERMISSION_VIEW_FEED.getCode());
+                res.setData(null);
+                res.setMessageEN(ErrorCode.Feed.NOT_PERMISSION_VIEW_FEED.getMessageEN());
+                res.setMessageVN(ErrorCode.Feed.NOT_PERMISSION_VIEW_FEED.getMessageVN());
+                return res;
+            }
+        }
         List<String> enableFeedGroupIds = this.getEnableFeedIdOfGroup(groupId);
         List<ListFeedRes.FeedInfoHome> data = this.listFeed(currentUserId, enableFeedGroupIds, page, size, groupId);
         if (CollectionUtils.isEmpty(data)) {

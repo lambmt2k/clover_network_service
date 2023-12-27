@@ -11,6 +11,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.Objects;
 
@@ -80,6 +81,30 @@ public class GroupController {
             } else {
                 res = groupService.searchMemberOfGroup(groupId, roleId, page, size, searchKey);
             }
+            return ResponseEntity.ok().body(res);
+        } catch (Exception e) {
+            logger.error(e.getMessage());
+            return ResponseEntity.internalServerError().body(null);
+        }
+    }
+
+    @PostMapping(value = "/disable-group", produces = {MediaType.APPLICATION_JSON_VALUE})
+    public ResponseEntity<ApiResponse> disableGroup(@RequestParam(name = "groupId") String groupId,
+                                                    @RequestParam(name = "confirm") boolean confirm) {
+        try {
+            ApiResponse res = groupService.disableGroup(groupId, confirm);
+            return ResponseEntity.ok().body(res);
+        } catch (Exception e) {
+            logger.error(e.getMessage());
+            return ResponseEntity.internalServerError().body(null);
+        }
+    }
+
+    @PostMapping("/change-group-banner")
+    public ResponseEntity<ApiResponse> changeGroupBanner(@RequestPart String groupId,
+                                                         @RequestPart MultipartFile bannerFile) {
+        try {
+            ApiResponse res = groupService.changeGroupBanner(groupId, bannerFile);
             return ResponseEntity.ok().body(res);
         } catch (Exception e) {
             logger.error(e.getMessage());

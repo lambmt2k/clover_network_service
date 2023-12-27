@@ -13,6 +13,6 @@ import java.util.List;
 @ToString
 public class SearchRes {
     List<UserInfoRes> users;
-    List<GroupEntity> groups;
+    List<GroupRes.GroupInfo> groups;
     List<FeedItem> feeds;
 }

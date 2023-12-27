@@ -32,6 +32,7 @@ public class GroupItem {
     private String groupOwnerId;
     private GroupEntity.GroupType groupType;
     private GroupEntity.GroupPrivacy groupPrivacy;
+    private int totalMember;
     private LocalDateTime createdTime;
     private LocalDateTime updatedTime;
     private boolean delFlag;

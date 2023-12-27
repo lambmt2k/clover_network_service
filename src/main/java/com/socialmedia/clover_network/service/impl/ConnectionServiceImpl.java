@@ -151,4 +151,10 @@ public class ConnectionServiceImpl implements ConnectionService {
 
         return res;
     }
+
+    @Override
+    public boolean checkAConnectB(String userAId, String userBId) {
+        Connection checkConnectAtoB = connectionRepository.findByUserIdAndUserIdConnected(userAId, userBId);
+        return checkConnectAtoB != null && checkConnectAtoB.isConnectStatus();
+    }
 }

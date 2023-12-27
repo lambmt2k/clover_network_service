@@ -56,6 +56,10 @@ public class FirebaseService {
                 prefixPath = prefixPath + "feed_images/";
                 break;
             }
+            case GROUP_BANNER: {
+                prefixPath = prefixPath + "group_banner/";
+                break;
+            }
             default: break;
 
         }
@@ -85,5 +89,13 @@ public class FirebaseService {
     private String getStorageUrl(String fileName) {
         //"https://storage.googleapis.com/"
         return bucketName + "/images/" + fileName;
+    }
+
+    public boolean isImage(MultipartFile file) {
+        // Get the file name
+        String fileName = file.getOriginalFilename();
+
+        // Check if the file has a valid image extension (you can extend this list)
+        return fileName != null && (fileName.endsWith(".jpg") || fileName.endsWith(".jpeg") || fileName.endsWith(".png"));
     }
 }

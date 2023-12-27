@@ -15,6 +15,7 @@ import com.socialmedia.clover_network.entity.GroupMember;
 import com.socialmedia.clover_network.entity.GroupRolePermission;
 import com.socialmedia.clover_network.entity.UserInfo;
 import com.socialmedia.clover_network.enumuration.GroupMemberRole;
+import com.socialmedia.clover_network.enumuration.ImageType;
 import com.socialmedia.clover_network.mapper.GroupEntityMapper;
 import com.socialmedia.clover_network.repository.*;
 import com.socialmedia.clover_network.service.FeedService;
@@ -22,6 +23,7 @@ import com.socialmedia.clover_network.service.FirebaseService;
 import com.socialmedia.clover_network.service.GroupService;
 import com.socialmedia.clover_network.service.UserService;
 import com.socialmedia.clover_network.util.GenIDUtil;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,7 +34,9 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -196,6 +200,8 @@ public class GroupServiceImpl implements GroupService {
                 String bannerUrl = firebaseService.getImagePublicUrl(groupEntity.getBannerImgUrl());
                 groupItem.setBannerUrl(bannerUrl);
             }
+            List<GroupMember> groupMembers = groupMemberRepository.findAllByGroupIdAndDelFlagFalseAndStatus(groupEntity.getGroupId(), GroupMember.GroupMemberStatus.APPROVED);
+            groupItem.setTotalMember(groupMembers.size());
             RoleGroupSettingReq currentUserRole = this.getMemberRolePermission(currentUserId, groupId, groupEntity.getGroupType().equals(GroupEntity.GroupType.USER_WALL));
             res.setCode(ErrorCode.Group.ACTION_SUCCESS.getCode());
             res.setData(GroupRes.GroupInfo.of(groupItem, currentUserRole));
@@ -244,6 +250,122 @@ public class GroupServiceImpl implements GroupService {
             res.setMessageVN(ErrorCode.Group.GROUP_NOT_FOUND.getMessageVN());
         }
         logger.info("End api [joinGroup]: userId {} join groupId {}", userId, groupId);
+        return res;
+    }
+
+    @Override
+    public ApiResponse disableGroup(String groupId, boolean confirm) {
+        ApiResponse res = new ApiResponse();
+        logger.info("Start API [disableGroup]");
+        String currentUserId = AuthenticationHelper.getUserIdFromContext();
+        LocalDateTime now = LocalDateTime.now();
+        if (StringUtils.isEmpty(currentUserId)) {
+            res.setCode(ErrorCode.Token.FORBIDDEN.getCode());
+            res.setData(null);
+            res.setMessageEN(ErrorCode.Token.FORBIDDEN.getMessageEN());
+            res.setMessageVN(ErrorCode.Token.FORBIDDEN.getMessageVN());
+            return res;
+        }
+        GroupEntity groupEntity = groupRepository.findByGroupIdAndDelFlagFalse(groupId);
+        if (groupEntity == null) {
+            res.setCode(ErrorCode.Group.GROUP_NOT_FOUND.getCode());
+            res.setData(groupId);
+            res.setMessageEN(ErrorCode.Group.GROUP_NOT_FOUND.getMessageEN());
+            res.setMessageVN(ErrorCode.Group.GROUP_NOT_FOUND.getMessageVN());
+            return res;
+        }
+        if (!currentUserId.equals(groupEntity.getGroupOwnerId())) {
+            res.setCode(ErrorCode.Group.NOT_PERMISSION.getCode());
+            res.setData(groupId);
+            res.setMessageEN(ErrorCode.Group.NOT_PERMISSION.getMessageEN());
+            res.setMessageVN(ErrorCode.Group.NOT_PERMISSION.getMessageVN());
+            return res;
+        }
+        groupEntity.setDelFlag(confirm);
+        groupEntity.setUpdatedTime(now);
+        GroupEntity result = groupRepository.save(groupEntity);
+        GroupRes.GroupInfo groupInfo = new GroupRes.GroupInfo();
+        GroupItem groupItem = groupEntityMapper.toDTO(result);
+        if (result.getAvatarImgUrl() != null) {
+            String avatarUrl = firebaseService.getImagePublicUrl(groupEntity.getAvatarImgUrl());
+            groupItem.setAvatarUrl(avatarUrl);
+        }
+        if (result.getBannerImgUrl() != null) {
+            String bannerUrl = firebaseService.getImagePublicUrl(groupEntity.getBannerImgUrl());
+            groupItem.setBannerUrl(bannerUrl);
+        }
+        groupInfo.setGroup(groupItem);
+        List<GroupMember> groupMembers = groupMemberRepository.findAllByGroupIdAndDelFlagFalseAndStatus(groupEntity.getGroupId(), GroupMember.GroupMemberStatus.APPROVED);
+        groupItem.setTotalMember(groupMembers.size());
+        RoleGroupSettingReq currentUserRole = this.getMemberRolePermission(currentUserId, groupEntity.getGroupId(), groupEntity.getGroupType().equals(GroupEntity.GroupType.USER_WALL));
+        groupInfo.setCurrentUserRole(currentUserRole);
+        res.setCode(ErrorCode.Group.ACTION_SUCCESS.getCode());
+        res.setData(groupInfo);
+        res.setMessageEN(ErrorCode.Group.ACTION_SUCCESS.getMessageEN());
+        res.setMessageVN(ErrorCode.Group.ACTION_SUCCESS.getMessageVN());
+        logger.info("End API [disableGroup]");
+        return res;
+    }
+
+    @Override
+    public ApiResponse changeGroupBanner(String groupId, MultipartFile bannerFile) throws IOException {
+        ApiResponse res = new ApiResponse();
+        logger.info("Start API [disableGroup]");
+        String currentUserId = AuthenticationHelper.getUserIdFromContext();
+        LocalDateTime now = LocalDateTime.now();
+        if (StringUtils.isEmpty(currentUserId)) {
+            res.setCode(ErrorCode.Token.FORBIDDEN.getCode());
+            res.setData(null);
+            res.setMessageEN(ErrorCode.Token.FORBIDDEN.getMessageEN());
+            res.setMessageVN(ErrorCode.Token.FORBIDDEN.getMessageVN());
+            return res;
+        }
+        if (bannerFile.isEmpty() || !firebaseService.isImage(bannerFile)) {
+            res.setCode(ErrorCode.User.INVALID_IMAGE_FILE.getCode());
+            res.setData(null);
+            res.setMessageEN(ErrorCode.User.INVALID_IMAGE_FILE.getMessageEN());
+            res.setMessageVN(ErrorCode.User.INVALID_IMAGE_FILE.getMessageVN());
+            return res;
+        }
+        GroupEntity groupEntity = groupRepository.findByGroupIdAndDelFlagFalse(groupId);
+        if (groupEntity == null) {
+            res.setCode(ErrorCode.Group.GROUP_NOT_FOUND.getCode());
+            res.setData(groupId);
+            res.setMessageEN(ErrorCode.Group.GROUP_NOT_FOUND.getMessageEN());
+            res.setMessageVN(ErrorCode.Group.GROUP_NOT_FOUND.getMessageVN());
+            return res;
+        }
+        if (!currentUserId.equals(groupEntity.getGroupOwnerId())) {
+            res.setCode(ErrorCode.Group.NOT_PERMISSION.getCode());
+            res.setData(groupId);
+            res.setMessageEN(ErrorCode.Group.NOT_PERMISSION.getMessageEN());
+            res.setMessageVN(ErrorCode.Group.NOT_PERMISSION.getMessageVN());
+            return res;
+        }
+        String imageFbUrl = firebaseService.uploadImage(bannerFile, ImageType.GROUP_BANNER);
+        groupEntity.setBannerImgUrl(imageFbUrl);
+        groupEntity.setUpdatedTime(now);
+        GroupEntity result = groupRepository.save(groupEntity);
+        GroupRes.GroupInfo groupInfo = new GroupRes.GroupInfo();
+        GroupItem groupItem = groupEntityMapper.toDTO(result);
+        if (result.getAvatarImgUrl() != null) {
+            String avatarUrl = firebaseService.getImagePublicUrl(groupEntity.getAvatarImgUrl());
+            groupItem.setAvatarUrl(avatarUrl);
+        }
+        if (result.getBannerImgUrl() != null) {
+            String bannerUrl = firebaseService.getImagePublicUrl(groupEntity.getBannerImgUrl());
+            groupItem.setBannerUrl(bannerUrl);
+        }
+        groupInfo.setGroup(groupItem);
+        List<GroupMember> groupMembers = groupMemberRepository.findAllByGroupIdAndDelFlagFalseAndStatus(groupEntity.getGroupId(), GroupMember.GroupMemberStatus.APPROVED);
+        groupItem.setTotalMember(groupMembers.size());
+        RoleGroupSettingReq currentUserRole = this.getMemberRolePermission(currentUserId, groupEntity.getGroupId(), groupEntity.getGroupType().equals(GroupEntity.GroupType.USER_WALL));
+        groupInfo.setCurrentUserRole(currentUserRole);
+        res.setCode(ErrorCode.Group.ACTION_SUCCESS.getCode());
+        res.setData(groupInfo);
+        res.setMessageEN(ErrorCode.Group.ACTION_SUCCESS.getMessageEN());
+        res.setMessageVN(ErrorCode.Group.ACTION_SUCCESS.getMessageVN());
+        logger.info("End API [disableGroup]");
         return res;
     }
 
@@ -407,6 +529,7 @@ public class GroupServiceImpl implements GroupService {
         if (groupMemberOpt.isPresent()) {
             RoleGroupSettingReq roleGroupSettingReq = new RoleGroupSettingReq();
             roleGroupSettingReq.setRoleId(groupMemberOpt.get().getGroupRoleId());
+            roleGroupSettingReq.setStatus(groupMemberOpt.get().getStatus());
 
             Optional<GroupRolePermission> groupRolePermissionOpt = groupRolePermissionRepository.findByGroupIdAndGroupRoleId(groupId, roleGroupSettingReq.getRoleId());
             if (groupRolePermissionOpt.isPresent()) {

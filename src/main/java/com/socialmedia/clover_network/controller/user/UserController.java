@@ -69,14 +69,4 @@ public class UserController {
         }
     }
 
-    @PostMapping("/change-user-banner")
-    public ResponseEntity<ApiResponse> changeUserBanner(@RequestPart MultipartFile bannerFile) {
-        try {
-            ApiResponse res = userService.changeUserBanner(bannerFile);
-            return ResponseEntity.ok().body(res);
-        } catch (Exception e) {
-            logger.error(e.getMessage());
-            return ResponseEntity.internalServerError().body(null);
-        }
-    }
 }

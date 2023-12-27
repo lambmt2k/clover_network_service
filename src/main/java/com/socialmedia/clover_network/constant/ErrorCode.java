@@ -55,6 +55,7 @@ public class ErrorCode {
         public static ErrorCode GROUP_NOT_FOUND = of(202, "There is no group", "Không tìm được nhóm nào.");
         public static ErrorCode ALREADY_MEMBER = of(203, "User already is member of group", "User đã là thành viên của nhóm.");
         public static ErrorCode DISABLE_COMMENT = of(204, "Group disable comment", "Bình luận trong nhóm bị khóa.");
+        public static ErrorCode NOT_PERMISSION = of(205, "You have not permission to do that", "Không có quyền thực hiện.");
     }
 
     /**
@@ -75,6 +76,7 @@ public class ErrorCode {
         public static ErrorCode GENERATE_POST_ID_ERROR = of(403, "Can't generate post Id", "Không thể khởi tạo postId.");
         public static ErrorCode EMPTY_FEED = of(404, "Empty feed", "Không có bài viết nào.");
         public static ErrorCode POST_NOT_FOUND = of(405, "Post not found", "Không tìm thấy bài viết.");
+        public static ErrorCode NOT_PERMISSION_VIEW_FEED = of(406, "User have not permission to view feed", "Người dùng không có quyền xem danh sách bài viết.");
     }
 
     /**
