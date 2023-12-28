@@ -35,6 +35,7 @@ public class GroupItem {
     private int totalMember;
     private LocalDateTime createdTime;
     private LocalDateTime updatedTime;
+    private LocalDateTime lastActive;
     private boolean delFlag;
 
 

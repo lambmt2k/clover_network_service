@@ -70,6 +70,7 @@ public class UserWallServiceImpl implements UserWallService {
                 newUserWall.setEnableReaction(true);
                 newUserWall.setCreatedTime(now);
                 newUserWall.setUpdatedTime(now);
+                newUserWall.setLastActive(now);
                 groupRepository.save(newUserWall);
 
                 //add new member into new group

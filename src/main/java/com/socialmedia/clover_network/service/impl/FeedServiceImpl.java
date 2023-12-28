@@ -113,7 +113,7 @@ public class FeedServiceImpl implements FeedService {
                             //check owner or post permission
                             if (currentUserId.equals(groupEntity.getGroupOwnerId()) || canPost) {
                                 feedItem.setPostToUserWall(false);
-                                feedItem = this.postFeed(feedItem, images);
+                                feedItem = this.postFeed(feedItem, images, groupOpt.get());
                                 logger.info("[FeedController] postFeed: " + feedItem + " | userId: " + currentUserId);
                                 res.setCode(ErrorCode.Feed.ACTION_SUCCESS.getCode());
                                 res.setData(feedItem);
@@ -136,7 +136,7 @@ public class FeedServiceImpl implements FeedService {
                                 feedItem.setToUserId(groupEntity.getGroupOwnerId());
                             }
                             if (canPost) {
-                                feedItem = this.postFeed(feedItem, images);
+                                feedItem = this.postFeed(feedItem, images, groupOpt.get());
                                 logger.info("[FeedController] postFeed: " + feedItem + " | userId: " + currentUserId);
                                 res.setCode(ErrorCode.Feed.ACTION_SUCCESS.getCode());
                                 res.setData(feedItem);
@@ -631,7 +631,7 @@ public class FeedServiceImpl implements FeedService {
     }
 
     @Transactional
-    private FeedItem postFeed(FeedItem feedItem, List<MultipartFile> images) {
+    private FeedItem postFeed(FeedItem feedItem, List<MultipartFile> images, GroupEntity groupEntity) {
         String postId = genIDUtil.genId();
         if (postId.isEmpty()) {
             logger.info("[postFeed] error: " + ErrorCode.Feed.GENERATE_POST_ID_ERROR + " | feedItem: " + feedItem);
@@ -642,9 +642,6 @@ public class FeedServiceImpl implements FeedService {
         feedItem.setUpdatedTime(now);
         feedItem.setLastActive(now);
         feedItem.setDelFlag(false);
-
-        String linkPost = serverHost + "/api/feed/detail?postId=" + feedItem.getPostId();
-        feedItem.setDynamicLink(linkPost);
 
         logger.info("[postFeed] Start post feed: " + feedItem);
         try {
@@ -675,6 +672,8 @@ public class FeedServiceImpl implements FeedService {
                 }
             }
             PostItem successData = feedRepository.save(postItem);
+            groupEntity.setLastActive(now);
+            groupRepository.save(groupEntity);
             if (Objects.nonNull(successData.getImages()) && successData.getImages().size() > 0) {
                 List<String> imageFeeds = new ArrayList<>();
                 successData.getImages().forEach(image -> {

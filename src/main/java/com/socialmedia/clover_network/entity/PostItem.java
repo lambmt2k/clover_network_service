@@ -37,9 +37,6 @@ public class PostItem {
     @Column(name = "html_content", columnDefinition = "TEXT")
     private String htmlContent;
 
-    @Column(name = "dynamic_link")
-    private String dynamicLink;
-
     @Column(name = "privacy_group_id")
     private String privacyGroupId;
 

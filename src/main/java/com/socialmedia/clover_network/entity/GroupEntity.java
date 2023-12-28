@@ -60,6 +60,9 @@ public class GroupEntity {
     @Column(name = "updated_time")
     private LocalDateTime updatedTime;
 
+    @Column(name = "last_active")
+    private LocalDateTime lastActive;
+
     @Column(name = "del_flag")
     private boolean delFlag;
 

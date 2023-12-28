@@ -94,6 +94,7 @@ public class GroupServiceImpl implements GroupService {
                 groupEntity.setEnableReaction(true);
                 groupEntity.setCreatedTime(now);
                 groupEntity.setUpdatedTime(now);
+                groupEntity.setLastActive(now);
                 groupRepository.save(groupEntity);
 
                 //add new member into new group
@@ -162,8 +163,22 @@ public class GroupServiceImpl implements GroupService {
                 Map<String, GroupEntity> mapGroups = new ConcurrentHashMap<>(10);
                 this.multiGetGroupItem(groupIds, mapGroups);
                 List<GroupEntity> listGroups = new ArrayList<>(mapGroups.values());
+                List<GroupItem> data = new ArrayList<>();
+                List<GroupEntity> groupEntities = listGroups.stream().sorted(Comparator.comparing(GroupEntity::getLastActive).reversed()).collect(Collectors.toList());
+                groupEntities.forEach(group -> {
+                    GroupItem groupItem = groupEntityMapper.toDTO(group);
+                    if (group.getAvatarImgUrl() != null) {
+                        String avatarUrl = firebaseService.getImagePublicUrl(group.getAvatarImgUrl());
+                        groupItem.setAvatarUrl(avatarUrl);
+                    }
+                    if (group.getBannerImgUrl() != null) {
+                        String bannerUrl = firebaseService.getImagePublicUrl(group.getBannerImgUrl());
+                        groupItem.setBannerUrl(bannerUrl);
+                    }
+                    data.add(groupItem);
+                });
                 res.setCode(ErrorCode.Group.ACTION_SUCCESS.getCode());
-                res.setData(listGroups);
+                res.setData(data);
                 res.setMessageEN(ErrorCode.Group.ACTION_SUCCESS.getMessageEN());
                 res.setMessageVN(ErrorCode.Group.ACTION_SUCCESS.getMessageVN());
             }
@@ -283,6 +298,7 @@ public class GroupServiceImpl implements GroupService {
         }
         groupEntity.setDelFlag(confirm);
         groupEntity.setUpdatedTime(now);
+        groupEntity.setLastActive(now);
         GroupEntity result = groupRepository.save(groupEntity);
         GroupRes.GroupInfo groupInfo = new GroupRes.GroupInfo();
         GroupItem groupItem = groupEntityMapper.toDTO(result);
@@ -345,6 +361,7 @@ public class GroupServiceImpl implements GroupService {
         String imageFbUrl = firebaseService.uploadImage(bannerFile, ImageType.GROUP_BANNER);
         groupEntity.setBannerImgUrl(imageFbUrl);
         groupEntity.setUpdatedTime(now);
+        groupEntity.setLastActive(now);
         GroupEntity result = groupRepository.save(groupEntity);
         GroupRes.GroupInfo groupInfo = new GroupRes.GroupInfo();
         GroupItem groupItem = groupEntityMapper.toDTO(result);
