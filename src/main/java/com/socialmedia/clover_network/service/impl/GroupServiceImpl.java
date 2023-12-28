@@ -147,7 +147,7 @@ public class GroupServiceImpl implements GroupService {
                     .map(GroupMember::getGroupId)
                     .distinct()
                     .collect(Collectors.toList());
-            List<String> userWallIds = groupRepository.findByGroupTypeAndGroupIdIn(GroupEntity.GroupType.USER_WALL, groupIds)
+            List<String> userWallIds = groupRepository.findByGroupTypeAndGroupIdInAndDelFlagFalse(GroupEntity.GroupType.USER_WALL, groupIds)
                     .stream()
                     .map(GroupEntity::getGroupId)
                     .distinct()
@@ -388,6 +388,7 @@ public class GroupServiceImpl implements GroupService {
                     break;
                 }
                 case ADMIN: {
+                    List<GroupMember> allAdminGroup = groupMemberRepository.getActiveRoleOfGroupByGroupId(groupId, GroupMemberRole.ADMIN.getRole());
                     Page<GroupMember> adminGroups = groupMemberRepository.getActiveRoleOfGroupByGroupId(groupId, GroupMemberRole.ADMIN.getRole(), pageable);
                     if (adminGroups.getTotalElements() > 0) {
                         List<String> adminUserIds = new ArrayList<>();
@@ -402,12 +403,13 @@ public class GroupServiceImpl implements GroupService {
                                 admins.add(bProfile);
                             }
                         }
-                        memberGroupResDTO.setTotal((int) adminGroups.getTotalElements());
+                        memberGroupResDTO.setTotal(allAdminGroup.size());
                         memberGroupResDTO.setMembers(admins);
                     }
                     break;
                 }
                 case MEMBER: {
+                    List<GroupMember> allMemberGroup = groupMemberRepository.getActiveRoleOfGroupByGroupId(groupId, GroupMemberRole.MEMBER.getRole());
                     Page<GroupMember> memberGroups = groupMemberRepository.getActiveRoleOfGroupByGroupId(groupId, GroupMemberRole.MEMBER.getRole(), pageable);
                     if (memberGroups.getTotalElements() > 0) {
                         List<String> memberUserIds = new ArrayList<>();
@@ -422,7 +424,7 @@ public class GroupServiceImpl implements GroupService {
                                 member.add(bProfile);
                             }
                         }
-                        memberGroupResDTO.setTotal((int) memberGroups.getTotalElements());
+                        memberGroupResDTO.setTotal(allMemberGroup.size());
                         memberGroupResDTO.setMembers(member);
                     }
                     break;

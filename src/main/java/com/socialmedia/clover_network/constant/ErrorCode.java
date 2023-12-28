@@ -36,6 +36,7 @@ public class ErrorCode {
         public static ErrorCode PROFILE_GET_EMPTY = of(101, "Profile empty", "Không tìm thấy dữ liệu user.");
         public static ErrorCode EXISTED_USER = of(102, "Existed user", "User đã tồn tại.");
         public static ErrorCode INVALID_IMAGE_FILE = of(103, "Invalid image file", "Hình ảnh truyền vào không hợp lệ.");
+        public static ErrorCode LIST_NO_USER = of(104, "List no user", "Danh sách người dùng trống.");
     }
 
     /**

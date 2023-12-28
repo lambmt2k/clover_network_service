@@ -9,7 +9,7 @@ import java.util.Optional;
 
 @Repository
 public interface GroupRepository extends JpaRepository<GroupEntity, Long> {
-    List<GroupEntity> findByGroupOwnerId(String groupOwnerId);
+    List<GroupEntity> findByGroupOwnerIdAndDelFlagFalse(String groupOwnerId);
 
     List<GroupEntity> findAllByGroupIdInAndDelFlagFalse(List<String> groupIds);
 
@@ -17,7 +17,7 @@ public interface GroupRepository extends JpaRepository<GroupEntity, Long> {
 
     Optional<GroupEntity> findByGroupIdAndGroupType(String groupId, GroupEntity.GroupType groupType);
 
-    List<GroupEntity> findByGroupTypeAndGroupIdIn(GroupEntity.GroupType groupType, List<String> groupIds);
+    List<GroupEntity> findByGroupTypeAndGroupIdInAndDelFlagFalse(GroupEntity.GroupType groupType, List<String> groupIds);
 
     Optional<GroupEntity> findByGroupId(String groupId);
 

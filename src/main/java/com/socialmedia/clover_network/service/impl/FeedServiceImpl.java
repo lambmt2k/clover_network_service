@@ -5,10 +5,7 @@ import com.socialmedia.clover_network.config.AuthenticationHelper;
 import com.socialmedia.clover_network.constant.CommonConstant;
 import com.socialmedia.clover_network.constant.CommonRegex;
 import com.socialmedia.clover_network.constant.ErrorCode;
-import com.socialmedia.clover_network.dto.BaseProfile;
-import com.socialmedia.clover_network.dto.CommentDTO;
-import com.socialmedia.clover_network.dto.FeedItem;
-import com.socialmedia.clover_network.dto.ReactDTO;
+import com.socialmedia.clover_network.dto.*;
 import com.socialmedia.clover_network.dto.req.RoleGroupSettingReq;
 import com.socialmedia.clover_network.dto.res.ApiResponse;
 import com.socialmedia.clover_network.dto.res.CheckUserLikeDTO;
@@ -16,6 +13,7 @@ import com.socialmedia.clover_network.dto.res.ListFeedRes;
 import com.socialmedia.clover_network.entity.*;
 import com.socialmedia.clover_network.enumuration.ImageType;
 import com.socialmedia.clover_network.mapper.CommentItemMapper;
+import com.socialmedia.clover_network.mapper.GroupEntityMapper;
 import com.socialmedia.clover_network.mapper.PostItemMapper;
 import com.socialmedia.clover_network.repository.*;
 import com.socialmedia.clover_network.service.*;
@@ -59,6 +57,8 @@ public class FeedServiceImpl implements FeedService {
     FeedUserRepository feedUserDAO;
     @Autowired
     FeedGroupRepository feedGroupDAO;
+    @Autowired
+    GroupEntityMapper groupEntityMapper;
 
     /*@Autowired
     FeedItemRepositoryRedis feedItemRedis;
@@ -463,7 +463,21 @@ public class FeedServiceImpl implements FeedService {
                     .stream()
                     .filter(group -> group.getGroupId().equals(feedItem.getPrivacyGroupId()))
                     .findFirst().orElse(null);
-            feedInfoHome.setGroupItem(groupEntity);
+            GroupItem groupItem = groupEntityMapper.toDTO(groupEntity);
+
+            if (groupEntity != null) {
+                if (groupEntity.getAvatarImgUrl() != null) {
+                    String avatarUrl = firebaseService.getImagePublicUrl(groupEntity.getAvatarImgUrl());
+                    groupItem.setAvatarUrl(avatarUrl);
+                }
+                if (groupEntity.getBannerImgUrl() != null) {
+                    String bannerUrl = firebaseService.getImagePublicUrl(groupEntity.getBannerImgUrl());
+                    groupItem.setBannerUrl(bannerUrl);
+                }
+                List<GroupMember> groupMembers = groupMemberRepository.findAllByGroupIdAndDelFlagFalseAndStatus(groupEntity.getGroupId(), GroupMember.GroupMemberStatus.APPROVED);
+                groupItem.setTotalMember(groupMembers.size());
+            }
+            feedInfoHome.setGroupItem(groupItem);
 
             //currentUserRole
             RoleGroupSettingReq currentUserRole = groupService.getMemberRolePermission(userId, feedItem.getPrivacyGroupId(), feedItem.isPostToUserWall());
@@ -499,7 +513,7 @@ public class FeedServiceImpl implements FeedService {
                 .map(GroupMember::getGroupId)
                 .distinct()
                 .collect(Collectors.toList());
-        List<String> userWallIds = groupRepository.findByGroupTypeAndGroupIdIn(GroupEntity.GroupType.USER_WALL, allGroupIds)
+        List<String> userWallIds = groupRepository.findByGroupTypeAndGroupIdInAndDelFlagFalse(GroupEntity.GroupType.USER_WALL, allGroupIds)
                 .stream()
                 .map(GroupEntity::getGroupId)
                 .distinct()
@@ -534,7 +548,20 @@ public class FeedServiceImpl implements FeedService {
                     .stream()
                     .filter(group -> group.getGroupId().equals(feedItem.getPrivacyGroupId()))
                     .findFirst().orElse(null);
-            feedInfoHome.setGroupItem(groupEntity);
+            GroupItem groupItem = groupEntityMapper.toDTO(groupEntity);
+            if (groupEntity != null) {
+                List<GroupMember> groupMembers = groupMemberRepository.findAllByGroupIdAndDelFlagFalseAndStatus(groupEntity.getGroupId(), GroupMember.GroupMemberStatus.APPROVED);
+                groupItem.setTotalMember(groupMembers.size());
+                if (groupEntity.getAvatarImgUrl() != null) {
+                    String avatarUrl = firebaseService.getImagePublicUrl(groupEntity.getAvatarImgUrl());
+                    groupItem.setAvatarUrl(avatarUrl);
+                }
+                if (groupEntity.getBannerImgUrl() != null) {
+                    String bannerUrl = firebaseService.getImagePublicUrl(groupEntity.getBannerImgUrl());
+                    groupItem.setBannerUrl(bannerUrl);
+                }
+            }
+            feedInfoHome.setGroupItem(groupItem);
 
             //currentUserRole
             RoleGroupSettingReq currentUserRole = groupService.getMemberRolePermission(userId, feedItem.getPrivacyGroupId(), feedItem.isPostToUserWall());

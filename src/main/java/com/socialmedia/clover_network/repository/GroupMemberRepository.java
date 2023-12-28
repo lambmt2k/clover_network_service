@@ -14,7 +14,7 @@ import java.util.Optional;
 @Repository
 public interface GroupMemberRepository extends JpaRepository<GroupMember, Long> {
     List<GroupMember> findByUserIdAndDelFlagFalse(String userId);
-    List<GroupMember> findAllByGroupId(String groupId);
+    List<GroupMember> findAllByGroupIdAndDelFlagFalse(String groupId);
     List<GroupMember> findAllByGroupIdAndDelFlagFalseAndStatus(String groupId, GroupMember.GroupMemberStatus status);
     Optional<GroupMember> findByUserIdAndGroupId(String userId, String groupId);
     Optional<GroupMember> findFirstByUserIdAndGroupIdAndDelFlagFalse(String userId, String groupId);
@@ -28,5 +28,14 @@ public interface GroupMemberRepository extends JpaRepository<GroupMember, Long> 
             "      and gm.group_role_id = ?2 " +
             "      and u.status = 1", nativeQuery = true)
     Page<GroupMember> getActiveRoleOfGroupByGroupId(String groupId, int roleId, Pageable pageable);
+
+    @Query(value = "SELECT gm.* " +
+            "FROM group_member gm " +
+            "LEFT JOIN user_info u on gm.user_id = u.user_id " +
+            "WHERE gm.group_id = ?1 " +
+            "      AND gm.del_flag = false " +
+            "      and gm.group_role_id = ?2 " +
+            "      and u.status = 1", nativeQuery = true)
+    List<GroupMember> getActiveRoleOfGroupByGroupId(String groupId, int roleId);
 
 }

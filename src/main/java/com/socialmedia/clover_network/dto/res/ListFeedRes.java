@@ -3,6 +3,7 @@ package com.socialmedia.clover_network.dto.res;
 import com.socialmedia.clover_network.dto.BaseProfile;
 import com.socialmedia.clover_network.dto.CommentDTO;
 import com.socialmedia.clover_network.dto.FeedItem;
+import com.socialmedia.clover_network.dto.GroupItem;
 import com.socialmedia.clover_network.dto.req.RoleGroupSettingReq;
 import com.socialmedia.clover_network.entity.GroupEntity;
 import com.socialmedia.clover_network.entity.ReactionItem;
@@ -32,7 +33,7 @@ public class ListFeedRes {
     public static class FeedInfoHome {
         private FeedItem feedItem;
         private BaseProfile authorProfile;
-        private GroupEntity groupItem;
+        private GroupItem groupItem;
         private RoleGroupSettingReq currentUserRole;
         private Integer totalReact;
         private Integer totalComment;

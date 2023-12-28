@@ -19,7 +19,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
@@ -104,7 +103,7 @@ public class UserWallServiceImpl implements UserWallService {
         if (userId != null) {
             if (existedUserInfo.getStatus().equals(UserStatus.ACTIVE)) {
                 //find group owned by userId
-                List<GroupEntity> groupEntities = groupRepository.findByGroupOwnerId(userId);
+                List<GroupEntity> groupEntities = groupRepository.findByGroupOwnerIdAndDelFlagFalse(userId);
                 return groupEntities.stream().anyMatch(group -> (
                         group.getGroupType().equals(GroupEntity.GroupType.USER_WALL) && !group.isDelFlag()));
             }
