@@ -443,8 +443,16 @@ public class FeedServiceImpl implements FeedService {
         postItems.forEach(postItem -> {
             ListFeedRes.FeedInfoHome feedInfoHome = new ListFeedRes.FeedInfoHome();
 
+
             //FeedItem
             FeedItem feedItem = PostItemMapper.INSTANCE.toDTO(postItem);
+            //groupItem
+            GroupEntity groupEntity = groupEntities
+                    .stream()
+                    .filter(group -> group.getGroupId().equals(feedItem.getPrivacyGroupId()))
+                    .findFirst().orElse(null);
+            GroupItem groupItem = groupEntityMapper.toDTO(groupEntity);
+            feedItem.setPostToUserWall(groupItem.getGroupType().equals(GroupEntity.GroupType.USER_WALL));
             if (postItem.getImages().size() > 0) {
                 List<String> imageFeeds = new ArrayList<>();
                 postItem.getImages().forEach(image -> {
@@ -458,12 +466,7 @@ public class FeedServiceImpl implements FeedService {
             BaseProfile authorProfile = userService.getBaseProfileByUserId(feedItem.getAuthorId());
             feedInfoHome.setAuthorProfile(authorProfile);
 
-            //groupItem
-            GroupEntity groupEntity = groupEntities
-                    .stream()
-                    .filter(group -> group.getGroupId().equals(feedItem.getPrivacyGroupId()))
-                    .findFirst().orElse(null);
-            GroupItem groupItem = groupEntityMapper.toDTO(groupEntity);
+
 
             if (groupEntity != null) {
                 if (groupEntity.getAvatarImgUrl() != null) {

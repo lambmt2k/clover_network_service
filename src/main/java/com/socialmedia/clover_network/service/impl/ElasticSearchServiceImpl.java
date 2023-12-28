@@ -75,6 +75,10 @@ public class ElasticSearchServiceImpl implements ElasticSearchService {
         userInfoRes.removeIf(userInfo -> userInfo.getUserId().equals(currentUserId));
         userInfoRes.forEach(userInfo -> {
             userInfo.setConnected(connectionService.checkAConnectB(currentUserId, userInfo.getUserId()));
+            if (userInfo.getAvatar() != null) {
+                String publicImgUrl = firebaseService.getImagePublicUrl(userInfo.getAvatar());
+                userInfo.setAvatar(publicImgUrl);
+            }
         });
         if (!userInfoRes.isEmpty()) {
             data.setUsers((userInfoRes));
