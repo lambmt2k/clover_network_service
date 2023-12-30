@@ -253,54 +253,6 @@ public class UserServiceImpl implements UserService {
             res.setMessageVN(ErrorCode.Token.FORBIDDEN.getMessageVN());
             return res;
         }
-        List<Connection> listUserConnector = connectionRepository.findByUserIdConnectedAndConnectStatusTrue(userId);
-        if (listUserConnector.isEmpty()) {
-            res.setCode(ErrorCode.User.LIST_NO_USER.getCode());
-            res.setData(null);
-            res.setMessageEN(ErrorCode.User.LIST_NO_USER.getMessageEN());
-            res.setMessageVN(ErrorCode.User.LIST_NO_USER.getMessageVN());
-            return res;
-        }
-        UserProfileDTO.ListUserConnectDTO data = new UserProfileDTO.ListUserConnectDTO();
-        List<BaseProfile> listBaseProfileConnect = new ArrayList<>();
-
-        listUserConnector.forEach(user -> listBaseProfileConnect.add(this.getBaseProfileByUserId(user.getUserId())));
-        List<BaseProfile> userProfiles = new ArrayList<>();
-        if (!listBaseProfileConnect.isEmpty() && listBaseProfileConnect.size() > size) {
-            userProfiles = listBaseProfileConnect
-                    .stream()
-                    .sorted(Comparator.comparing(BaseProfile::getDisplayName))
-                    .skip((long) (page - 1) * size)
-                    .limit(size)
-                    .collect(Collectors.toList());
-        } else {
-            userProfiles = listBaseProfileConnect;
-        }
-
-        data.setTotal(listUserConnector.size());
-        data.setUserProfiles(userProfiles);
-
-        res.setCode(ErrorCode.User.ACTION_SUCCESS.getCode());
-        res.setData(data);
-        res.setMessageEN(ErrorCode.User.ACTION_SUCCESS.getMessageEN());
-        res.setMessageVN(ErrorCode.User.ACTION_SUCCESS.getMessageVN());
-        logger.info("End api [getListUserConnect]");
-        return res;
-    }
-
-    @Override
-    public ApiResponse getListUserConnector(String userId, int page, int size) {
-        logger.info("Start [getListUserConnector]");
-        ApiResponse res = new ApiResponse();
-        SimpleDateFormat dateFormat = new SimpleDateFormat(CommonRegex.PATTERN_DATE.pattern());
-        String currentUserId = AuthenticationHelper.getUserIdFromContext();
-        if (StringUtils.isEmpty(currentUserId)) {
-            res.setCode(ErrorCode.Token.FORBIDDEN.getCode());
-            res.setData(null);
-            res.setMessageEN(ErrorCode.Token.FORBIDDEN.getMessageEN());
-            res.setMessageVN(ErrorCode.Token.FORBIDDEN.getMessageVN());
-            return res;
-        }
         List<Connection> listUserConnect = connectionRepository.findByUserIdAndConnectStatusTrue(userId);
         if (listUserConnect.isEmpty()) {
             res.setCode(ErrorCode.User.LIST_NO_USER.getCode());
@@ -326,6 +278,54 @@ public class UserServiceImpl implements UserService {
         }
 
         data.setTotal(listUserConnect.size());
+        data.setUserProfiles(userProfiles);
+
+        res.setCode(ErrorCode.User.ACTION_SUCCESS.getCode());
+        res.setData(data);
+        res.setMessageEN(ErrorCode.User.ACTION_SUCCESS.getMessageEN());
+        res.setMessageVN(ErrorCode.User.ACTION_SUCCESS.getMessageVN());
+        logger.info("End api [getListUserConnect]");
+        return res;
+    }
+
+    @Override
+    public ApiResponse getListUserConnector(String userId, int page, int size) {
+        logger.info("Start [getListUserConnector]");
+        ApiResponse res = new ApiResponse();
+        SimpleDateFormat dateFormat = new SimpleDateFormat(CommonRegex.PATTERN_DATE.pattern());
+        String currentUserId = AuthenticationHelper.getUserIdFromContext();
+        if (StringUtils.isEmpty(currentUserId)) {
+            res.setCode(ErrorCode.Token.FORBIDDEN.getCode());
+            res.setData(null);
+            res.setMessageEN(ErrorCode.Token.FORBIDDEN.getMessageEN());
+            res.setMessageVN(ErrorCode.Token.FORBIDDEN.getMessageVN());
+            return res;
+        }
+        List<Connection> listUserConnector = connectionRepository.findByUserIdConnectedAndConnectStatusTrue(userId);
+        if (listUserConnector.isEmpty()) {
+            res.setCode(ErrorCode.User.LIST_NO_USER.getCode());
+            res.setData(null);
+            res.setMessageEN(ErrorCode.User.LIST_NO_USER.getMessageEN());
+            res.setMessageVN(ErrorCode.User.LIST_NO_USER.getMessageVN());
+            return res;
+        }
+        UserProfileDTO.ListUserConnectDTO data = new UserProfileDTO.ListUserConnectDTO();
+        List<BaseProfile> listBaseProfileConnect = new ArrayList<>();
+
+        listUserConnector.forEach(user -> listBaseProfileConnect.add(this.getBaseProfileByUserId(user.getUserId())));
+        List<BaseProfile> userProfiles = new ArrayList<>();
+        if (!listBaseProfileConnect.isEmpty() && listBaseProfileConnect.size() > size) {
+            userProfiles = listBaseProfileConnect
+                    .stream()
+                    .sorted(Comparator.comparing(BaseProfile::getDisplayName))
+                    .skip((long) (page - 1) * size)
+                    .limit(size)
+                    .collect(Collectors.toList());
+        } else {
+            userProfiles = listBaseProfileConnect;
+        }
+
+        data.setTotal(listUserConnector.size());
         data.setUserProfiles(userProfiles);
 
         res.setCode(ErrorCode.User.ACTION_SUCCESS.getCode());
