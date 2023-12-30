@@ -754,7 +754,9 @@ public class FeedServiceImpl implements FeedService {
                     return true;
                 }
                 //case user post to another user's wall
-                return connectionRepository.findByUserIdAndUserIdConnectedAndConnectStatusTrue(userId, createdUserId).isPresent();
+                boolean AConnectB = connectionRepository.findByUserIdAndUserIdConnectedAndConnectStatusTrue(userId, createdUserId).isPresent();
+                boolean BConnectA = connectionRepository.findByUserIdAndUserIdConnectedAndConnectStatusTrue(createdUserId, userId).isPresent();
+                return AConnectB && BConnectA;
             } else {
                 RoleGroupSettingReq roleGroup = groupService.getMemberRolePermission(userId, groupId, false);
                 return roleGroup != null && roleGroup.isEnablePost();
