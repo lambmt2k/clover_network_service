@@ -31,7 +31,7 @@ redis:
 jwt:
   secret: clover
 clover:
-  server_host: https://clover-network-service-fd0c2a440af1.herokuapp.com
+  server_host: https://clover-network-app-rok7a.ondigitalocean.app
   local_host: localhost:8080
 app_setting:
   firebase:
