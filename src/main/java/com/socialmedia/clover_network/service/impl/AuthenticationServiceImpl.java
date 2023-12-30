@@ -32,7 +32,6 @@ import com.socialmedia.clover_network.util.JwtTokenUtil;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.security.core.parameters.P;
 import org.springframework.stereotype.Service;
 
 import javax.servlet.http.HttpServletRequest;
@@ -471,7 +470,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
             res.setMessageVN(ErrorCode.Authentication.INVALID_PASSWORD.getMessageVN());
             return res;
         }
-        OTPEntity otpEntity = otpRepository.findTopByEmailOrderByCreatedTimeDesc(req.getEmail()).orElse(null);
+        OTPEntity otpEntity = otpRepository.findTopByEmailAndIsUsedFalseOrderByCreatedTimeDesc(req.getEmail()).orElse(null);
         if (Objects.isNull(otpEntity)) {
             res.setCode(ErrorCode.SendMail.ACTION_FAIL.getCode());
             res.setData(req.getEmail());

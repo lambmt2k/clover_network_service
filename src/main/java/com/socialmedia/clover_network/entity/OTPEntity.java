@@ -26,6 +26,9 @@ public class OTPEntity {
     @Column(name = "otp")
     private String otp;
 
+    @Column(name = "is_used", columnDefinition = "BOOLEAN DEFAULT false")
+    private boolean isUsed;
+
     @Column(name = "created_time")
     private LocalDateTime createdTime;
 }
