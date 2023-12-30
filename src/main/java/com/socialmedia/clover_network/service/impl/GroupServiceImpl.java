@@ -343,9 +343,8 @@ public class GroupServiceImpl implements GroupService {
                 .stream()
                 .map(PostItem::getPostId)
                 .collect(Collectors.toList());
-        List<String>  memberList = groupMemberRepository.findAllByGroupIdAndDelFlagFalse(groupId)
-                .stream().map(GroupMember::getUserId)
-                .collect(Collectors.toList());
+        List<GroupMember> groupMembers = groupMemberRepository.findAllByGroupIdAndDelFlagFalse(groupId);
+        List<String>  memberList = groupMembers.stream().map(GroupMember::getUserId).collect(Collectors.toList());
         if (limit > enableFeeds.size()) {
             limit = enableFeeds.size();
         }
@@ -361,6 +360,8 @@ public class GroupServiceImpl implements GroupService {
                 break;
             }
 
+            //disable member group
+            this.disableMemberGroup(groupMembers);
             //disable all feed in group
             this.disableFeedItems(feedIds);
 
@@ -368,6 +369,15 @@ public class GroupServiceImpl implements GroupService {
             this.multiRemoveEnableFeedForUser(memberList, feedIds);
         }
         logger.info("[disableGroup] finish disable all feed of group: " + groupId);
+    }
+
+    private void disableMemberGroup(List<GroupMember> groupMembers) {
+        LocalDateTime now = LocalDateTime.now();
+        groupMembers.forEach(groupMember -> {
+            groupMember.setDelFlag(true);
+            groupMember.setLeaveTime(now);
+        });
+        groupMemberRepository.saveAll(groupMembers);
     }
 
     private void multiRemoveEnableFeedForUser(List<String> userIds, List<String> feedIds) {
