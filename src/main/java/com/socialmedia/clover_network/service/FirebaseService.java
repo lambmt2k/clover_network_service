@@ -73,7 +73,10 @@ public class FirebaseService {
     }
 
     public String getImagePublicUrl(String imagePath) {
-        return StorageClient.getInstance().bucket().get(imagePath).signUrl(1, TimeUnit.HOURS).toString();
+        if (imagePath != null) {
+            return StorageClient.getInstance().bucket().get(imagePath).signUrl(1, TimeUnit.HOURS).toString();
+        }
+        return null;
     }
 
     private String generateUniqueFileName(String originalFileName) {
