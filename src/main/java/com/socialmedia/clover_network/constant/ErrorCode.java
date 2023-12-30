@@ -55,6 +55,7 @@ public class ErrorCode {
     public static class Connection {
         public static ErrorCode ACTION_SUCCESS = of(150, "Action success", "Thành công.");
         public static ErrorCode ALREADY_CONNECTED = of(151, "User already connected", "Người dùng đã được kết nối trước đó.");
+        public static ErrorCode CANNOT_CONNECT_YOURSELF = of(152, "You can't connect yourself", "Bạn không thể kết nối chính mình.");
     }
 
     /**

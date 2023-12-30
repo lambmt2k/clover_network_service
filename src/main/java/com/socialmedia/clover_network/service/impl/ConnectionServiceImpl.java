@@ -55,6 +55,13 @@ public class ConnectionServiceImpl implements ConnectionService {
             res.setMessageVN(ErrorCode.Token.FORBIDDEN.getMessageVN());
             return res;
         }
+        if (currentUserId.equals(req.getTargetUserId())) {
+            res.setCode(ErrorCode.Connection.CANNOT_CONNECT_YOURSELF.getCode());
+            res.setData(req);
+            res.setMessageEN(ErrorCode.Connection.CANNOT_CONNECT_YOURSELF.getMessageEN());
+            res.setMessageVN(ErrorCode.Connection.CANNOT_CONNECT_YOURSELF.getMessageVN());
+            return res;
+        }
         UserInfo targetUserInfo = userService.getUserInfo(req.getTargetUserId());
         if (Objects.isNull(targetUserInfo) || !targetUserInfo.getStatus().equals(UserStatus.ACTIVE)) {
             res.setCode(ErrorCode.User.PROFILE_GET_EMPTY.getCode());
