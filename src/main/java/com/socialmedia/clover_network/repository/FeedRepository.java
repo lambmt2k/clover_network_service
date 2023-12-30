@@ -10,6 +10,7 @@ import java.util.List;
 @Repository
 public interface FeedRepository extends JpaRepository<PostItem, String> {
     List<PostItem> findAllByPrivacyGroupIdInAndDelFlagFalseAndLastActiveIsNotNullOrderByLastActiveDesc(List<String> privacyGroupIds, Pageable pageable);
+    List<PostItem> findByPrivacyGroupIdAndDelFlagFalse(String privacyGroupId);
 
     List<PostItem> findByDelFlagFalseAndContentContainingIgnoreCase(String keyword);
 

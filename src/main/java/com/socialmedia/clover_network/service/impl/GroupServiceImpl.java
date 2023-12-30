@@ -4,16 +4,14 @@ import com.socialmedia.clover_network.config.AuthenticationHelper;
 import com.socialmedia.clover_network.constant.CommonRegex;
 import com.socialmedia.clover_network.constant.ErrorCode;
 import com.socialmedia.clover_network.dto.BaseProfile;
+import com.socialmedia.clover_network.dto.FeedItem;
 import com.socialmedia.clover_network.dto.GroupItem;
 import com.socialmedia.clover_network.dto.req.GroupReq;
 import com.socialmedia.clover_network.dto.req.RoleGroupSettingReq;
 import com.socialmedia.clover_network.dto.res.ApiResponse;
 import com.socialmedia.clover_network.dto.res.GroupRes;
 import com.socialmedia.clover_network.dto.res.MemberGroupResDTO;
-import com.socialmedia.clover_network.entity.GroupEntity;
-import com.socialmedia.clover_network.entity.GroupMember;
-import com.socialmedia.clover_network.entity.GroupRolePermission;
-import com.socialmedia.clover_network.entity.UserInfo;
+import com.socialmedia.clover_network.entity.*;
 import com.socialmedia.clover_network.enumuration.GroupMemberRole;
 import com.socialmedia.clover_network.enumuration.ImageType;
 import com.socialmedia.clover_network.mapper.GroupEntityMapper;
@@ -32,6 +30,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 import org.springframework.web.multipart.MultipartFile;
@@ -70,6 +69,12 @@ public class GroupServiceImpl implements GroupService {
     FeedService feedService;
     @Autowired
     FirebaseService firebaseService;
+    @Autowired
+    FeedGroupRepository feedGroupDAO;
+    @Autowired
+    FeedRepository feedRepository;
+    @Autowired
+    FeedUserRepository feedUserDAO;
 
     @Override
     public ApiResponse createNewGroup(GroupReq groupReq) {
@@ -300,6 +305,9 @@ public class GroupServiceImpl implements GroupService {
         groupEntity.setUpdatedTime(now);
         groupEntity.setLastActive(now);
         GroupEntity result = groupRepository.save(groupEntity);
+
+        this.deletePostInGroupDisabled(groupEntity.getGroupId());
+
         GroupRes.GroupInfo groupInfo = new GroupRes.GroupInfo();
         GroupItem groupItem = groupEntityMapper.toDTO(result);
         if (result.getAvatarImgUrl() != null) {
@@ -321,6 +329,63 @@ public class GroupServiceImpl implements GroupService {
         res.setMessageVN(ErrorCode.Group.ACTION_SUCCESS.getMessageVN());
         logger.info("End API [disableGroup]");
         return res;
+    }
+
+    @Async
+    private void deletePostInGroupDisabled(String groupId) {
+        int limit = 200;
+        int to = 0;
+        FeedGroupEntity feedGroupEntity = feedGroupDAO.findById(groupId).orElse(null);
+        if (feedGroupEntity != null) {
+            feedGroupDAO.delete(feedGroupEntity);
+        }
+        List<String> enableFeeds = feedRepository.findByPrivacyGroupIdAndDelFlagFalse(groupId)
+                .stream()
+                .map(PostItem::getPostId)
+                .collect(Collectors.toList());
+        List<String>  memberList = groupMemberRepository.findAllByGroupIdAndDelFlagFalse(groupId)
+                .stream().map(GroupMember::getUserId)
+                .collect(Collectors.toList());
+        if (limit > enableFeeds.size()) {
+            limit = enableFeeds.size();
+        }
+        while (true) {
+            int from = to;
+            to += limit;
+            if (to > enableFeeds.size()) {
+                to = enableFeeds.size();
+            }
+            logger.info("[disableGroup] delete enableFeed from: " + from + " to: " + to);
+            List<String> feedIds = enableFeeds.subList(from, to);
+            if (feedIds.size() == 0) {
+                break;
+            }
+
+            //disable all feed in group
+            this.disableFeedItems(feedIds);
+
+            //remove all feed in feedUser
+            this.multiRemoveEnableFeedForUser(memberList, feedIds);
+        }
+        logger.info("[disableGroup] finish disable all feed of group: " + groupId);
+    }
+
+    private void multiRemoveEnableFeedForUser(List<String> userIds, List<String> feedIds) {
+        userIds.forEach(userId -> {
+            feedUserDAO.findById(userId).ifPresent(feedUserEntity -> feedIds.forEach(feedId -> {
+                feedUserEntity.getListFeedId().removeAll(feedIds);
+            }));
+        });
+    }
+
+    private void disableFeedItems(List<String> feedIds) {
+        List<PostItem> listFeedDisable = new ArrayList<>();
+        feedIds.forEach(feedId -> {
+            PostItem postItem = feedRepository.findByPostIdAndDelFlagFalse(feedId);
+            postItem.setDelFlag(true);
+            listFeedDisable.add(postItem);
+        });
+        feedRepository.saveAll(listFeedDisable);
     }
 
     @Override
@@ -537,8 +602,10 @@ public class GroupServiceImpl implements GroupService {
     private void multiGetGroupItem(List<String> groupIds, Map<String, GroupEntity> mapGroupItems) {
         logger.info("[multiGetGroupItem] Start get multi group item for list groupIds: " + groupIds);
         groupIds.forEach(groupId -> {
-            Optional<GroupEntity> groupEntityOpt = groupRepository.findByGroupId(groupId);
-            groupEntityOpt.ifPresent(groupEntity -> mapGroupItems.put(groupId, groupEntity));
+            GroupEntity groupEntity = groupRepository.findByGroupIdAndDelFlagFalse(groupId);
+            if (groupEntity != null) {
+                mapGroupItems.put(groupId, groupEntity);
+            }
         });
     }
 
