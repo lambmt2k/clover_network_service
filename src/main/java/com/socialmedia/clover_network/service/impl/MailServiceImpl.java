@@ -35,7 +35,7 @@ public class MailServiceImpl implements MailService {
         logger.info("Start [sendMailActiveAccount]");
         String toEmail = userInfo.getEmail();
         
-         MimeMessage message = javaMailSender.createMimeMessage();
+        MimeMessage message = javaMailSender.createMimeMessage();
         MimeMessageHelper helper = new MimeMessageHelper(message, true);
 
         String fromEmail = CommonConstant.HOST_EMAIL;
@@ -61,5 +61,36 @@ public class MailServiceImpl implements MailService {
         helper.setText(content, true);
 
         javaMailSender.send(message);
+    }
+
+    @Override
+    public String sendMailOtp(UserInfo userInfo, String otp) throws MessagingException, UnsupportedEncodingException {
+        String toEmail = userInfo.getEmail();
+
+        MimeMessage message = javaMailSender.createMimeMessage();
+        MimeMessageHelper helper = new MimeMessageHelper(message, true);
+
+        String fromEmail = CommonConstant.HOST_EMAIL;
+        String senderName = "Clover Network Admin";
+        String title = "Clover Network | Your One-Time Password (OTP)";
+
+        String content = "Dear [[name]],<br>"
+                + "Thank you for using and supporting our product.<br>"
+                + "We received a request for forgetting your account password.<br>"
+                + "Please use the code below to set a new password.<br>"
+                + "<p>Your OTP is: <strong>" + otp + "</strong></p><br>"
+                + "Thank you,<br>"
+                + "Clover Network Admin.";
+
+        content = content.replace("[[name]]", userInfo.getFirstname() + CommonRegex.REGEX_SPACE + userInfo.getLastname());
+
+
+        helper.setFrom(fromEmail, senderName);
+        helper.setTo(toEmail);
+        helper.setSubject(title);
+        helper.setText(content, true);
+
+        javaMailSender.send(message);
+        return otp;
     }
 }

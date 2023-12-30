@@ -155,6 +155,8 @@ public class UserServiceImpl implements UserService {
                 //get user's wall info
                 GroupEntity userWall = userWallService.getUserWallByUserId(currentUserId);
                 data.setUserWallId(userWall.getGroupId());
+                String bannerUrl = firebaseService.getImagePublicUrl(userWall.getBannerImgUrl());
+                data.setBannerUrl(bannerUrl);
                 res.setCode(ErrorCode.User.ACTION_SUCCESS.getCode());
                 res.setData(data);
                 res.setMessageEN(ErrorCode.User.ACTION_SUCCESS.getMessageEN());
@@ -204,6 +206,8 @@ public class UserServiceImpl implements UserService {
                 //get user's wall info
                 GroupEntity userWall = userWallService.getUserWallByUserId(userId);
                 data.setUserWallId(userWall.getGroupId());
+                String bannerUrl = firebaseService.getImagePublicUrl(userWall.getBannerImgUrl());
+                data.setBannerUrl(bannerUrl);
                 Connection checkConnectAtoB = connectionRepository.findByUserIdAndUserIdConnected(currentUserId, userId);
                 if (checkConnectAtoB != null && checkConnectAtoB.isConnectStatus()) {
                     data.setConnected(true);
@@ -442,7 +446,8 @@ public class UserServiceImpl implements UserService {
             //get user's wall info
             GroupEntity userWall = userWallService.getUserWallByUserId(currentUserId);
             data.setUserWallId(userWall.getGroupId());
-
+            String bannerUrl = firebaseService.getImagePublicUrl(userWall.getBannerImgUrl());
+            data.setBannerUrl(bannerUrl);
             res.setCode(ErrorCode.User.ACTION_SUCCESS.getCode());
             res.setData(data);
             res.setMessageEN(ErrorCode.User.ACTION_SUCCESS.getMessageEN());
@@ -509,7 +514,8 @@ public class UserServiceImpl implements UserService {
         //get user's wall info
         GroupEntity userWall = userWallService.getUserWallByUserId(currentUserId);
         data.setUserWallId(userWall.getGroupId());
-
+        String bannerUrl = firebaseService.getImagePublicUrl(userWall.getBannerImgUrl());
+        data.setBannerUrl(bannerUrl);
         res.setCode(ErrorCode.User.ACTION_SUCCESS.getCode());
         res.setData(data);
         res.setMessageEN(ErrorCode.User.ACTION_SUCCESS.getMessageEN());

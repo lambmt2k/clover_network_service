@@ -3,6 +3,7 @@ package com.socialmedia.clover_network.controller.user;
 import com.socialmedia.clover_network.constant.CommonRegex;
 import com.socialmedia.clover_network.constant.ErrorCode;
 import com.socialmedia.clover_network.dto.FeedItem;
+import com.socialmedia.clover_network.dto.req.ResetPasswordDTO;
 import com.socialmedia.clover_network.dto.req.UserLoginReq;
 import com.socialmedia.clover_network.dto.req.UserSignUpReq;
 import com.socialmedia.clover_network.dto.res.ApiResponse;
@@ -12,10 +13,14 @@ import com.socialmedia.clover_network.service.AuthenticationService;
 
 import javax.mail.MessagingException;
 import javax.servlet.http.HttpServletRequest;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.io.UnsupportedEncodingException;
 import java.util.Objects;
@@ -23,6 +28,8 @@ import java.util.Objects;
 @RestController
 @RequestMapping(path = "/api/authenticate")
 public class AuthenticationController {
+
+    private final Logger logger = LoggerFactory.getLogger(AuthenticationController.class);
 
     private final AuthenticationService authenticationService;
 
@@ -56,6 +63,28 @@ public class AuthenticationController {
             ApiResponse res = authenticationService.logout(tokenId, request);
             return ResponseEntity.ok().body(res);
         } catch (Exception e) {
+            return ResponseEntity.internalServerError().body(null);
+        }
+    }
+
+    @GetMapping("/forgot-password")
+    public ResponseEntity<ApiResponse> forgotPassword(@RequestParam(name = "email") String email) {
+        try {
+            ApiResponse res = authenticationService.generateOTP(email);
+            return ResponseEntity.ok().body(res);
+        } catch (Exception e) {
+            logger.error(e.getMessage());
+            return ResponseEntity.internalServerError().body(null);
+        }
+    }
+
+    @PostMapping("/reset-password")
+    public ResponseEntity<ApiResponse> resetPassword(@RequestBody ResetPasswordDTO req) {
+        try {
+            ApiResponse res = authenticationService.resetPassword(req);
+            return ResponseEntity.ok().body(res);
+        } catch (Exception e) {
+            logger.error(e.getMessage());
             return ResponseEntity.internalServerError().body(null);
         }
     }
