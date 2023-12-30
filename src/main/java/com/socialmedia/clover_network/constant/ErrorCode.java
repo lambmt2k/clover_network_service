@@ -15,7 +15,7 @@ public class ErrorCode {
     private String messageVN;
 
     /**
-     * Code from 1 => 99
+     * Code from 1 => 49
      */
     public static class Authentication {
         public static ErrorCode ACTION_SUCCESS = of(-1, "Action success", "Thành công.");
@@ -25,6 +25,16 @@ public class ErrorCode {
                 "Account doesn't activated. Please verify account by link send to your email before first login",
                 "Tài khoản chưa được kích hoat. Vui lòng kích hoạt tài khoản bằng đường dẫn được gửi tới email của bạn.");
         public static ErrorCode INVALID_PASSWORD = of(4, "Invalid password", "Mật khẩu không hợp lệ");
+        public static ErrorCode INCORRECT_OTP_CODE = of(5, "Incorrect otp code", "Mã xác thực không đúng. Vui lòng kiểm tra lại.");
+        public static ErrorCode EXPIRED_OTP_CODE = of(6, "Otp code is expired", "Mã xác thực hết hạn. Vui lòng kiểm tra lại.");
+    }
+
+    /**
+     * Code from 50 => 99
+     */
+    public static class SendMail {
+        public static ErrorCode ACTION_SUCCESS = of(50, "Action success", "Thành công.");
+        public static ErrorCode ACTION_FAIL = of(51, "Send mail fail. Please check your email", "Gửi thư không thành công. Vui lòng kiểm tra lại email.");
     }
 
     /**

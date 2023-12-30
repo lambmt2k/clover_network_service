@@ -1,5 +1,6 @@
 package com.socialmedia.clover_network.service;
 
+import com.socialmedia.clover_network.dto.req.ResetPasswordDTO;
 import com.socialmedia.clover_network.dto.req.UserLoginReq;
 import com.socialmedia.clover_network.dto.req.UserSignUpReq;
 import com.socialmedia.clover_network.dto.res.ApiResponse;
@@ -18,4 +19,6 @@ public interface AuthenticationService {
     ApiResponse verifyAccount(String tokenId);
     TokenItem getTokenItem(String tokenId);
     ApiResponse logout(String tokenId, HttpServletRequest request);
+    ApiResponse generateOTP(String email);
+    ApiResponse resetPassword(ResetPasswordDTO resetPasswordDTO) throws Exception;
 }

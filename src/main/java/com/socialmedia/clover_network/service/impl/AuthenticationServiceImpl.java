@@ -4,11 +4,13 @@ import com.socialmedia.clover_network.config.AuthenticationHelper;
 import com.socialmedia.clover_network.constant.CommonConstant;
 import com.socialmedia.clover_network.constant.CommonRegex;
 import com.socialmedia.clover_network.constant.ErrorCode;
+import com.socialmedia.clover_network.dto.req.ResetPasswordDTO;
 import com.socialmedia.clover_network.dto.req.UserLoginReq;
 import com.socialmedia.clover_network.dto.req.UserSignUpReq;
 import com.socialmedia.clover_network.dto.res.ApiResponse;
 import com.socialmedia.clover_network.dto.res.UserInfoRes;
 import com.socialmedia.clover_network.dto.res.UserLoginRes;
+import com.socialmedia.clover_network.entity.OTPEntity;
 import com.socialmedia.clover_network.entity.TokenItem;
 import com.socialmedia.clover_network.entity.UserAuth;
 import com.socialmedia.clover_network.entity.UserInfo;
@@ -16,6 +18,7 @@ import com.socialmedia.clover_network.enumuration.AccountType;
 import com.socialmedia.clover_network.enumuration.Gender;
 import com.socialmedia.clover_network.enumuration.UserRole;
 import com.socialmedia.clover_network.enumuration.UserStatus;
+import com.socialmedia.clover_network.repository.OTPRepository;
 import com.socialmedia.clover_network.repository.TokenItemRepository;
 import com.socialmedia.clover_network.repository.UserAuthRepository;
 import com.socialmedia.clover_network.repository.UserInfoRepository;
@@ -26,18 +29,17 @@ import com.socialmedia.clover_network.util.EncryptUtil;
 import com.socialmedia.clover_network.util.GenIDUtil;
 import com.socialmedia.clover_network.util.HttpHelper;
 import com.socialmedia.clover_network.util.JwtTokenUtil;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.security.core.parameters.P;
 import org.springframework.stereotype.Service;
 
 import javax.servlet.http.HttpServletRequest;
 import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
-import java.util.Arrays;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -48,6 +50,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     private final UserInfoRepository userInfoRepository;
     private final UserAuthRepository userAuthRepository;
     private final TokenItemRepository tokenItemRepository;
+    private final OTPRepository otpRepository;
 
     private final JwtTokenUtil jwtTokenUtil;
     private final GenIDUtil genIDUtil;
@@ -58,6 +61,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     public AuthenticationServiceImpl(UserInfoRepository userInfoRepository,
                                      UserAuthRepository userAuthRepository,
                                      TokenItemRepository tokenItemRepository,
+                                     OTPRepository otpRepository,
                                      JwtTokenUtil jwtTokenUtil,
                                      GenIDUtil genIDUtil,
                                      MailService mailService,
@@ -65,6 +69,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         this.userInfoRepository = userInfoRepository;
         this.userAuthRepository = userAuthRepository;
         this.tokenItemRepository = tokenItemRepository;
+        this.otpRepository = otpRepository;
         this.jwtTokenUtil = jwtTokenUtil;
         this.genIDUtil = genIDUtil;
         this.mailService = mailService;
@@ -402,5 +407,116 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         res.setMessageEN(ErrorCode.Token.ACTION_SUCCESS.getMessageEN());
         res.setMessageVN(ErrorCode.Token.ACTION_SUCCESS.getMessageVN());
         return res;
+    }
+
+    @Override
+    public ApiResponse generateOTP(String email) {
+        ApiResponse res = new ApiResponse();
+        logger.info("Start API [generateOTP]");
+        Optional<UserInfo> userInfoOpt = userInfoRepository.findByEmail(email);
+        if (userInfoOpt.isEmpty() || userInfoOpt.get().getStatus().equals(UserStatus.INACTIVE)) {
+            res.setCode(ErrorCode.User.PROFILE_GET_EMPTY.getCode());
+            res.setData(email);
+            res.setMessageEN(ErrorCode.User.PROFILE_GET_EMPTY.getMessageEN());
+            res.setMessageVN(ErrorCode.User.PROFILE_GET_EMPTY.getMessageVN());
+            return res;
+        }
+        try {
+            LocalDateTime now = LocalDateTime.now();
+            String otp = generateRandomOtp();
+            OTPEntity otpEntity = new OTPEntity();
+            otpEntity.setEmail(email);
+            otpEntity.setOtp(otp);
+            otpEntity.setCreatedTime(now);
+            otpRepository.save(otpEntity);
+            String successOTP = mailService.sendMailOtp(userInfoOpt.get(), otp);
+            if (otp.equals(successOTP)) {
+                res.setCode(ErrorCode.User.ACTION_SUCCESS.getCode());
+                res.setData(email);
+                res.setMessageEN(ErrorCode.User.ACTION_SUCCESS.getMessageEN());
+                res.setMessageVN(ErrorCode.User.ACTION_SUCCESS.getMessageVN());
+                logger.info("Finish API [generateOTP]");
+                return res;
+            } else {
+                res.setCode(ErrorCode.SendMail.ACTION_FAIL.getCode());
+                res.setData(email);
+                res.setMessageEN(ErrorCode.SendMail.ACTION_FAIL.getMessageEN());
+                res.setMessageVN(ErrorCode.SendMail.ACTION_FAIL.getMessageVN());
+                return res;
+            }
+        } catch (Exception e) {
+            throw new RuntimeException(e.getMessage());
+        }
+    }
+
+    @Override
+    public ApiResponse resetPassword(ResetPasswordDTO req) throws Exception {
+        ApiResponse res = new ApiResponse();
+        logger.info("Start API [resetPassword]");
+        Optional<UserInfo> userInfoOpt = userInfoRepository.findByEmail(req.getEmail());
+        if (userInfoOpt.isEmpty() || userInfoOpt.get().getStatus().equals(UserStatus.INACTIVE)) {
+            res.setCode(ErrorCode.User.PROFILE_GET_EMPTY.getCode());
+            res.setData(null);
+            res.setMessageEN(ErrorCode.User.PROFILE_GET_EMPTY.getMessageEN());
+            res.setMessageVN(ErrorCode.User.PROFILE_GET_EMPTY.getMessageVN());
+            return res;
+        }
+        if (StringUtils.isEmpty(req.getNewPassword())
+                || StringUtils.isEmpty(req.getRepeatNewPassword())
+                ||!req.getNewPassword().equals(req.getRepeatNewPassword())
+                || !req.getNewPassword().matches(CommonRegex.REGEX_PASSWORD)) {
+            res.setCode(ErrorCode.Authentication.INVALID_PASSWORD.getCode());
+            res.setData(req);
+            res.setMessageEN(ErrorCode.Authentication.INVALID_PASSWORD.getMessageEN());
+            res.setMessageVN(ErrorCode.Authentication.INVALID_PASSWORD.getMessageVN());
+            return res;
+        }
+        OTPEntity otpEntity = otpRepository.findTopByEmailOrderByCreatedTimeDesc(req.getEmail()).orElse(null);
+        if (Objects.isNull(otpEntity)) {
+            res.setCode(ErrorCode.SendMail.ACTION_FAIL.getCode());
+            res.setData(req.getEmail());
+            res.setMessageEN(ErrorCode.SendMail.ACTION_FAIL.getMessageEN());
+            res.setMessageVN(ErrorCode.SendMail.ACTION_FAIL.getMessageVN());
+            return res;
+        }
+        LocalDateTime now = LocalDateTime.now();
+        if (!otpEntity.getOtp().equals(req.getOtp())) {
+            res.setCode(ErrorCode.Authentication.INCORRECT_OTP_CODE.getCode());
+            res.setData(req.getOtp());
+            res.setMessageEN(ErrorCode.Authentication.INCORRECT_OTP_CODE.getMessageEN());
+            res.setMessageVN(ErrorCode.Authentication.INCORRECT_OTP_CODE.getMessageVN());
+            return res;
+        }
+        if (otpEntity.getCreatedTime().isBefore(now.minusSeconds(CommonConstant.OTP_EXPIRATION_TIME_SECONDS))) {
+            res.setCode(ErrorCode.Authentication.EXPIRED_OTP_CODE.getCode());
+            res.setData(req.getOtp());
+            res.setMessageEN(ErrorCode.Authentication.EXPIRED_OTP_CODE.getMessageEN());
+            res.setMessageVN(ErrorCode.Authentication.EXPIRED_OTP_CODE.getMessageVN());
+            return res;
+        }
+        UserAuth userAuth = userAuthRepository.findByEmail(req.getEmail()).orElse(null);
+        if (userAuth != null) {
+            String encryptedPassword = EncryptUtil.encrypt(req.getNewPassword());
+            userAuth.setPassword(encryptedPassword);
+            userAuthRepository.save(userAuth);
+            res.setCode(ErrorCode.User.ACTION_SUCCESS.getCode());
+            res.setData(req.getOtp());
+            res.setMessageEN(ErrorCode.User.ACTION_SUCCESS.getMessageEN());
+            res.setMessageVN(ErrorCode.User.ACTION_SUCCESS.getMessageVN());
+            return res;
+        }
+        logger.info("Start API [resetPassword]");
+        return res;
+    }
+
+    private String generateRandomOtp() {
+        Random random = new Random();
+        StringBuilder otp = new StringBuilder();
+
+        for (int i = 0; i < CommonConstant.OTP_LENGTH; i++) {
+            otp.append(random.nextInt(10));
+        }
+
+        return otp.toString();
     }
 }
