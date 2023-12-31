@@ -98,9 +98,26 @@ public class FeedController {
         }
     }
 
-    @PostMapping("/detail")
-    public ResponseEntity<ApiResponse> detailFeed(@RequestParam(name = "postId") String postId) {
-        return null;
+    @GetMapping("/detail/{postId}")
+    public ResponseEntity<ApiResponse> detailFeed(@PathVariable String postId) {
+        try {
+            ApiResponse res = feedService.feedDetail(postId);
+            return ResponseEntity.ok().body(res);
+        } catch (Exception e) {
+            logger.error(e.getMessage());
+            return ResponseEntity.internalServerError().body(null);
+        }
+    }
+
+    @GetMapping("/get-link-detail-feed")
+    public ResponseEntity<ApiResponse> getLinkDetailFeed(@RequestParam(name = "feedId") String feedId) {
+        try {
+            ApiResponse res = feedService.getLinkDetailFeed(feedId);
+            return ResponseEntity.ok().body(res);
+        } catch (Exception e) {
+            logger.error(e.getMessage());
+            return ResponseEntity.internalServerError().body(null);
+        }
     }
 
     @PostMapping("/comment")
