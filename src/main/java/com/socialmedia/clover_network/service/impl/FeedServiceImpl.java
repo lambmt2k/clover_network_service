@@ -831,6 +831,115 @@ public class FeedServiceImpl implements FeedService {
     }
 
     @Override
+    public ApiResponse feedDetail(String postId) {
+        logger.info("Start API [feedDetail]");
+        ApiResponse res = new ApiResponse();
+        String currentUserId = AuthenticationHelper.getUserIdFromContext();
+        if (StringUtils.isEmpty(currentUserId)) {
+            res.setCode(ErrorCode.Token.FORBIDDEN.getCode());
+            res.setData(null);
+            res.setMessageEN(ErrorCode.Token.FORBIDDEN.getMessageEN());
+            res.setMessageVN(ErrorCode.Token.FORBIDDEN.getMessageVN());
+            return res;
+        }
+        PostItem postItem = feedRepository.findByPostIdAndDelFlagFalse(postId);
+        if (Objects.isNull(postItem)) {
+            res.setCode(ErrorCode.Feed.POST_NOT_FOUND.getCode());
+            res.setData(postId);
+            res.setMessageEN(ErrorCode.Feed.POST_NOT_FOUND.getMessageEN());
+            res.setMessageVN(ErrorCode.Feed.POST_NOT_FOUND.getMessageVN());
+            return res;
+        }
+        ListFeedRes.FeedInfoHome feedInfoHome = new ListFeedRes.FeedInfoHome();
+
+
+        //FeedItem
+        FeedItem feedItem = PostItemMapper.INSTANCE.toDTO(postItem);
+        //groupItem
+        GroupEntity groupEntity = groupRepository.findByGroupIdAndDelFlagFalse(feedItem.getPrivacyGroupId());
+        GroupItem groupItem = groupEntityMapper.toDTO(groupEntity);
+        feedItem.setPostToUserWall(groupItem.getGroupType().equals(GroupEntity.GroupType.USER_WALL));
+        if (postItem.getImages().size() > 0) {
+            List<String> imageFeeds = new ArrayList<>();
+            postItem.getImages().forEach(image -> {
+                imageFeeds.add(firebaseService.getImagePublicUrl(image.getImageUrl()));
+            });
+            feedItem.setFeedImages(imageFeeds);
+        }
+        feedInfoHome.setFeedItem(feedItem);
+
+        //authorProfile
+        BaseProfile authorProfile = userService.getBaseProfileByUserId(feedItem.getAuthorId());
+        feedInfoHome.setAuthorProfile(authorProfile);
+
+        if (groupEntity != null) {
+            if (groupEntity.getAvatarImgUrl() != null) {
+                String avatarUrl = firebaseService.getImagePublicUrl(groupEntity.getAvatarImgUrl());
+                groupItem.setAvatarUrl(avatarUrl);
+            }
+            if (groupEntity.getBannerImgUrl() != null) {
+                String bannerUrl = firebaseService.getImagePublicUrl(groupEntity.getBannerImgUrl());
+                groupItem.setBannerUrl(bannerUrl);
+            }
+            List<GroupMember> groupMembers = groupMemberRepository.findAllByGroupIdAndDelFlagFalseAndStatus(groupEntity.getGroupId(), GroupMember.GroupMemberStatus.APPROVED);
+            groupItem.setTotalMember(groupMembers.size());
+        }
+        feedInfoHome.setGroupItem(groupItem);
+
+        //currentUserRole
+        RoleGroupSettingReq currentUserRole = groupService.getMemberRolePermission(currentUserId, feedItem.getPrivacyGroupId(), feedItem.isPostToUserWall());
+        feedInfoHome.setCurrentUserRole(currentUserRole);
+
+        //totalReact
+        List<ReactionItem> reactionItems = reactionItemRepository.findByPostIdAndDelFlagFalse(feedItem.getPostId());
+        Integer totalReact = reactionItems.size();
+        feedInfoHome.setTotalReact(totalReact);
+        //currentUserReact
+        ReactionItem currentUserReactionItem = reactionItems.stream().filter(reactionItem -> reactionItem.getAuthorId().equals(currentUserId)).findFirst().orElse(null);
+        ReactionItem.ReactType currentUserReactType = currentUserReactionItem != null && !currentUserReactionItem.isDelFlag()
+                ? currentUserReactionItem.getReactType() : null;
+        feedInfoHome.setCurrentUserReact(currentUserReactType);
+        //totalComment
+        Integer totalComment = commentItemRepository.findByPostIdAndDelFlagFalseOrderByUpdatedTimeDesc(feedItem.getPostId()).size();
+        feedInfoHome.setTotalComment(totalComment);
+        res.setCode(ErrorCode.Feed.ACTION_SUCCESS.getCode());
+        res.setData(feedInfoHome);
+        res.setMessageEN(ErrorCode.Feed.ACTION_SUCCESS.getMessageEN());
+        res.setMessageVN(ErrorCode.Feed.ACTION_SUCCESS.getMessageVN());
+        logger.info("Finish API [feedDetail]");
+        return res;
+    }
+
+    @Override
+    public ApiResponse getLinkDetailFeed(String postId) {
+        logger.info("Start API [feedDetail]");
+        ApiResponse res = new ApiResponse();
+        String currentUserId = AuthenticationHelper.getUserIdFromContext();
+        if (StringUtils.isEmpty(currentUserId)) {
+            res.setCode(ErrorCode.Token.FORBIDDEN.getCode());
+            res.setData(null);
+            res.setMessageEN(ErrorCode.Token.FORBIDDEN.getMessageEN());
+            res.setMessageVN(ErrorCode.Token.FORBIDDEN.getMessageVN());
+            return res;
+        }
+        PostItem postItem = feedRepository.findByPostIdAndDelFlagFalse(postId);
+        if (Objects.isNull(postItem)) {
+            res.setCode(ErrorCode.Feed.POST_NOT_FOUND.getCode());
+            res.setData(postId);
+            res.setMessageEN(ErrorCode.Feed.POST_NOT_FOUND.getMessageEN());
+            res.setMessageVN(ErrorCode.Feed.POST_NOT_FOUND.getMessageVN());
+            return res;
+        }
+        String dynamicLink = serverHost + "/api/feed/detail/" + postItem.getPostId();
+        res.setCode(ErrorCode.Feed.ACTION_SUCCESS.getCode());
+        res.setData(dynamicLink);
+        res.setMessageEN(ErrorCode.Feed.ACTION_SUCCESS.getMessageEN());
+        res.setMessageVN(ErrorCode.Feed.ACTION_SUCCESS.getMessageVN());
+        logger.info("Finish API [feedDetail]");
+        return res;
+    }
+
+    @Override
     public ApiResponse getCommentOfPost(String postId, int page, int size) {
         logger.info("Start API [getCommentOfPost]");
         ApiResponse res = new ApiResponse();

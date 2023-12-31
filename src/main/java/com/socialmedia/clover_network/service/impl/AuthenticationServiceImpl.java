@@ -498,6 +498,10 @@ public class AuthenticationServiceImpl implements AuthenticationService {
             String encryptedPassword = EncryptUtil.encrypt(req.getNewPassword());
             userAuth.setPassword(encryptedPassword);
             userAuthRepository.save(userAuth);
+
+            otpEntity.setUsed(true);
+            otpRepository.save(otpEntity);
+
             res.setCode(ErrorCode.User.ACTION_SUCCESS.getCode());
             res.setData(req.getOtp());
             res.setMessageEN(ErrorCode.User.ACTION_SUCCESS.getMessageEN());
