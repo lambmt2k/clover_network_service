@@ -453,6 +453,8 @@ public class FeedServiceImpl implements FeedService {
                     .findFirst().orElse(null);
             GroupItem groupItem = groupEntityMapper.toDTO(groupEntity);
             feedItem.setPostToUserWall(groupItem.getGroupType().equals(GroupEntity.GroupType.USER_WALL));
+            RoleGroupSettingReq authorGroupRole = groupService.getMemberRolePermission(feedItem.getAuthorId(), feedItem.getPrivacyGroupId(), feedItem.isPostToUserWall());
+            feedItem.setAuthorRoleGroup(authorGroupRole.getRoleId());
             if (postItem.getImages().size() > 0) {
                 List<String> imageFeeds = new ArrayList<>();
                 postItem.getImages().forEach(image -> {
