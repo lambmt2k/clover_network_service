@@ -517,7 +517,8 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     public ApiResponse changePassword(ChangePasswordDTO req) throws Exception {
         ApiResponse res = new ApiResponse();
         logger.info("Start API [resetPassword]");
-        Optional<UserInfo> userInfoOpt = userInfoRepository.findByEmail(req.getEmail());
+        String currentUserId = AuthenticationHelper.getUserIdFromContext();
+        Optional<UserInfo> userInfoOpt = userInfoRepository.findByUserId(currentUserId);
         if (userInfoOpt.isEmpty() || userInfoOpt.get().getStatus().equals(UserStatus.INACTIVE)) {
             res.setCode(ErrorCode.User.PROFILE_GET_EMPTY.getCode());
             res.setData(null);
@@ -542,7 +543,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
             res.setMessageVN(ErrorCode.Authentication.NEW_PASSWORD_NO_CHANGE.getMessageVN());
             return res;
         }
-        UserAuth userAuth = userAuthRepository.findByEmail(req.getEmail()).orElse(null);
+        UserAuth userAuth = userAuthRepository.findByEmail(userInfoOpt.get().getEmail()).orElse(null);
         LocalDateTime now = LocalDateTime.now();
         String oldPassword = EncryptUtil.encrypt(req.getOldPassword());
         if (Objects.isNull(userAuth) || !userAuth.getPassword().equals(oldPassword)) {
