@@ -68,6 +68,22 @@ public class GroupController {
         }
     }
 
+    @GetMapping(value = "/leave", produces = {MediaType.APPLICATION_JSON_VALUE})
+    public ResponseEntity<ApiResponse> leaveGroup(@RequestParam(name = "groupId") String groupId) {
+        try {
+            ApiResponse res = groupService.leaveGroup(groupId);
+            return ResponseEntity.ok().body(res);
+        } catch (Exception e) {
+            logger.error(e.getMessage());
+            return ResponseEntity.internalServerError().body(null);
+        }
+    }
+
+    @GetMapping(value = "/canPost", produces = {MediaType.APPLICATION_JSON_VALUE})
+    public boolean canPost(@RequestParam(name = "groupId") String groupId) {
+        return groupService.canPost(groupId);
+    }
+
     @GetMapping("/list-member-group")
     public ResponseEntity<ApiResponse> listMemberOfGroup(@RequestParam(name = "groupId") String groupId,
                                                        @RequestParam(name = "roleId") GroupMemberRole roleId,

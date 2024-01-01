@@ -69,6 +69,8 @@ public class ErrorCode {
         public static ErrorCode ALREADY_MEMBER = of(203, "User already is member of group", "User đã là thành viên của nhóm.");
         public static ErrorCode DISABLE_COMMENT = of(204, "Group disable comment", "Bình luận trong nhóm bị khóa.");
         public static ErrorCode NOT_PERMISSION = of(205, "You have not permission to do that", "Không có quyền thực hiện.");
+        public static ErrorCode NOT_MEMBER = of(206, "You are not member of group", "Bạn không là thành viên của nhóm.");
+        public static ErrorCode OWNER_CANNOT_LEAVE = of(207, "You are group owner, cannot leave", "Bạn là người tạo group. Không thể rời");
     }
 
     /**
