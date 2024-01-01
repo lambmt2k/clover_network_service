@@ -119,7 +119,7 @@ public class GroupServiceImpl implements GroupService {
                 //create config role permission of group
                 GroupRolePermission ownerRole = new GroupRolePermission(groupId, GroupMemberRole.OWNER, true, true, true, !newGroupMember.isDelFlag());
                 GroupRolePermission adminRole = new GroupRolePermission(groupId, GroupMemberRole.ADMIN, true, true, true, !newGroupMember.isDelFlag());
-                GroupRolePermission memberRole = new GroupRolePermission(groupId, GroupMemberRole.MEMBER, true, false, false, !newGroupMember.isDelFlag());
+                GroupRolePermission memberRole = new GroupRolePermission(groupId, GroupMemberRole.MEMBER, true, true, true, !newGroupMember.isDelFlag());
                 groupRolePermissionRepository.saveAll(Arrays.asList(ownerRole, adminRole, memberRole));
 
                 res.setCode(ErrorCode.Group.ACTION_SUCCESS.getCode());
