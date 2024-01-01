@@ -18,6 +18,7 @@ import com.socialmedia.clover_network.mapper.PostItemMapper;
 import com.socialmedia.clover_network.repository.*;
 import com.socialmedia.clover_network.service.*;
 import com.socialmedia.clover_network.util.GenIDUtil;
+import com.socialmedia.clover_network.util.HtmlHelper;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -644,6 +645,8 @@ public class FeedServiceImpl implements FeedService {
         feedItem.setUpdatedTime(now);
         feedItem.setLastActive(now);
         feedItem.setDelFlag(false);
+        feedItem.setContent(HtmlHelper.convertToHTML(feedItem.getContent()));
+        feedItem.setHtmlContent(HtmlHelper.convertToHTML(feedItem.getContent()));
 
         logger.info("[postFeed] Start post feed: " + feedItem);
         try {

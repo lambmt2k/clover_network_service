@@ -62,5 +62,6 @@ public class SyncUserWorker {
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
+        logger.info("[syncAllUserToAllGroupSystem] End add all user to Clover Network Community with groupId = 1191451836392214528");
     }
 }
