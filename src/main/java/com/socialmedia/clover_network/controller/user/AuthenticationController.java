@@ -3,6 +3,7 @@ package com.socialmedia.clover_network.controller.user;
 import com.socialmedia.clover_network.constant.CommonRegex;
 import com.socialmedia.clover_network.constant.ErrorCode;
 import com.socialmedia.clover_network.dto.FeedItem;
+import com.socialmedia.clover_network.dto.req.ChangePasswordDTO;
 import com.socialmedia.clover_network.dto.req.ResetPasswordDTO;
 import com.socialmedia.clover_network.dto.req.UserLoginReq;
 import com.socialmedia.clover_network.dto.req.UserSignUpReq;
@@ -82,6 +83,17 @@ public class AuthenticationController {
     public ResponseEntity<ApiResponse> resetPassword(@RequestBody ResetPasswordDTO req) {
         try {
             ApiResponse res = authenticationService.resetPassword(req);
+            return ResponseEntity.ok().body(res);
+        } catch (Exception e) {
+            logger.error(e.getMessage());
+            return ResponseEntity.internalServerError().body(null);
+        }
+    }
+
+    @PostMapping("/change-password")
+    public ResponseEntity<ApiResponse> changePassword(@RequestBody ChangePasswordDTO req) {
+        try {
+            ApiResponse res = authenticationService.changePassword(req);
             return ResponseEntity.ok().body(res);
         } catch (Exception e) {
             logger.error(e.getMessage());

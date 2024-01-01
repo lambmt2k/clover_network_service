@@ -4,6 +4,7 @@ import com.socialmedia.clover_network.config.AuthenticationHelper;
 import com.socialmedia.clover_network.constant.CommonConstant;
 import com.socialmedia.clover_network.constant.CommonRegex;
 import com.socialmedia.clover_network.constant.ErrorCode;
+import com.socialmedia.clover_network.dto.req.ChangePasswordDTO;
 import com.socialmedia.clover_network.dto.req.ResetPasswordDTO;
 import com.socialmedia.clover_network.dto.req.UserLoginReq;
 import com.socialmedia.clover_network.dto.req.UserSignUpReq;
@@ -462,7 +463,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         }
         if (StringUtils.isEmpty(req.getNewPassword())
                 || StringUtils.isEmpty(req.getRepeatNewPassword())
-                ||!req.getNewPassword().equals(req.getRepeatNewPassword())
+                || !req.getNewPassword().equals(req.getRepeatNewPassword())
                 || !req.getNewPassword().matches(CommonRegex.REGEX_PASSWORD)) {
             res.setCode(ErrorCode.Authentication.INVALID_PASSWORD.getCode());
             res.setData(req);
@@ -508,6 +509,57 @@ public class AuthenticationServiceImpl implements AuthenticationService {
             res.setMessageVN(ErrorCode.User.ACTION_SUCCESS.getMessageVN());
             return res;
         }
+        logger.info("Start API [resetPassword]");
+        return res;
+    }
+
+    @Override
+    public ApiResponse changePassword(ChangePasswordDTO req) throws Exception {
+        ApiResponse res = new ApiResponse();
+        logger.info("Start API [resetPassword]");
+        Optional<UserInfo> userInfoOpt = userInfoRepository.findByEmail(req.getEmail());
+        if (userInfoOpt.isEmpty() || userInfoOpt.get().getStatus().equals(UserStatus.INACTIVE)) {
+            res.setCode(ErrorCode.User.PROFILE_GET_EMPTY.getCode());
+            res.setData(null);
+            res.setMessageEN(ErrorCode.User.PROFILE_GET_EMPTY.getMessageEN());
+            res.setMessageVN(ErrorCode.User.PROFILE_GET_EMPTY.getMessageVN());
+            return res;
+        }
+        if (StringUtils.isEmpty(req.getNewPassword())
+                || StringUtils.isEmpty(req.getRepeatNewPassword())
+                || !req.getNewPassword().equals(req.getRepeatNewPassword())
+                || !req.getNewPassword().matches(CommonRegex.REGEX_PASSWORD)) {
+            res.setCode(ErrorCode.Authentication.INVALID_PASSWORD.getCode());
+            res.setData(req);
+            res.setMessageEN(ErrorCode.Authentication.INVALID_PASSWORD.getMessageEN());
+            res.setMessageVN(ErrorCode.Authentication.INVALID_PASSWORD.getMessageVN());
+            return res;
+        }
+        if (req.getOldPassword().equals(req.getNewPassword())) {
+            res.setCode(ErrorCode.Authentication.NEW_PASSWORD_NO_CHANGE.getCode());
+            res.setData(req);
+            res.setMessageEN(ErrorCode.Authentication.NEW_PASSWORD_NO_CHANGE.getMessageEN());
+            res.setMessageVN(ErrorCode.Authentication.NEW_PASSWORD_NO_CHANGE.getMessageVN());
+            return res;
+        }
+        UserAuth userAuth = userAuthRepository.findByEmail(req.getEmail()).orElse(null);
+        LocalDateTime now = LocalDateTime.now();
+        String oldPassword = EncryptUtil.encrypt(req.getOldPassword());
+        if (Objects.isNull(userAuth) || !userAuth.getPassword().equals(oldPassword)) {
+            res.setCode(ErrorCode.Authentication.INVALID_PASSWORD.getCode());
+            res.setData(req);
+            res.setMessageEN(ErrorCode.Authentication.INVALID_PASSWORD.getMessageEN());
+            res.setMessageVN(ErrorCode.Authentication.INVALID_PASSWORD.getMessageVN());
+            return res;
+        }
+        String newPassword = EncryptUtil.encrypt(req.getNewPassword());
+        userAuth.setPassword(newPassword);
+        userAuthRepository.save(userAuth);
+
+        res.setCode(ErrorCode.User.ACTION_SUCCESS.getCode());
+        res.setData(req);
+        res.setMessageEN(ErrorCode.User.ACTION_SUCCESS.getMessageEN());
+        res.setMessageVN(ErrorCode.User.ACTION_SUCCESS.getMessageVN());
         logger.info("Start API [resetPassword]");
         return res;
     }

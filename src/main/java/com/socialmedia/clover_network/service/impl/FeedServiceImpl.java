@@ -1025,9 +1025,13 @@ public class FeedServiceImpl implements FeedService {
             newReactionItem.setDelFlag(!reactDTO.isStatus());
             reactionId = reactionItemRepository.save(newReactionItem).getReactionId();
         }
+        //totalReact
+        List<ReactionItem> reactionItems = reactionItemRepository.findByPostIdAndDelFlagFalse(reactDTO.getPostId());
+        Integer totalReact = reactionItems.size();
+
 
         res.setCode(ErrorCode.Reaction.ACTION_SUCCESS.getCode());
-        res.setData(reactionId);
+        res.setData(totalReact);
         res.setMessageEN(ErrorCode.Reaction.ACTION_SUCCESS.getMessageEN());
         res.setMessageVN(ErrorCode.Reaction.ACTION_SUCCESS.getMessageVN());
         return res;

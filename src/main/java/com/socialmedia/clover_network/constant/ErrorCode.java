@@ -27,6 +27,7 @@ public class ErrorCode {
         public static ErrorCode INVALID_PASSWORD = of(4, "Invalid password", "Mật khẩu không hợp lệ");
         public static ErrorCode INCORRECT_OTP_CODE = of(5, "Incorrect otp code", "Mã xác thực không đúng. Vui lòng kiểm tra lại.");
         public static ErrorCode EXPIRED_OTP_CODE = of(6, "Otp code is expired", "Mã xác thực hết hạn. Vui lòng kiểm tra lại.");
+        public static ErrorCode NEW_PASSWORD_NO_CHANGE = of(7, "New password must be different old password", "Mật khẩu mới phải khác với mật khẩu cũ.");
     }
 
     /**
