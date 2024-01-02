@@ -27,6 +27,7 @@ public class ErrorCode {
         public static ErrorCode INVALID_PASSWORD = of(4, "Invalid password", "Mật khẩu không hợp lệ");
         public static ErrorCode INCORRECT_OTP_CODE = of(5, "Incorrect otp code", "Mã xác thực không đúng. Vui lòng kiểm tra lại.");
         public static ErrorCode EXPIRED_OTP_CODE = of(6, "Otp code is expired", "Mã xác thực hết hạn. Vui lòng kiểm tra lại.");
+        public static ErrorCode NEW_PASSWORD_NO_CHANGE = of(7, "New password must be different old password", "Mật khẩu mới phải khác với mật khẩu cũ.");
     }
 
     /**
@@ -68,6 +69,9 @@ public class ErrorCode {
         public static ErrorCode ALREADY_MEMBER = of(203, "User already is member of group", "User đã là thành viên của nhóm.");
         public static ErrorCode DISABLE_COMMENT = of(204, "Group disable comment", "Bình luận trong nhóm bị khóa.");
         public static ErrorCode NOT_PERMISSION = of(205, "You have not permission to do that", "Không có quyền thực hiện.");
+        public static ErrorCode NOT_MEMBER = of(206, "You are not member of group", "Bạn không là thành viên của nhóm.");
+        public static ErrorCode OWNER_CANNOT_LEAVE = of(207, "You are group owner, cannot leave", "Bạn là người tạo group. Không thể rời");
+        public static ErrorCode LIST_MEMBER_EMPTY = of(208, "List member empty", "Danh sách thành viên trống");
     }
 
     /**

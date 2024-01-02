@@ -18,6 +18,7 @@ import com.socialmedia.clover_network.mapper.PostItemMapper;
 import com.socialmedia.clover_network.repository.*;
 import com.socialmedia.clover_network.service.*;
 import com.socialmedia.clover_network.util.GenIDUtil;
+import com.socialmedia.clover_network.util.HtmlHelper;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -453,6 +454,8 @@ public class FeedServiceImpl implements FeedService {
                     .findFirst().orElse(null);
             GroupItem groupItem = groupEntityMapper.toDTO(groupEntity);
             feedItem.setPostToUserWall(groupItem.getGroupType().equals(GroupEntity.GroupType.USER_WALL));
+            RoleGroupSettingReq authorGroupRole = groupService.getMemberRolePermission(feedItem.getAuthorId(), feedItem.getPrivacyGroupId(), feedItem.isPostToUserWall());
+            feedItem.setAuthorRoleGroup(authorGroupRole.getRoleId());
             if (postItem.getImages().size() > 0) {
                 List<String> imageFeeds = new ArrayList<>();
                 postItem.getImages().forEach(image -> {
@@ -642,6 +645,7 @@ public class FeedServiceImpl implements FeedService {
         feedItem.setUpdatedTime(now);
         feedItem.setLastActive(now);
         feedItem.setDelFlag(false);
+        feedItem.setHtmlContent(HtmlHelper.convertToHTML(feedItem.getContent()));
 
         logger.info("[postFeed] Start post feed: " + feedItem);
         try {
@@ -1025,9 +1029,13 @@ public class FeedServiceImpl implements FeedService {
             newReactionItem.setDelFlag(!reactDTO.isStatus());
             reactionId = reactionItemRepository.save(newReactionItem).getReactionId();
         }
+        //totalReact
+        List<ReactionItem> reactionItems = reactionItemRepository.findByPostIdAndDelFlagFalse(reactDTO.getPostId());
+        Integer totalReact = reactionItems.size();
+
 
         res.setCode(ErrorCode.Reaction.ACTION_SUCCESS.getCode());
-        res.setData(reactionId);
+        res.setData(totalReact);
         res.setMessageEN(ErrorCode.Reaction.ACTION_SUCCESS.getMessageEN());
         res.setMessageVN(ErrorCode.Reaction.ACTION_SUCCESS.getMessageVN());
         return res;

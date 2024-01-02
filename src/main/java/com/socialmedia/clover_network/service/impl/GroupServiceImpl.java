@@ -1,5 +1,6 @@
 package com.socialmedia.clover_network.service.impl;
 
+import com.google.gson.Gson;
 import com.socialmedia.clover_network.config.AuthenticationHelper;
 import com.socialmedia.clover_network.constant.CommonRegex;
 import com.socialmedia.clover_network.constant.ErrorCode;
@@ -44,7 +45,7 @@ import java.util.stream.Collectors;
 @Service
 public class GroupServiceImpl implements GroupService {
     private final Logger logger = LoggerFactory.getLogger(GroupServiceImpl.class);
-
+    private static Gson gson = new Gson();
     @Autowired
     GenIDUtil genIDUtil;
 
@@ -118,7 +119,7 @@ public class GroupServiceImpl implements GroupService {
                 //create config role permission of group
                 GroupRolePermission ownerRole = new GroupRolePermission(groupId, GroupMemberRole.OWNER, true, true, true, !newGroupMember.isDelFlag());
                 GroupRolePermission adminRole = new GroupRolePermission(groupId, GroupMemberRole.ADMIN, true, true, true, !newGroupMember.isDelFlag());
-                GroupRolePermission memberRole = new GroupRolePermission(groupId, GroupMemberRole.MEMBER, true, false, false, !newGroupMember.isDelFlag());
+                GroupRolePermission memberRole = new GroupRolePermission(groupId, GroupMemberRole.MEMBER, true, true, true, !newGroupMember.isDelFlag());
                 groupRolePermissionRepository.saveAll(Arrays.asList(ownerRole, adminRole, memberRole));
 
                 res.setCode(ErrorCode.Group.ACTION_SUCCESS.getCode());
@@ -158,7 +159,13 @@ public class GroupServiceImpl implements GroupService {
                     .map(GroupEntity::getGroupId)
                     .distinct()
                     .collect(Collectors.toList());
+            List<String> systemGroups = groupRepository.findByGroupTypeAndDelFlagFalse(GroupEntity.GroupType.SYSTEM)
+                    .stream()
+                    .map(GroupEntity::getGroupId)
+                    .distinct()
+                    .collect(Collectors.toList());
             groupIds.removeAll(userWallIds);
+            groupIds.removeAll(systemGroups);
             if (groupIds.size() == 0) {
                 res.setCode(ErrorCode.Group.GROUP_NOT_FOUND.getCode());
                 res.setData(null);
@@ -194,6 +201,61 @@ public class GroupServiceImpl implements GroupService {
             res.setMessageVN(ErrorCode.Token.FORBIDDEN.getMessageVN());
         }
         logger.info("End api [getListAllGroupOfUser]");
+        return res;
+    }
+
+    @Override
+    public ApiResponse getListMemberWaitingForApprove(String groupId) {
+        ApiResponse res = new ApiResponse();
+        String currentUserId = AuthenticationHelper.getUserIdFromContext();
+        logger.info("Start API [leaveGroup]: userId {}, groupId {}", currentUserId, groupId);
+        if (StringUtils.isEmpty(currentUserId)) {
+            res.setCode(ErrorCode.Token.FORBIDDEN.getCode());
+            res.setData(null);
+            res.setMessageEN(ErrorCode.Token.FORBIDDEN.getMessageEN());
+            res.setMessageVN(ErrorCode.Token.FORBIDDEN.getMessageVN());
+            return res;
+        }
+        GroupEntity groupEntity = groupRepository.findByGroupIdAndDelFlagFalse(groupId);
+        if (Objects.isNull(groupEntity)) {
+            res.setCode(ErrorCode.Group.GROUP_NOT_FOUND.getCode());
+            res.setData(groupId);
+            res.setMessageEN(ErrorCode.Group.GROUP_NOT_FOUND.getMessageEN());
+            res.setMessageVN(ErrorCode.Group.GROUP_NOT_FOUND.getMessageVN());
+            return res;
+        }
+        Optional<GroupMember> groupMemberOpt = groupMemberRepository.findFirstByUserIdAndGroupIdAndDelFlagFalse(currentUserId, groupId);
+        if (groupMemberOpt.isEmpty()) {
+            res.setCode(ErrorCode.Group.NOT_MEMBER.getCode());
+            res.setData(groupId);
+            res.setMessageEN(ErrorCode.Group.NOT_MEMBER.getMessageEN());
+            res.setMessageVN(ErrorCode.Group.NOT_MEMBER.getMessageVN());
+            return res;
+        }
+        GroupMember groupMember = groupMemberOpt.get();
+        if (!groupMember.getGroupRoleId().equals(GroupMemberRole.OWNER) || !groupMember.getGroupRoleId().equals(GroupMemberRole.ADMIN)) {
+            res.setCode(ErrorCode.Group.NOT_PERMISSION.getCode());
+            res.setData(groupId);
+            res.setMessageEN(ErrorCode.Group.NOT_PERMISSION.getMessageEN());
+            res.setMessageVN(ErrorCode.Group.NOT_PERMISSION.getMessageVN());
+            return res;
+        }
+        List<GroupMember> listMemberWaiting = groupMemberRepository.findAllByGroupIdAndDelFlagFalseAndStatusOrderByJoinTimeDesc(groupEntity.getGroupId(), GroupMember.GroupMemberStatus.WAITING_FOR_APPROVE);
+        if (listMemberWaiting.isEmpty()) {
+            res.setCode(ErrorCode.Group.LIST_MEMBER_EMPTY.getCode());
+            res.setData(groupId);
+            res.setMessageEN(ErrorCode.Group.LIST_MEMBER_EMPTY.getMessageEN());
+            res.setMessageVN(ErrorCode.Group.LIST_MEMBER_EMPTY.getMessageVN());
+            return res;
+        }
+        List<BaseProfile> listMemberBaseProfile = new ArrayList<>();
+        listMemberWaiting.forEach(member -> {
+            listMemberBaseProfile.add(userService.getBaseProfileByUserId(member.getUserId()));
+        });
+        res.setCode(ErrorCode.Group.ACTION_SUCCESS.getCode());
+        res.setData(listMemberBaseProfile);
+        res.setMessageEN(ErrorCode.Group.ACTION_SUCCESS.getMessageEN());
+        res.setMessageVN(ErrorCode.Group.ACTION_SUCCESS.getMessageVN());
         return res;
     }
 
@@ -271,6 +333,80 @@ public class GroupServiceImpl implements GroupService {
         }
         logger.info("End api [joinGroup]: userId {} join groupId {}", userId, groupId);
         return res;
+    }
+
+    @Override
+    public ApiResponse leaveGroup(String groupId) {
+        ApiResponse res = new ApiResponse();
+        String currentUserId = AuthenticationHelper.getUserIdFromContext();
+        logger.info("Start API [leaveGroup]: userId {}, groupId {}", currentUserId, groupId);
+        LocalDateTime now = LocalDateTime.now();
+        if (StringUtils.isEmpty(currentUserId)) {
+            res.setCode(ErrorCode.Token.FORBIDDEN.getCode());
+            res.setData(null);
+            res.setMessageEN(ErrorCode.Token.FORBIDDEN.getMessageEN());
+            res.setMessageVN(ErrorCode.Token.FORBIDDEN.getMessageVN());
+            return res;
+        }
+        GroupEntity groupEntity = groupRepository.findByGroupIdAndDelFlagFalse(groupId);
+        if (Objects.isNull(groupEntity)) {
+            res.setCode(ErrorCode.Group.GROUP_NOT_FOUND.getCode());
+            res.setData(groupId);
+            res.setMessageEN(ErrorCode.Group.GROUP_NOT_FOUND.getMessageEN());
+            res.setMessageVN(ErrorCode.Group.GROUP_NOT_FOUND.getMessageVN());
+            return res;
+        }
+        Optional<GroupMember> groupMemberOpt = groupMemberRepository.findFirstByUserIdAndGroupIdAndDelFlagFalse(currentUserId, groupId);
+        if (groupMemberOpt.isEmpty()) {
+            res.setCode(ErrorCode.Group.NOT_MEMBER.getCode());
+            res.setData(groupId);
+            res.setMessageEN(ErrorCode.Group.NOT_MEMBER.getMessageEN());
+            res.setMessageVN(ErrorCode.Group.NOT_MEMBER.getMessageVN());
+            return res;
+        }
+        GroupMember groupMember = groupMemberOpt.get();
+        if (groupMember.getGroupRoleId().equals(GroupMemberRole.OWNER)) {
+            res.setCode(ErrorCode.Group.OWNER_CANNOT_LEAVE.getCode());
+            res.setData(groupId);
+            res.setMessageEN(ErrorCode.Group.OWNER_CANNOT_LEAVE.getMessageEN());
+            res.setMessageVN(ErrorCode.Group.OWNER_CANNOT_LEAVE.getMessageVN());
+            return res;
+        }
+        groupMember.setDelFlag(true);
+        groupMember.setLeaveTime(now);
+        groupMemberRepository.save(groupMember);
+
+        //remove feedGroup in feedUser
+        FeedGroupEntity feedGroupEntity = feedGroupDAO.findById(groupId).orElse(null);
+        if (feedGroupEntity != null) {
+            List<String> feedGroupIds = feedGroupEntity.getListFeedId();
+
+            FeedUserEntity feedUserEntity = feedUserDAO.findById(currentUserId).orElse(null);
+            if (feedUserEntity != null) {
+                List<String> feedIds = feedUserEntity.getListFeedId();
+                feedIds.removeAll(feedGroupIds);
+                feedIds = feedIds.stream().distinct().collect(Collectors.toList());
+                feedUserEntity.setValue(gson.toJson(feedIds));
+                feedUserDAO.save(feedUserEntity);
+            }
+        }
+
+        res.setCode(ErrorCode.Group.ACTION_SUCCESS.getCode());
+        res.setData(groupId);
+        res.setMessageEN(ErrorCode.Group.ACTION_SUCCESS.getMessageEN());
+        res.setMessageVN(ErrorCode.Group.ACTION_SUCCESS.getMessageVN());
+        logger.info("Finish API [leaveGroup]: userId {}, groupId {}", currentUserId, groupId);
+        return res;
+    }
+
+    @Override
+    public boolean canPost(String groupId) {
+        String currentUserId = AuthenticationHelper.getUserIdFromContext();
+        logger.info("Start API [canPost]: userId {}, groupId {}", currentUserId, groupId);
+        if (StringUtils.isEmpty(currentUserId)) {
+            return false;
+        }
+        return feedService.checkUserCanPostFeedToGroup(groupId, currentUserId);
     }
 
     @Override
@@ -565,6 +701,7 @@ public class GroupServiceImpl implements GroupService {
             groupMemberOpt.get().setDelFlag(false);
             groupMemberOpt.get().setJoinTime(now);
             groupMemberOpt.get().setStatus(GroupMember.GroupMemberStatus.APPROVED);
+            groupMemberOpt.get().setGroupRoleId(GroupMemberRole.MEMBER);
             groupMemberRepository.save(groupMemberOpt.get());
         } else if (groupMemberOpt.isEmpty()) {
             //add new member into new group
@@ -581,6 +718,24 @@ public class GroupServiceImpl implements GroupService {
                     .build();
             groupMemberRepository.save(newMember);
         }
+
+        //add all feed group to feed user
+        FeedGroupEntity feedGroupEntity = feedGroupDAO.findById(groupId).orElse(null);
+        if (feedGroupEntity != null) {
+            List<String> feedGroupIds = feedGroupEntity.getListFeedId();
+
+            FeedUserEntity feedUserEntity = feedUserDAO.findById(userId).orElse(null);
+            if (feedUserEntity != null) {
+                List<String> feedIds = feedUserEntity.getListFeedId();
+                feedIds.addAll(feedGroupIds);
+                feedIds = feedIds.stream().distinct().collect(Collectors.toList());
+                feedUserEntity.setValue(gson.toJson(feedIds));
+                feedUserDAO.save(feedUserEntity);
+            } else {
+                FeedUserEntity feedUserEntityCreate = FeedUserEntity.builder().key(userId).value(gson.toJson(feedGroupIds)).build();
+                feedUserDAO.save(feedUserEntityCreate);
+            }
+        }
     }
     @Override
     public void addWaitingMemberList(String groupId, String userId) {
@@ -591,6 +746,7 @@ public class GroupServiceImpl implements GroupService {
             groupMemberOpt.get().setDelFlag(false);
             groupMemberOpt.get().setJoinTime(now);
             groupMemberOpt.get().setStatus(GroupMember.GroupMemberStatus.WAITING_FOR_APPROVE);
+            groupMemberOpt.get().setGroupRoleId(GroupMemberRole.MEMBER);
             groupMemberRepository.save(groupMemberOpt.get());
         } else if (groupMemberOpt.isEmpty()) {
             //add new member into new group

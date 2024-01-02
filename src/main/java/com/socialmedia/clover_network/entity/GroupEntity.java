@@ -68,7 +68,8 @@ public class GroupEntity {
 
     public enum GroupType {
         DEFAULT,
-        USER_WALL;
+        USER_WALL,
+        SYSTEM;
 
         @JsonValue
         public int toValue() {

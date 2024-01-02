@@ -47,6 +47,16 @@ public class GroupController {
         }
     }
 
+    @GetMapping("/list-member-waiting")
+    public ResponseEntity<ApiResponse> getListMemberWaitingForApprove(@RequestParam(name = "groupId") String groupId) throws Exception {
+        ApiResponse res = groupService.getListMemberWaitingForApprove(groupId);
+        if (Objects.nonNull(res)) {
+            return ResponseEntity.ok().body(res);
+        } else {
+            return ResponseEntity.internalServerError().body(null);
+        }
+    }
+
     @GetMapping("/get-group-info/{groupId}")
     public ResponseEntity<ApiResponse> getGroupInfo(@PathVariable String groupId) throws Exception {
         ApiResponse res = groupService.getGroupInfo(groupId);
@@ -66,6 +76,22 @@ public class GroupController {
         } else {
             return ResponseEntity.badRequest().build();
         }
+    }
+
+    @GetMapping(value = "/leave", produces = {MediaType.APPLICATION_JSON_VALUE})
+    public ResponseEntity<ApiResponse> leaveGroup(@RequestParam(name = "groupId") String groupId) {
+        try {
+            ApiResponse res = groupService.leaveGroup(groupId);
+            return ResponseEntity.ok().body(res);
+        } catch (Exception e) {
+            logger.error(e.getMessage());
+            return ResponseEntity.internalServerError().body(null);
+        }
+    }
+
+    @GetMapping(value = "/canPost", produces = {MediaType.APPLICATION_JSON_VALUE})
+    public boolean canPost(@RequestParam(name = "groupId") String groupId) {
+        return groupService.canPost(groupId);
     }
 
     @GetMapping("/list-member-group")

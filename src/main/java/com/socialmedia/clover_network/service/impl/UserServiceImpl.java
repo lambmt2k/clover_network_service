@@ -26,6 +26,8 @@ import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 import org.springframework.web.multipart.MultipartFile;
@@ -253,7 +255,8 @@ public class UserServiceImpl implements UserService {
             res.setMessageVN(ErrorCode.Token.FORBIDDEN.getMessageVN());
             return res;
         }
-        List<Connection> listUserConnect = connectionRepository.findByUserIdAndConnectStatusTrue(userId);
+        Pageable pageable = PageRequest.of(page, size);
+        List<Connection> listUserConnect = connectionRepository.findByUserIdAndConnectStatusTrue(userId, pageable);
         if (listUserConnect.isEmpty()) {
             res.setCode(ErrorCode.User.LIST_NO_USER.getCode());
             res.setData(null);
@@ -265,20 +268,8 @@ public class UserServiceImpl implements UserService {
         List<BaseProfile> listBaseProfileConnect = new ArrayList<>();
 
         listUserConnect.forEach(user -> listBaseProfileConnect.add(this.getBaseProfileByUserId(user.getUserIdConnected())));
-        List<BaseProfile> userProfiles = new ArrayList<>();
-        if (!listBaseProfileConnect.isEmpty() && listBaseProfileConnect.size() > size) {
-            userProfiles = listBaseProfileConnect
-                    .stream()
-                    .sorted(Comparator.comparing(BaseProfile::getDisplayName))
-                    .skip((long) (page - 1) * size)
-                    .limit(size)
-                    .collect(Collectors.toList());
-        } else {
-            userProfiles = listBaseProfileConnect;
-        }
-
         data.setTotal(listUserConnect.size());
-        data.setUserProfiles(userProfiles);
+        data.setUserProfiles(listBaseProfileConnect);
 
         res.setCode(ErrorCode.User.ACTION_SUCCESS.getCode());
         res.setData(data);
@@ -301,7 +292,8 @@ public class UserServiceImpl implements UserService {
             res.setMessageVN(ErrorCode.Token.FORBIDDEN.getMessageVN());
             return res;
         }
-        List<Connection> listUserConnector = connectionRepository.findByUserIdConnectedAndConnectStatusTrue(userId);
+        Pageable pageable = PageRequest.of(page, size);
+        List<Connection> listUserConnector = connectionRepository.findByUserIdConnectedAndConnectStatusTrue(userId, pageable);
         if (listUserConnector.isEmpty()) {
             res.setCode(ErrorCode.User.LIST_NO_USER.getCode());
             res.setData(null);
@@ -313,20 +305,8 @@ public class UserServiceImpl implements UserService {
         List<BaseProfile> listBaseProfileConnect = new ArrayList<>();
 
         listUserConnector.forEach(user -> listBaseProfileConnect.add(this.getBaseProfileByUserId(user.getUserId())));
-        List<BaseProfile> userProfiles = new ArrayList<>();
-        if (!listBaseProfileConnect.isEmpty() && listBaseProfileConnect.size() > size) {
-            userProfiles = listBaseProfileConnect
-                    .stream()
-                    .sorted(Comparator.comparing(BaseProfile::getDisplayName))
-                    .skip((long) (page - 1) * size)
-                    .limit(size)
-                    .collect(Collectors.toList());
-        } else {
-            userProfiles = listBaseProfileConnect;
-        }
-
         data.setTotal(listUserConnector.size());
-        data.setUserProfiles(userProfiles);
+        data.setUserProfiles(listBaseProfileConnect);
 
         res.setCode(ErrorCode.User.ACTION_SUCCESS.getCode());
         res.setData(data);

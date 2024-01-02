@@ -28,9 +28,6 @@ public class PostItem {
     @Column(name = "to_user_id")
     private String toUserId;
 
-    @Column(name = "author_role_group")
-    private GroupMemberRole authorRoleGroup;
-
     @Column(name = "content", columnDefinition = "TEXT")
     private String content;
 

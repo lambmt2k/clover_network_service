@@ -13,6 +13,7 @@ public class CommonConstant {
     public static final String DEFAULT_AVATAR_URL = "images/user_avatar/default_avatar.jpg";
     public static final int OTP_LENGTH = 6;
     public static final long OTP_EXPIRATION_TIME_SECONDS = 150;
+    public static final String SYSTEM_GROUP_ID = "1191451836392214528";
 
     public class API {
         public static final String API_LOGIN = "/api/authenticate/login-by-email";
