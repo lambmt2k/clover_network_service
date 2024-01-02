@@ -645,7 +645,6 @@ public class FeedServiceImpl implements FeedService {
         feedItem.setUpdatedTime(now);
         feedItem.setLastActive(now);
         feedItem.setDelFlag(false);
-        feedItem.setContent(HtmlHelper.convertToHTML(feedItem.getContent()));
         feedItem.setHtmlContent(HtmlHelper.convertToHTML(feedItem.getContent()));
 
         logger.info("[postFeed] Start post feed: " + feedItem);
