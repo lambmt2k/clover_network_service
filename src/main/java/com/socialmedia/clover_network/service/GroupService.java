@@ -13,6 +13,7 @@ import java.util.Map;
 public interface GroupService {
     ApiResponse createNewGroup(GroupReq groupReq);
     ApiResponse getListAllGroupOfUser();
+    ApiResponse getListMemberWaitingForApprove(String groupId);
     ApiResponse getGroupInfo(String groupId);
     ApiResponse joinGroup(String groupId, String userId);
     ApiResponse leaveGroup(String groupId);

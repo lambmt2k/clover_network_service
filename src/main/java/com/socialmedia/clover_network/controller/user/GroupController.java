@@ -47,6 +47,16 @@ public class GroupController {
         }
     }
 
+    @GetMapping("/list-member-waiting")
+    public ResponseEntity<ApiResponse> getListMemberWaitingForApprove(@RequestParam(name = "groupId") String groupId) throws Exception {
+        ApiResponse res = groupService.getListMemberWaitingForApprove(groupId);
+        if (Objects.nonNull(res)) {
+            return ResponseEntity.ok().body(res);
+        } else {
+            return ResponseEntity.internalServerError().body(null);
+        }
+    }
+
     @GetMapping("/get-group-info/{groupId}")
     public ResponseEntity<ApiResponse> getGroupInfo(@PathVariable String groupId) throws Exception {
         ApiResponse res = groupService.getGroupInfo(groupId);

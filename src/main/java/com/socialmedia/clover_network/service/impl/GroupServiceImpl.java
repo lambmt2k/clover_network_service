@@ -159,7 +159,13 @@ public class GroupServiceImpl implements GroupService {
                     .map(GroupEntity::getGroupId)
                     .distinct()
                     .collect(Collectors.toList());
+            List<String> systemGroups = groupRepository.findByGroupTypeAndDelFlagFalse(GroupEntity.GroupType.SYSTEM)
+                    .stream()
+                    .map(GroupEntity::getGroupId)
+                    .distinct()
+                    .collect(Collectors.toList());
             groupIds.removeAll(userWallIds);
+            groupIds.removeAll(systemGroups);
             if (groupIds.size() == 0) {
                 res.setCode(ErrorCode.Group.GROUP_NOT_FOUND.getCode());
                 res.setData(null);
@@ -195,6 +201,61 @@ public class GroupServiceImpl implements GroupService {
             res.setMessageVN(ErrorCode.Token.FORBIDDEN.getMessageVN());
         }
         logger.info("End api [getListAllGroupOfUser]");
+        return res;
+    }
+
+    @Override
+    public ApiResponse getListMemberWaitingForApprove(String groupId) {
+        ApiResponse res = new ApiResponse();
+        String currentUserId = AuthenticationHelper.getUserIdFromContext();
+        logger.info("Start API [leaveGroup]: userId {}, groupId {}", currentUserId, groupId);
+        if (StringUtils.isEmpty(currentUserId)) {
+            res.setCode(ErrorCode.Token.FORBIDDEN.getCode());
+            res.setData(null);
+            res.setMessageEN(ErrorCode.Token.FORBIDDEN.getMessageEN());
+            res.setMessageVN(ErrorCode.Token.FORBIDDEN.getMessageVN());
+            return res;
+        }
+        GroupEntity groupEntity = groupRepository.findByGroupIdAndDelFlagFalse(groupId);
+        if (Objects.isNull(groupEntity)) {
+            res.setCode(ErrorCode.Group.GROUP_NOT_FOUND.getCode());
+            res.setData(groupId);
+            res.setMessageEN(ErrorCode.Group.GROUP_NOT_FOUND.getMessageEN());
+            res.setMessageVN(ErrorCode.Group.GROUP_NOT_FOUND.getMessageVN());
+            return res;
+        }
+        Optional<GroupMember> groupMemberOpt = groupMemberRepository.findFirstByUserIdAndGroupIdAndDelFlagFalse(currentUserId, groupId);
+        if (groupMemberOpt.isEmpty()) {
+            res.setCode(ErrorCode.Group.NOT_MEMBER.getCode());
+            res.setData(groupId);
+            res.setMessageEN(ErrorCode.Group.NOT_MEMBER.getMessageEN());
+            res.setMessageVN(ErrorCode.Group.NOT_MEMBER.getMessageVN());
+            return res;
+        }
+        GroupMember groupMember = groupMemberOpt.get();
+        if (!groupMember.getGroupRoleId().equals(GroupMemberRole.OWNER) || !groupMember.getGroupRoleId().equals(GroupMemberRole.ADMIN)) {
+            res.setCode(ErrorCode.Group.NOT_PERMISSION.getCode());
+            res.setData(groupId);
+            res.setMessageEN(ErrorCode.Group.NOT_PERMISSION.getMessageEN());
+            res.setMessageVN(ErrorCode.Group.NOT_PERMISSION.getMessageVN());
+            return res;
+        }
+        List<GroupMember> listMemberWaiting = groupMemberRepository.findAllByGroupIdAndDelFlagFalseAndStatusOrderByJoinTimeDesc(groupEntity.getGroupId(), GroupMember.GroupMemberStatus.WAITING_FOR_APPROVE);
+        if (listMemberWaiting.isEmpty()) {
+            res.setCode(ErrorCode.Group.LIST_MEMBER_EMPTY.getCode());
+            res.setData(groupId);
+            res.setMessageEN(ErrorCode.Group.LIST_MEMBER_EMPTY.getMessageEN());
+            res.setMessageVN(ErrorCode.Group.LIST_MEMBER_EMPTY.getMessageVN());
+            return res;
+        }
+        List<BaseProfile> listMemberBaseProfile = new ArrayList<>();
+        listMemberWaiting.forEach(member -> {
+            listMemberBaseProfile.add(userService.getBaseProfileByUserId(member.getUserId()));
+        });
+        res.setCode(ErrorCode.Group.ACTION_SUCCESS.getCode());
+        res.setData(listMemberBaseProfile);
+        res.setMessageEN(ErrorCode.Group.ACTION_SUCCESS.getMessageEN());
+        res.setMessageVN(ErrorCode.Group.ACTION_SUCCESS.getMessageVN());
         return res;
     }
 
