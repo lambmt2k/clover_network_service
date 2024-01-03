@@ -10,7 +10,7 @@ spring:
       show-sql: 'true'
   mail:
     host: smtp.gmail.com
-    username: ytbbuilamsonla@gmail.com
+    username: clovernetworkvn@gmail.com
     port: '587'
     properties:
       mail:
@@ -18,9 +18,9 @@ spring:
           starttls:
             enable: 'true'
           auth: 'true'
-    password: ohrxnidvjxdjvjwx
+    password: spjxgkfcikcajsrc
   datasource:
-    username: clover_admin1
+    username: clover
     password: lambmt0910
     url: jdbc:postgresql://clover-network-database.ck32a9mfyksb.ap-southeast-1.rds.amazonaws.com/db_clover_network
     continue-on-error: 'true'
