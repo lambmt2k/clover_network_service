@@ -1,22 +1,21 @@
 package com.socialmedia.clover_network.service.impl;
 
 import com.socialmedia.clover_network.config.AuthenticationHelper;
+import com.socialmedia.clover_network.constant.CommonRegex;
 import com.socialmedia.clover_network.constant.ErrorCode;
+import com.socialmedia.clover_network.dto.BaseProfile;
 import com.socialmedia.clover_network.dto.ConnectionDTO;
+import com.socialmedia.clover_network.dto.NotificationItem;
 import com.socialmedia.clover_network.dto.res.ApiResponse;
 import com.socialmedia.clover_network.dto.res.UserInfoRes;
-import com.socialmedia.clover_network.entity.Connection;
-import com.socialmedia.clover_network.entity.GroupEntity;
-import com.socialmedia.clover_network.entity.GroupMember;
-import com.socialmedia.clover_network.entity.UserInfo;
+import com.socialmedia.clover_network.entity.*;
 import com.socialmedia.clover_network.enumuration.UserStatus;
 import com.socialmedia.clover_network.mapper.UserInfoMapper;
 import com.socialmedia.clover_network.repository.ConnectionRepository;
 import com.socialmedia.clover_network.repository.GroupMemberRepository;
-import com.socialmedia.clover_network.service.ConnectionService;
-import com.socialmedia.clover_network.service.GroupService;
-import com.socialmedia.clover_network.service.UserService;
-import com.socialmedia.clover_network.service.UserWallService;
+import com.socialmedia.clover_network.repository.GroupRepository;
+import com.socialmedia.clover_network.repository.UserInfoRepository;
+import com.socialmedia.clover_network.service.*;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -24,8 +23,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
 
 @Service
 public class ConnectionServiceImpl implements ConnectionService {
@@ -39,9 +37,15 @@ public class ConnectionServiceImpl implements ConnectionService {
     @Autowired
     GroupService groupService;
     @Autowired
+    NotificationService notificationService;
+    @Autowired
     ConnectionRepository connectionRepository;
     @Autowired
     GroupMemberRepository groupMemberRepository;
+    @Autowired
+    private UserInfoRepository userInfoRepository;
+    @Autowired
+    private GroupRepository groupRepository;
 
 
     @Override
@@ -108,6 +112,8 @@ public class ConnectionServiceImpl implements ConnectionService {
                 checkConnectAtoB.setConnectStatus(true);
                 checkConnectAtoB.setTimeConnect(now);
                 connectionRepository.save(checkConnectAtoB);
+
+
             } else { //case disconnect
                 Optional<GroupMember> groupMemberOpt = groupMemberRepository.findByUserIdAndGroupId(currentUserId, targetUserWall.getGroupId());
                 if (groupMemberOpt.isPresent() && !groupMemberOpt.get().isDelFlag()) {
@@ -157,6 +163,46 @@ public class ConnectionServiceImpl implements ConnectionService {
         }
 
         return res;
+    }
+
+    private void broadcastConnect(ConnectionDTO connectionDTO, boolean isConnectTogether) {
+        logger.info("[broadcastConnect] Start broadcast connection: " + connectionDTO);
+        Long notificationId = this.createNotificationConnect(connectionDTO, isConnectTogether);
+        if (notificationId != null) {
+            Map<String, String> customData = new HashMap<>();
+            customData.put("isConnectTogether", isConnectTogether ? "true" : "false");
+            notificationService.broadcastNotification(notificationId, Collections.singletonList(connectionDTO.getUserIdConnected()), customData);
+        }
+    }
+
+    private Long createNotificationConnect(ConnectionDTO connectionDTO, boolean isConnectTogether) {
+        logger.info("[createNotificationConnect] Start create notification of connection: " + connectionDTO);
+        LocalDateTime now = LocalDateTime.now();
+        BaseProfile fromUser = userService.getBaseProfileByUserId(connectionDTO.getUserId());
+        BaseProfile toUser = userService.getBaseProfileByUserId(connectionDTO.getUserIdConnected());
+        String message = "";
+        if (!isConnectTogether) {
+            message = fromUser.getDisplayName()
+                    + " connected to you. Would you like to connect with "
+                    + fromUser.getDisplayName();
+        } else {
+            message = fromUser.getDisplayName()
+                    + "has connected back to you. Now everyone can post on each other's wall.";
+        }
+        String groupName = groupRepository.findByGroupIdAndDelFlagFalse(toUser.getUserWallId()).getGroupName();
+        NotificationItem notiItem = NotificationItem.builder()
+                .templateId(NotificationEntity.TemplateNotification.CONNECTION)
+                .fromUserId(connectionDTO.getUserId())
+                .toUserId(connectionDTO.getUserIdConnected())
+                .username(fromUser.getDisplayName())
+                .objectId(connectionDTO.getId())
+                .message(message)
+                .fromGroupId(toUser.getUserWallId())
+                .groupName(groupName)
+                .createdTime(now)
+                .build();
+        logger.info("[createNotificationConnect] Finish create notification of connection: " + connectionDTO);
+        return notificationService.createNotificationItem(notiItem);
     }
 
     @Override
