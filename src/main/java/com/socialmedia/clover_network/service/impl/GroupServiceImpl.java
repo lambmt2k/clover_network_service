@@ -377,11 +377,19 @@ public class GroupServiceImpl implements GroupService {
         groupMember.setLeaveTime(now);
         groupMemberRepository.save(groupMember);
 
+        //remove feedItem in group
+        List<PostItem> postItems = feedRepository.findByAuthorIdAndPrivacyGroupIdAndDelFlagFalse(currentUserId, groupId);
+        List<String> listFeedGroupIdRemove = postItems.stream().map(PostItem::getPostId).distinct().collect(Collectors.toList());
+        postItems.forEach(postItem -> {
+            postItem.setDelFlag(true);
+            postItem.setUpdatedTime(now);
+        });
+        feedRepository.saveAll(postItems);
+
         //remove feedGroup in feedUser
         FeedGroupEntity feedGroupEntity = feedGroupDAO.findById(groupId).orElse(null);
         if (feedGroupEntity != null) {
             List<String> feedGroupIds = feedGroupEntity.getListFeedId();
-
             FeedUserEntity feedUserEntity = feedUserDAO.findById(currentUserId).orElse(null);
             if (feedUserEntity != null) {
                 List<String> feedIds = feedUserEntity.getListFeedId();
@@ -390,6 +398,9 @@ public class GroupServiceImpl implements GroupService {
                 feedUserEntity.setValue(gson.toJson(feedIds));
                 feedUserDAO.save(feedUserEntity);
             }
+            feedGroupIds.removeAll(listFeedGroupIdRemove);
+            feedGroupEntity.setValue(gson.toJson(feedGroupIds));
+            feedGroupDAO.save(feedGroupEntity);
         }
 
         res.setCode(ErrorCode.Group.ACTION_SUCCESS.getCode());

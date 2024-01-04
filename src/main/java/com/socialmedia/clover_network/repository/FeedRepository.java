@@ -18,4 +18,7 @@ public interface FeedRepository extends JpaRepository<PostItem, String> {
 
     List<PostItem> findAllByPostIdInAndDelFlagFalseAndLastActiveIsNotNullOrderByLastActiveDesc(List<String> postId, Pageable pageable);
     List<PostItem> findAllByPostIdInAndPrivacyGroupIdInAndDelFlagFalseAndLastActiveIsNotNullOrderByLastActiveDesc(List<String> postId, List<String> groupIds, Pageable pageable);
+
+    List<PostItem> findByAuthorIdAndPrivacyGroupIdAndDelFlagFalse(String authorId, String privacyGroupId);
+
 }

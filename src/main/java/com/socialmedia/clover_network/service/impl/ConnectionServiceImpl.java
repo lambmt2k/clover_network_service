@@ -48,6 +48,8 @@ public class ConnectionServiceImpl implements ConnectionService {
     @Autowired
     private GroupRepository groupRepository;
     @Autowired
+    FeedRepository feedRepository;
+    @Autowired
     FeedGroupRepository feedGroupDAO;
     @Autowired
     FeedUserRepository feedUserDAO;
@@ -134,11 +136,19 @@ public class ConnectionServiceImpl implements ConnectionService {
                 checkConnectAtoB.setTimeDisconnect(now);
                 connectionRepository.save(checkConnectAtoB);
 
+                //remove feedItem in group
+                List<PostItem> postItems = feedRepository.findByAuthorIdAndPrivacyGroupIdAndDelFlagFalse(currentUserId, targetUserWall.getGroupId());
+                List<String> listFeedGroupIdRemove = postItems.stream().map(PostItem::getPostId).distinct().collect(Collectors.toList());
+                postItems.forEach(postItem -> {
+                    postItem.setDelFlag(true);
+                    postItem.setUpdatedTime(now);
+                });
+                feedRepository.saveAll(postItems);
+
                 //remove feedGroup in feedUser
                 FeedGroupEntity feedGroupEntity = feedGroupDAO.findById(targetUserWall.getGroupId()).orElse(null);
                 if (feedGroupEntity != null) {
                     List<String> feedGroupIds = feedGroupEntity.getListFeedId();
-
                     FeedUserEntity feedUserEntity = feedUserDAO.findById(currentUserId).orElse(null);
                     if (feedUserEntity != null) {
                         List<String> feedIds = feedUserEntity.getListFeedId();
@@ -147,6 +157,9 @@ public class ConnectionServiceImpl implements ConnectionService {
                         feedUserEntity.setValue(gson.toJson(feedIds));
                         feedUserDAO.save(feedUserEntity);
                     }
+                    feedGroupIds.removeAll(listFeedGroupIdRemove);
+                    feedGroupEntity.setValue(gson.toJson(feedGroupIds));
+                    feedGroupDAO.save(feedGroupEntity);
                 }
 
             }
