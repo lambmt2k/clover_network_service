@@ -125,7 +125,7 @@ public class ElasticSearchServiceImpl implements ElasticSearchService {
         List<FeedItem> feedItems = PostItemMapper.INSTANCE.toDTOS(feedRepository.findByDelFlagFalseAndContentContainingIgnoreCase(keyword));
         if (!feedItems.isEmpty()) {
             List<String> listFeed = feedItems.stream().map(FeedItem::getPostId).distinct().collect(Collectors.toList());
-            List<ListFeedRes.FeedInfoHome> feeds = feedService.listFeed(currentUserId, listFeed, 100, 0, null);
+            List<ListFeedRes.FeedInfoHome> feeds = feedService.listFeed(currentUserId, listFeed, 0, 50, null);
             data.setFeeds(feeds);
         }
         res.setCode(ErrorCode.Feed.ACTION_SUCCESS.getCode());
