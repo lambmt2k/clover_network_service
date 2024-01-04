@@ -1,6 +1,7 @@
 package com.socialmedia.clover_network.controller.user;
 
 import com.socialmedia.clover_network.config.AuthenticationHelper;
+import com.socialmedia.clover_network.dto.req.ApproveMemberGroup;
 import com.socialmedia.clover_network.dto.req.GroupReq;
 import com.socialmedia.clover_network.dto.res.ApiResponse;
 import com.socialmedia.clover_network.enumuration.GroupMemberRole;
@@ -119,6 +120,17 @@ public class GroupController {
                                                     @RequestParam(name = "confirm") boolean confirm) {
         try {
             ApiResponse res = groupService.disableGroup(groupId, confirm);
+            return ResponseEntity.ok().body(res);
+        } catch (Exception e) {
+            logger.error(e.getMessage());
+            return ResponseEntity.internalServerError().body(null);
+        }
+    }
+
+    @PostMapping(value = "/approve-member", produces = {MediaType.APPLICATION_JSON_VALUE})
+    public ResponseEntity<ApiResponse> approveMemberGroup(@RequestBody ApproveMemberGroup req) {
+        try {
+            ApiResponse res = groupService.approveMemberGroup(req);
             return ResponseEntity.ok().body(res);
         } catch (Exception e) {
             logger.error(e.getMessage());

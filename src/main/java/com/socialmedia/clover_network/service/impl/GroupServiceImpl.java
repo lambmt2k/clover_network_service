@@ -7,6 +7,7 @@ import com.socialmedia.clover_network.constant.ErrorCode;
 import com.socialmedia.clover_network.dto.BaseProfile;
 import com.socialmedia.clover_network.dto.FeedItem;
 import com.socialmedia.clover_network.dto.GroupItem;
+import com.socialmedia.clover_network.dto.req.ApproveMemberGroup;
 import com.socialmedia.clover_network.dto.req.GroupReq;
 import com.socialmedia.clover_network.dto.req.RoleGroupSettingReq;
 import com.socialmedia.clover_network.dto.res.ApiResponse;
@@ -464,6 +465,64 @@ public class GroupServiceImpl implements GroupService {
         res.setMessageEN(ErrorCode.Group.ACTION_SUCCESS.getMessageEN());
         res.setMessageVN(ErrorCode.Group.ACTION_SUCCESS.getMessageVN());
         logger.info("End API [disableGroup]");
+        return res;
+    }
+
+    @Override
+    public ApiResponse approveMemberGroup(ApproveMemberGroup req) {
+        ApiResponse res = new ApiResponse();
+        logger.info("Start API [disableGroup]");
+        String currentUserId = AuthenticationHelper.getUserIdFromContext();
+        LocalDateTime now = LocalDateTime.now();
+        if (StringUtils.isEmpty(currentUserId)) {
+            res.setCode(ErrorCode.Token.FORBIDDEN.getCode());
+            res.setData(null);
+            res.setMessageEN(ErrorCode.Token.FORBIDDEN.getMessageEN());
+            res.setMessageVN(ErrorCode.Token.FORBIDDEN.getMessageVN());
+            return res;
+        }
+        GroupEntity groupEntity = groupRepository.findByGroupIdAndDelFlagFalse(req.getGroupId());
+        if (groupEntity == null) {
+            res.setCode(ErrorCode.Group.GROUP_NOT_FOUND.getCode());
+            res.setData(req.getGroupId());
+            res.setMessageEN(ErrorCode.Group.GROUP_NOT_FOUND.getMessageEN());
+            res.setMessageVN(ErrorCode.Group.GROUP_NOT_FOUND.getMessageVN());
+            return res;
+        }
+
+        Optional<GroupMember> groupMemberOpt = groupMemberRepository.findFirstByUserIdAndGroupIdAndDelFlagFalse(currentUserId, req.getGroupId());
+        if (groupMemberOpt.isEmpty()) {
+            res.setCode(ErrorCode.Group.NOT_MEMBER.getCode());
+            res.setData(req.getGroupId());
+            res.setMessageEN(ErrorCode.Group.NOT_MEMBER.getMessageEN());
+            res.setMessageVN(ErrorCode.Group.NOT_MEMBER.getMessageVN());
+            return res;
+        }
+        GroupMember groupMember = groupMemberOpt.get();
+        if (!groupMember.getGroupRoleId().equals(GroupMemberRole.OWNER) || !groupMember.getGroupRoleId().equals(GroupMemberRole.ADMIN)) {
+            res.setCode(ErrorCode.Group.NOT_PERMISSION.getCode());
+            res.setData(req.getGroupId());
+            res.setMessageEN(ErrorCode.Group.NOT_PERMISSION.getMessageEN());
+            res.setMessageVN(ErrorCode.Group.NOT_PERMISSION.getMessageVN());
+            return res;
+        }
+        Optional<GroupMember> approveMemberOpt = groupMemberRepository.findFirstByUserIdAndGroupIdAndDelFlagFalse(currentUserId, req.getGroupId());
+        if (approveMemberOpt.isEmpty()) {
+            res.setCode(ErrorCode.Group.MEMBER_NOT_FOUND.getCode());
+            res.setData(req);
+            res.setMessageEN(ErrorCode.Group.MEMBER_NOT_FOUND.getMessageEN());
+            res.setMessageVN(ErrorCode.Group.MEMBER_NOT_FOUND.getMessageVN());
+            return res;
+        }
+        GroupMember approveMember = approveMemberOpt.get();
+        approveMember.setStatus(GroupMember.GroupMemberStatus.APPROVED);
+        approveMember.setJoinTime(now);
+        groupMemberRepository.save(approveMember);
+
+        res.setCode(ErrorCode.Group.ACTION_SUCCESS.getCode());
+        res.setData(req);
+        res.setMessageEN(ErrorCode.Group.ACTION_SUCCESS.getMessageEN());
+        res.setMessageVN(ErrorCode.Group.ACTION_SUCCESS.getMessageVN());
         return res;
     }
 
