@@ -10,7 +10,7 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @NoArgsConstructor
 public class ConnectionDTO {
-    private String id;
+    private Long id;
     private String userId;
     private String userIdConnected;
     private LocalDateTime timeConnect;

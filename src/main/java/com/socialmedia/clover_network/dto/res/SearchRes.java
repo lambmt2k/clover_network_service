@@ -14,5 +14,5 @@ import java.util.List;
 public class SearchRes {
     List<UserInfoRes> users;
     List<GroupRes.GroupInfo> groups;
-    List<FeedItem> feeds;
+    List<ListFeedRes.FeedInfoHome> feeds;
 }

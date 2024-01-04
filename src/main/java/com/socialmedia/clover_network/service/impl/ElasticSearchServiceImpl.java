@@ -6,10 +6,7 @@ import com.socialmedia.clover_network.constant.ErrorCode;
 import com.socialmedia.clover_network.dto.FeedItem;
 import com.socialmedia.clover_network.dto.GroupItem;
 import com.socialmedia.clover_network.dto.req.RoleGroupSettingReq;
-import com.socialmedia.clover_network.dto.res.ApiResponse;
-import com.socialmedia.clover_network.dto.res.GroupRes;
-import com.socialmedia.clover_network.dto.res.SearchRes;
-import com.socialmedia.clover_network.dto.res.UserInfoRes;
+import com.socialmedia.clover_network.dto.res.*;
 import com.socialmedia.clover_network.entity.GroupEntity;
 import com.socialmedia.clover_network.entity.GroupMember;
 import com.socialmedia.clover_network.entity.UserInfo;
@@ -32,6 +29,7 @@ import org.springframework.stereotype.Service;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class ElasticSearchServiceImpl implements ElasticSearchService {
@@ -51,6 +49,8 @@ public class ElasticSearchServiceImpl implements ElasticSearchService {
     GroupEntityMapper groupEntityMapper;
     @Autowired
     FirebaseService firebaseService;
+    @Autowired
+    FeedService feedService;
     @Autowired
     GroupMemberRepository groupMemberRepository;
 
@@ -124,7 +124,9 @@ public class ElasticSearchServiceImpl implements ElasticSearchService {
         }
         List<FeedItem> feedItems = PostItemMapper.INSTANCE.toDTOS(feedRepository.findByDelFlagFalseAndContentContainingIgnoreCase(keyword));
         if (!feedItems.isEmpty()) {
-            data.setFeeds(feedItems);
+            List<String> listFeed = feedItems.stream().map(FeedItem::getPostId).distinct().collect(Collectors.toList());
+            List<ListFeedRes.FeedInfoHome> feeds = feedService.listFeed(currentUserId, listFeed, 100, 0, null);
+            data.setFeeds(feeds);
         }
         res.setCode(ErrorCode.Feed.ACTION_SUCCESS.getCode());
         res.setData(data);
