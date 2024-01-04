@@ -16,6 +16,7 @@ import com.socialmedia.clover_network.dto.res.MemberGroupResDTO;
 import com.socialmedia.clover_network.entity.*;
 import com.socialmedia.clover_network.enumuration.GroupMemberRole;
 import com.socialmedia.clover_network.enumuration.ImageType;
+import com.socialmedia.clover_network.enumuration.UserRole;
 import com.socialmedia.clover_network.mapper.GroupEntityMapper;
 import com.socialmedia.clover_network.repository.*;
 import com.socialmedia.clover_network.service.FeedService;
@@ -149,6 +150,7 @@ public class GroupServiceImpl implements GroupService {
         ApiResponse res = new ApiResponse();
         String currentUserId = AuthenticationHelper.getUserIdFromContext();
         if (currentUserId != null) {
+            Optional<UserInfo> currentUserInfoOpt = userInfoRepository.findByUserId(currentUserId);
             logger.info("Get list group of userId {}", currentUserId);
             List<String> groupIds = groupMemberRepository.findByUserIdAndDelFlagFalse(currentUserId)
                     .stream()
@@ -166,7 +168,9 @@ public class GroupServiceImpl implements GroupService {
                     .distinct()
                     .collect(Collectors.toList());
             groupIds.removeAll(userWallIds);
-            groupIds.removeAll(systemGroups);
+            if (!(currentUserInfoOpt.isPresent() && currentUserInfoOpt.get().getUserRole().equals(UserRole.ADMIN))) {
+                groupIds.removeAll(systemGroups);
+            }
             if (groupIds.size() == 0) {
                 res.setCode(ErrorCode.Group.GROUP_NOT_FOUND.getCode());
                 res.setData(null);
