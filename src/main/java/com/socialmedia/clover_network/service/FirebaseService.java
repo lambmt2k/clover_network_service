@@ -172,6 +172,7 @@ public class FirebaseService {
     }
 
     public void pushDeviceToken(FirebaseTokenUserItem item) {
+        logger.info("[pushDeviceToken] of user : " + item.getUserId() + " | deviceToken: " + item.getToken());
         UserDeviceToken existedDeviceToken = userDeviceTokenRepository.findByUserIdAndToken(item.getUserId(), item.getToken());
         if (Objects.isNull(existedDeviceToken)) {
             UserDeviceToken newUserDeviceToken = new UserDeviceToken();
@@ -182,6 +183,7 @@ public class FirebaseService {
     }
 
     public void removeDeviceToken(FirebaseTokenUserItem item) {
+        logger.info("[removeDeviceToken] of user : " + item.getUserId() + " | deviceToken: " + item.getToken());
         UserDeviceToken existedDeviceToken = userDeviceTokenRepository.findByUserIdAndToken(item.getUserId(), item.getToken());
         if (Objects.nonNull(existedDeviceToken)) {
             userDeviceTokenRepository.delete(existedDeviceToken);
