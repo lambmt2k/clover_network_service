@@ -519,6 +519,24 @@ public class GroupServiceImpl implements GroupService {
         approveMember.setJoinTime(now);
         groupMemberRepository.save(approveMember);
 
+        //add all feed group to feed user
+        FeedGroupEntity feedGroupEntity = feedGroupDAO.findById(req.getGroupId()).orElse(null);
+        if (feedGroupEntity != null) {
+            List<String> feedGroupIds = feedGroupEntity.getListFeedId();
+
+            FeedUserEntity feedUserEntity = feedUserDAO.findById(req.getUserId()).orElse(null);
+            if (feedUserEntity != null) {
+                List<String> feedIds = feedUserEntity.getListFeedId();
+                feedIds.addAll(feedGroupIds);
+                feedIds = feedIds.stream().distinct().collect(Collectors.toList());
+                feedUserEntity.setValue(gson.toJson(feedIds));
+                feedUserDAO.save(feedUserEntity);
+            } else {
+                FeedUserEntity feedUserEntityCreate = FeedUserEntity.builder().key(req.getUserId()).value(gson.toJson(feedGroupIds)).build();
+                feedUserDAO.save(feedUserEntityCreate);
+            }
+        }
+
         res.setCode(ErrorCode.Group.ACTION_SUCCESS.getCode());
         res.setData(req);
         res.setMessageEN(ErrorCode.Group.ACTION_SUCCESS.getMessageEN());
