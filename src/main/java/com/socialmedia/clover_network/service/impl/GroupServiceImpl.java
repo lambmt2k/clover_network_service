@@ -168,7 +168,7 @@ public class GroupServiceImpl implements GroupService {
                     .distinct()
                     .collect(Collectors.toList());
             groupIds.removeAll(userWallIds);
-            if (!(currentUserInfoOpt.isPresent() && currentUserInfoOpt.get().getUserRole().equals(UserRole.ADMIN))) {
+            if (currentUserInfoOpt.isPresent() && currentUserInfoOpt.get().getUserRole().equals(UserRole.USER)) {
                 groupIds.removeAll(systemGroups);
             }
             if (groupIds.size() == 0) {
