@@ -1,5 +1,6 @@
 package com.socialmedia.clover_network.service.impl;
 
+import com.google.gson.Gson;
 import com.socialmedia.clover_network.config.AuthenticationHelper;
 import com.socialmedia.clover_network.constant.CommonRegex;
 import com.socialmedia.clover_network.constant.ErrorCode;
@@ -12,10 +13,7 @@ import com.socialmedia.clover_network.entity.*;
 import com.socialmedia.clover_network.enumuration.UserStatus;
 import com.socialmedia.clover_network.mapper.ConnectionMapper;
 import com.socialmedia.clover_network.mapper.UserInfoMapper;
-import com.socialmedia.clover_network.repository.ConnectionRepository;
-import com.socialmedia.clover_network.repository.GroupMemberRepository;
-import com.socialmedia.clover_network.repository.GroupRepository;
-import com.socialmedia.clover_network.repository.UserInfoRepository;
+import com.socialmedia.clover_network.repository.*;
 import com.socialmedia.clover_network.service.*;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -26,12 +24,13 @@ import org.springframework.stereotype.Service;
 import javax.transaction.Transactional;
 import java.time.LocalDateTime;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 public class ConnectionServiceImpl implements ConnectionService {
 
     private final Logger logger = LoggerFactory.getLogger(ConnectionServiceImpl.class);
-
+    private static Gson gson = new Gson();
     @Autowired
     UserService userService;
     @Autowired
@@ -48,6 +47,10 @@ public class ConnectionServiceImpl implements ConnectionService {
     private UserInfoRepository userInfoRepository;
     @Autowired
     private GroupRepository groupRepository;
+    @Autowired
+    FeedGroupRepository feedGroupDAO;
+    @Autowired
+    FeedUserRepository feedUserDAO;
     @Autowired
     ConnectionMapper connectionMapper;
 
@@ -130,6 +133,22 @@ public class ConnectionServiceImpl implements ConnectionService {
                 checkConnectAtoB.setConnectStatus(false);
                 checkConnectAtoB.setTimeDisconnect(now);
                 connectionRepository.save(checkConnectAtoB);
+
+                //remove feedGroup in feedUser
+                FeedGroupEntity feedGroupEntity = feedGroupDAO.findById(targetUserWall.getGroupId()).orElse(null);
+                if (feedGroupEntity != null) {
+                    List<String> feedGroupIds = feedGroupEntity.getListFeedId();
+
+                    FeedUserEntity feedUserEntity = feedUserDAO.findById(currentUserId).orElse(null);
+                    if (feedUserEntity != null) {
+                        List<String> feedIds = feedUserEntity.getListFeedId();
+                        feedIds.removeAll(feedGroupIds);
+                        feedIds = feedIds.stream().distinct().collect(Collectors.toList());
+                        feedUserEntity.setValue(gson.toJson(feedIds));
+                        feedUserDAO.save(feedUserEntity);
+                    }
+                }
+
             }
             res.setCode(ErrorCode.Connection.ACTION_SUCCESS.getCode());
             res.setData(targetUserInfo.getUserId());
