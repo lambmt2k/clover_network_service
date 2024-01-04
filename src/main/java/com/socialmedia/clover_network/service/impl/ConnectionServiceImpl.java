@@ -10,6 +10,7 @@ import com.socialmedia.clover_network.dto.res.ApiResponse;
 import com.socialmedia.clover_network.dto.res.UserInfoRes;
 import com.socialmedia.clover_network.entity.*;
 import com.socialmedia.clover_network.enumuration.UserStatus;
+import com.socialmedia.clover_network.mapper.ConnectionMapper;
 import com.socialmedia.clover_network.mapper.UserInfoMapper;
 import com.socialmedia.clover_network.repository.ConnectionRepository;
 import com.socialmedia.clover_network.repository.GroupMemberRepository;
@@ -22,6 +23,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import javax.transaction.Transactional;
 import java.time.LocalDateTime;
 import java.util.*;
 
@@ -46,9 +48,12 @@ public class ConnectionServiceImpl implements ConnectionService {
     private UserInfoRepository userInfoRepository;
     @Autowired
     private GroupRepository groupRepository;
+    @Autowired
+    ConnectionMapper connectionMapper;
 
 
     @Override
+    @Transactional
     public ApiResponse connectToUser(ConnectionDTO.ConnectUserItem req) {
         ApiResponse res = new ApiResponse();
         String currentUserId = AuthenticationHelper.getUserIdFromContext();
@@ -111,9 +116,9 @@ public class ConnectionServiceImpl implements ConnectionService {
                 }
                 checkConnectAtoB.setConnectStatus(true);
                 checkConnectAtoB.setTimeConnect(now);
-                connectionRepository.save(checkConnectAtoB);
+                Connection success = connectionRepository.save(checkConnectAtoB);
 
-
+                //this.broadcastConnect(connectionMapper.toDTO(success), checkConnectBtoA != null && checkConnectBtoA.isConnectStatus());
             } else { //case disconnect
                 Optional<GroupMember> groupMemberOpt = groupMemberRepository.findByUserIdAndGroupId(currentUserId, targetUserWall.getGroupId());
                 if (groupMemberOpt.isPresent() && !groupMemberOpt.get().isDelFlag()) {
@@ -153,8 +158,8 @@ public class ConnectionServiceImpl implements ConnectionService {
                         .userIdConnected(req.getTargetUserId())
                         .connectStatus(true)
                         .timeConnect(now).build();
-                connectionRepository.save(newConnection);
-
+                Connection success = connectionRepository.save(newConnection);
+                this.broadcastConnect(ConnectionMapper.INSTANCE.toDTO(success), checkConnectBtoA != null && checkConnectBtoA.isConnectStatus());
                 res.setCode(ErrorCode.Connection.ACTION_SUCCESS.getCode());
                 res.setData(targetUserInfo.getUserId());
                 res.setMessageEN(ErrorCode.Connection.ACTION_SUCCESS.getMessageEN());
@@ -195,7 +200,7 @@ public class ConnectionServiceImpl implements ConnectionService {
                 .fromUserId(connectionDTO.getUserId())
                 .toUserId(connectionDTO.getUserIdConnected())
                 .username(fromUser.getDisplayName())
-                .objectId(connectionDTO.getId())
+                .objectId(String.valueOf(connectionDTO.getId()))
                 .message(message)
                 .fromGroupId(toUser.getUserWallId())
                 .groupName(groupName)
