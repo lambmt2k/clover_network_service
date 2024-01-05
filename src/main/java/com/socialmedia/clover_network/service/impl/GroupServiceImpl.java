@@ -238,7 +238,7 @@ public class GroupServiceImpl implements GroupService {
             return res;
         }
         GroupMember groupMember = groupMemberOpt.get();
-        if (!groupMember.getGroupRoleId().equals(GroupMemberRole.OWNER) || !groupMember.getGroupRoleId().equals(GroupMemberRole.ADMIN)) {
+        if (!Arrays.asList(GroupMemberRole.OWNER, GroupMemberRole.ADMIN).contains(groupMember.getGroupRoleId())) {
             res.setCode(ErrorCode.Group.NOT_PERMISSION.getCode());
             res.setData(groupId);
             res.setMessageEN(ErrorCode.Group.NOT_PERMISSION.getMessageEN());
