@@ -188,7 +188,7 @@ public class UserServiceImpl implements UserService {
         String currentUserId = AuthenticationHelper.getUserIdFromContext();
         if (currentUserId != null) {
             logger.info("Get info of userId: {}", userId);
-            Optional<UserInfo> userInfoOpt = userInfoRepository.findByUserId(userId);
+            Optional<UserInfo> userInfoOpt = userInfoRepository.findByUserIdAndStatus(userId, UserStatus.ACTIVE);
             if (userInfoOpt.isPresent()) {
                 UserInfo userInfo = userInfoOpt.get();
                 UserProfileDTO userProfileDTO = new UserProfileDTO();

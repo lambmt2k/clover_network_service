@@ -11,6 +11,7 @@ import com.socialmedia.clover_network.entity.GroupEntity;
 import com.socialmedia.clover_network.entity.GroupMember;
 import com.socialmedia.clover_network.entity.UserInfo;
 import com.socialmedia.clover_network.enumuration.Gender;
+import com.socialmedia.clover_network.enumuration.UserStatus;
 import com.socialmedia.clover_network.mapper.GroupEntityMapper;
 import com.socialmedia.clover_network.mapper.PostItemMapper;
 import com.socialmedia.clover_network.mapper.UserInfoMapper;
@@ -77,6 +78,7 @@ public class ElasticSearchServiceImpl implements ElasticSearchService {
         SearchRes data = new SearchRes();
         List<UserInfo> userInfos = userInfoRepository.findByFirstNameOrLastNameContainingIgnoreCase(keyword);
         userInfos.removeIf(userInfo -> userInfo.getUserId().equals(currentUserId));
+        userInfos.removeIf(userInfo -> !userInfo.getStatus().equals(UserStatus.ACTIVE));
         List<UserInfoRes> listUserInfoRes = new ArrayList<>();
         userInfos.forEach(userInfo -> {
             UserInfoRes dto = UserInfoMapperImpl.INSTANCE.toDTO(userInfo);
