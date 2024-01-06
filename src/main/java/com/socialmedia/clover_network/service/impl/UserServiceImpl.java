@@ -280,6 +280,44 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    public ApiResponse getListFriendRequest() {
+        logger.info("Start [getListUserConnect]");
+        ApiResponse res = new ApiResponse();
+        String currentUserId = AuthenticationHelper.getUserIdFromContext();
+        if (StringUtils.isEmpty(currentUserId)) {
+            res.setCode(ErrorCode.Token.FORBIDDEN.getCode());
+            res.setData(null);
+            res.setMessageEN(ErrorCode.Token.FORBIDDEN.getMessageEN());
+            res.setMessageVN(ErrorCode.Token.FORBIDDEN.getMessageVN());
+            return res;
+        }
+        List<Connection> listConnector = connectionRepository.findByUserIdConnectedAndConnectStatusTrue(currentUserId);
+        List<String> listConnect = connectionRepository.findByUserIdAndConnectStatusTrue(currentUserId)
+                .stream()
+                .map(Connection::getUserIdConnected).collect(Collectors.toList());
+        listConnector.removeIf(connection -> listConnect.contains(connection.getUserId()));
+        if (listConnector.isEmpty()) {
+            res.setCode(ErrorCode.User.LIST_NO_USER.getCode());
+            res.setData(null);
+            res.setMessageEN(ErrorCode.User.LIST_NO_USER.getMessageEN());
+            res.setMessageVN(ErrorCode.User.LIST_NO_USER.getMessageVN());
+            return res;
+        }
+        UserProfileDTO.ListUserConnectDTO data = new UserProfileDTO.ListUserConnectDTO();
+        List<BaseProfile> listBaseProfileConnect = new ArrayList<>();
+
+        listConnector.forEach(user -> listBaseProfileConnect.add(this.getBaseProfileByUserId(user.getUserIdConnected())));
+        data.setTotal(listConnector.size());
+        data.setUserProfiles(listBaseProfileConnect);
+        res.setCode(ErrorCode.User.ACTION_SUCCESS.getCode());
+        res.setData(data);
+        res.setMessageEN(ErrorCode.User.ACTION_SUCCESS.getMessageEN());
+        res.setMessageVN(ErrorCode.User.ACTION_SUCCESS.getMessageVN());
+        logger.info("End api [getListUserConnect]");
+        return res;
+    }
+
+    @Override
     public ApiResponse getListUserConnect(String userId, int page, int size) {
         logger.info("Start [getListUserConnect]");
         ApiResponse res = new ApiResponse();

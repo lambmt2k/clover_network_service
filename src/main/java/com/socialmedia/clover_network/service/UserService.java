@@ -20,6 +20,7 @@ public interface UserService {
     ApiResponse getUserInfo();
     ApiResponse getUserProfile(String userId);
     ApiResponse getListFriend(int page, int size);
+    ApiResponse getListFriendRequest();
     ApiResponse getListUserConnect(String userId, int page, int size);
     ApiResponse getListUserConnector(String userId, int page, int size);
     ApiResponse editProfile(String firstname, String lastname, String phoneNo, Gender gender, Date dayOfBirth);
