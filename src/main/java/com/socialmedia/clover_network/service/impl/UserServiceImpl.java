@@ -26,6 +26,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -240,6 +241,42 @@ public class UserServiceImpl implements UserService {
         logger.info("End api [getUserProfile]");
         return res;
 
+    }
+
+    @Override
+    public ApiResponse getListFriend(int page, int size) {
+        logger.info("Start [getListUserConnect]");
+        ApiResponse res = new ApiResponse();
+        String currentUserId = AuthenticationHelper.getUserIdFromContext();
+        if (StringUtils.isEmpty(currentUserId)) {
+            res.setCode(ErrorCode.Token.FORBIDDEN.getCode());
+            res.setData(null);
+            res.setMessageEN(ErrorCode.Token.FORBIDDEN.getMessageEN());
+            res.setMessageVN(ErrorCode.Token.FORBIDDEN.getMessageVN());
+            return res;
+        }
+        Pageable pageable = PageRequest.of(page, size);
+        Page<Connection> pageFriends = connectionRepository.findFriendsByUserId(currentUserId, pageable);
+        List<Connection> listFriends = pageFriends.toList();
+        if (listFriends.isEmpty()) {
+            res.setCode(ErrorCode.User.LIST_NO_USER.getCode());
+            res.setData(null);
+            res.setMessageEN(ErrorCode.User.LIST_NO_USER.getMessageEN());
+            res.setMessageVN(ErrorCode.User.LIST_NO_USER.getMessageVN());
+            return res;
+        }
+        UserProfileDTO.ListUserConnectDTO data = new UserProfileDTO.ListUserConnectDTO();
+        List<BaseProfile> listBaseProfileConnect = new ArrayList<>();
+
+        listFriends.forEach(user -> listBaseProfileConnect.add(this.getBaseProfileByUserId(user.getUserIdConnected())));
+        data.setTotal(listFriends.size());
+        data.setUserProfiles(listBaseProfileConnect);
+        res.setCode(ErrorCode.User.ACTION_SUCCESS.getCode());
+        res.setData(data);
+        res.setMessageEN(ErrorCode.User.ACTION_SUCCESS.getMessageEN());
+        res.setMessageVN(ErrorCode.User.ACTION_SUCCESS.getMessageVN());
+        logger.info("End api [getListUserConnect]");
+        return res;
     }
 
     @Override

@@ -43,6 +43,18 @@ public class UserController {
         }
     }
 
+    @GetMapping("/get-list-friend")
+    public ResponseEntity<ApiResponse> getListFriend(@RequestParam(name = "page") int page,
+                                                     @RequestParam(name = "size") int size){
+        try {
+            ApiResponse res = userService.getListFriend(page, size);
+            return ResponseEntity.ok().body(res);
+        } catch (Exception e) {
+            logger.error(e.getMessage());
+            return ResponseEntity.internalServerError().body(null);
+        }
+    }
+
     @PostMapping("/edit-profile")
     public ResponseEntity<ApiResponse> editProfile(@RequestParam(name = "firstname", required = false) String firstname,
                                                    @RequestParam(name = "lastname", required = false) String lastname,
