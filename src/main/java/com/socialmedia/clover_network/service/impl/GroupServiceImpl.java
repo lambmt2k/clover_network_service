@@ -521,7 +521,7 @@ public class GroupServiceImpl implements GroupService {
             res.setMessageVN(ErrorCode.Group.NOT_PERMISSION.getMessageVN());
             return res;
         }
-        Optional<GroupMember> approveMemberOpt = groupMemberRepository.findFirstByUserIdAndGroupIdAndDelFlagFalse(currentUserId, req.getGroupId());
+        Optional<GroupMember> approveMemberOpt = groupMemberRepository.findFirstByUserIdAndGroupIdAndDelFlagFalse(req.getUserId(), req.getGroupId());
         if (approveMemberOpt.isEmpty()) {
             res.setCode(ErrorCode.Group.MEMBER_NOT_FOUND.getCode());
             res.setData(req);
