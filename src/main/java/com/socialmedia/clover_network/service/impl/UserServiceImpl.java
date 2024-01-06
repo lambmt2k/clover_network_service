@@ -216,10 +216,10 @@ public class UserServiceImpl implements UserService {
                     data.setConnected(true);
                 }
                 userProfileDTO.setUserInfo(data);
-                List<Connection> listUserConnect = connectionRepository.findByUserIdAndConnectStatusTrue(userId);
+                List<Connection> listUserConnect = connectionRepository.findByUserIdAndConnectStatusTrueAndDelFlagFalse(userId);
                 userProfileDTO.setTotalConnect(listUserConnect.size());
 
-                List<Connection> listUserConnector = connectionRepository.findByUserIdConnectedAndConnectStatusTrue(userId);
+                List<Connection> listUserConnector = connectionRepository.findByUserIdConnectedAndConnectStatusTrueAndDelFlagFalse(userId);
                 userProfileDTO.setTotalConnector(listUserConnector.size());
 
                 res.setCode(ErrorCode.User.ACTION_SUCCESS.getCode());
@@ -291,8 +291,8 @@ public class UserServiceImpl implements UserService {
             res.setMessageVN(ErrorCode.Token.FORBIDDEN.getMessageVN());
             return res;
         }
-        List<Connection> listConnector = connectionRepository.findByUserIdConnectedAndConnectStatusTrue(currentUserId);
-        List<String> listConnect = connectionRepository.findByUserIdAndConnectStatusTrue(currentUserId)
+        List<Connection> listConnector = connectionRepository.findByUserIdConnectedAndConnectStatusTrueAndDelFlagFalse(currentUserId);
+        List<String> listConnect = connectionRepository.findByUserIdAndConnectStatusTrueAndDelFlagFalse(currentUserId)
                 .stream()
                 .map(Connection::getUserIdConnected).collect(Collectors.toList());
         listConnector.removeIf(connection -> listConnect.contains(connection.getUserId()));
@@ -306,7 +306,7 @@ public class UserServiceImpl implements UserService {
         UserProfileDTO.ListUserConnectDTO data = new UserProfileDTO.ListUserConnectDTO();
         List<BaseProfile> listBaseProfileConnect = new ArrayList<>();
 
-        listConnector.forEach(user -> listBaseProfileConnect.add(this.getBaseProfileByUserId(user.getUserIdConnected())));
+        listConnector.forEach(user -> listBaseProfileConnect.add(this.getBaseProfileByUserId(user.getUserId())));
         data.setTotal(listConnector.size());
         data.setUserProfiles(listBaseProfileConnect);
         res.setCode(ErrorCode.User.ACTION_SUCCESS.getCode());
@@ -331,7 +331,7 @@ public class UserServiceImpl implements UserService {
             return res;
         }
         Pageable pageable = PageRequest.of(page, size);
-        List<Connection> listUserConnect = connectionRepository.findByUserIdAndConnectStatusTrue(userId, pageable);
+        List<Connection> listUserConnect = connectionRepository.findByUserIdAndConnectStatusTrueAndDelFlagFalse(userId, pageable);
         if (listUserConnect.isEmpty()) {
             res.setCode(ErrorCode.User.LIST_NO_USER.getCode());
             res.setData(null);
@@ -368,7 +368,7 @@ public class UserServiceImpl implements UserService {
             return res;
         }
         Pageable pageable = PageRequest.of(page, size);
-        List<Connection> listUserConnector = connectionRepository.findByUserIdConnectedAndConnectStatusTrue(userId, pageable);
+        List<Connection> listUserConnector = connectionRepository.findByUserIdConnectedAndConnectStatusTrueAndDelFlagFalse(userId, pageable);
         if (listUserConnector.isEmpty()) {
             res.setCode(ErrorCode.User.LIST_NO_USER.getCode());
             res.setData(null);

@@ -16,10 +16,10 @@ public interface ConnectionRepository extends JpaRepository<Connection, Long> {
     Optional<Connection> findByUserIdAndUserIdConnectedAndConnectStatusTrue(String userId, String userIdConnected);
 
     Connection findByUserIdAndUserIdConnected(String userId, String userIdConnected);
-    List<Connection> findByUserIdAndConnectStatusTrue(String userId);
-    List<Connection> findByUserIdAndConnectStatusTrue(String userId, Pageable pageable);
-    List<Connection> findByUserIdConnectedAndConnectStatusTrue(String userId);
-    List<Connection> findByUserIdConnectedAndConnectStatusTrue(String userId, Pageable pageable);
+    List<Connection> findByUserIdAndConnectStatusTrueAndDelFlagFalse(String userId);
+    List<Connection> findByUserIdAndConnectStatusTrueAndDelFlagFalse(String userId, Pageable pageable);
+    List<Connection> findByUserIdConnectedAndConnectStatusTrueAndDelFlagFalse(String userId);
+    List<Connection> findByUserIdConnectedAndConnectStatusTrueAndDelFlagFalse(String userId, Pageable pageable);
 
     @Query(value = "SELECT c1.* FROM connection c1 " +
             "INNER JOIN connection c2 ON c1.user_id = c2.user_id_connected AND c1.user_id_connected = c2.user_id " +
