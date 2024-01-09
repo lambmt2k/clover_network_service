@@ -2,6 +2,7 @@ package com.socialmedia.clover_network.service.impl;
 
 import com.google.gson.Gson;
 import com.socialmedia.clover_network.config.AuthenticationHelper;
+import com.socialmedia.clover_network.constant.CommonConstant;
 import com.socialmedia.clover_network.constant.CommonRegex;
 import com.socialmedia.clover_network.constant.ErrorCode;
 import com.socialmedia.clover_network.dto.BaseProfile;
@@ -97,6 +98,7 @@ public class GroupServiceImpl implements GroupService {
                 groupEntity.setGroupOwnerId(currentUserId);
                 groupEntity.setGroupType(GroupEntity.GroupType.DEFAULT);
                 groupEntity.setGroupPrivacy(groupReq.getGroupPrivacy());
+                groupEntity.setBannerImgUrl(CommonConstant.DEFAULT_BANNER_URL);
                 groupEntity.setEnableComment(true);
                 groupEntity.setEnablePost(true);
                 groupEntity.setEnableReaction(true);

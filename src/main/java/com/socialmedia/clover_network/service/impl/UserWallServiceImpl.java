@@ -1,6 +1,7 @@
 package com.socialmedia.clover_network.service.impl;
 
 import com.socialmedia.clover_network.config.AuthenticationHelper;
+import com.socialmedia.clover_network.constant.CommonConstant;
 import com.socialmedia.clover_network.constant.CommonRegex;
 import com.socialmedia.clover_network.entity.GroupEntity;
 import com.socialmedia.clover_network.entity.GroupMember;
@@ -65,6 +66,7 @@ public class UserWallServiceImpl implements UserWallService {
                 newUserWall.setGroupDesc(existedUserInfo.getFirstname() + CommonRegex.REGEX_SPACE + existedUserInfo.getLastname() + "'s Wall");
                 newUserWall.setGroupType(GroupEntity.GroupType.USER_WALL);
                 newUserWall.setGroupPrivacy(GroupEntity.GroupPrivacy.PUBLIC);
+                newUserWall.setBannerImgUrl(CommonConstant.DEFAULT_BANNER_URL);
                 newUserWall.setEnableComment(true);
                 newUserWall.setEnablePost(true);
                 newUserWall.setEnableReaction(true);
