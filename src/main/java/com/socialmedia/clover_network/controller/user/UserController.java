@@ -105,6 +105,17 @@ public class UserController {
         }
     }
 
+    @GetMapping("/get-list-recommend")
+    public ResponseEntity<ApiResponse> getListUserRecommend(){
+        try {
+            ApiResponse res = userService.getListUserRecommend();
+            return ResponseEntity.ok().body(res);
+        } catch (Exception e) {
+            logger.error(e.getMessage());
+            return ResponseEntity.internalServerError().body(null);
+        }
+    }
+
     @GetMapping("/get-list-connector")
     public ResponseEntity<ApiResponse> getListUserConnector(@RequestParam(name = "userId") String userId,
                                                             @RequestParam(name = "page") int page,

@@ -393,6 +393,48 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    public ApiResponse getListUserRecommend() {
+        logger.info("Start [getListUserConnect]");
+        ApiResponse res = new ApiResponse();
+        SimpleDateFormat dateFormat = new SimpleDateFormat(CommonRegex.PATTERN_DATE.pattern());
+        String currentUserId = AuthenticationHelper.getUserIdFromContext();
+        if (StringUtils.isEmpty(currentUserId)) {
+            res.setCode(ErrorCode.Token.FORBIDDEN.getCode());
+            res.setData(null);
+            res.setMessageEN(ErrorCode.Token.FORBIDDEN.getMessageEN());
+            res.setMessageVN(ErrorCode.Token.FORBIDDEN.getMessageVN());
+            return res;
+        }
+        Pageable pageable = PageRequest.of(0, 10);
+        List<String> listUserIdConnect = connectionRepository.findByUserIdAndConnectStatusTrueAndDelFlagFalse(currentUserId)
+                .stream()
+                .map(Connection::getUserIdConnected)
+                .collect(Collectors.toList());
+        listUserIdConnect.add(currentUserId);
+        List<UserInfo> listUserRecommend = userInfoRepository.findRandom10Users(listUserIdConnect, pageable);
+        if (listUserRecommend.isEmpty()) {
+            res.setCode(ErrorCode.User.LIST_NO_USER.getCode());
+            res.setData(null);
+            res.setMessageEN(ErrorCode.User.LIST_NO_USER.getMessageEN());
+            res.setMessageVN(ErrorCode.User.LIST_NO_USER.getMessageVN());
+            return res;
+        }
+        UserProfileDTO.ListUserConnectDTO data = new UserProfileDTO.ListUserConnectDTO();
+        List<BaseProfile> listBaseProfileConnect = new ArrayList<>();
+
+        listUserRecommend.forEach(user -> listBaseProfileConnect.add(this.getBaseProfileByUserId(user.getUserId())));
+        data.setTotal(listUserRecommend.size());
+        data.setUserProfiles(listBaseProfileConnect);
+
+        res.setCode(ErrorCode.User.ACTION_SUCCESS.getCode());
+        res.setData(data);
+        res.setMessageEN(ErrorCode.User.ACTION_SUCCESS.getMessageEN());
+        res.setMessageVN(ErrorCode.User.ACTION_SUCCESS.getMessageVN());
+        logger.info("End api [getListUserConnect]");
+        return res;
+    }
+
+    @Override
     public ApiResponse editProfile(String firstname, String lastname, String phoneNo, Gender gender, Date dayOfBirth) {
         logger.info("Start API [editProfile]");
         ApiResponse res = new ApiResponse();
