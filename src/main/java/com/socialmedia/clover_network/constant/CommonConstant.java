@@ -9,7 +9,7 @@ public class CommonConstant {
     public static final String ADMIN_ACCOUNT = "ADMIN";
     public static final String SECRET_KEY = "clovernetwork@23";
     public static final String VECTOR_VALUE = "clovernetwork@23";
-    public static final String LOGIN_PAGE_URL = "https://clover-network-web.vercel.app/login";
+    public static final String LOGIN_PAGE_URL = "https://clover-network-web-final.vercel.app//login";
     public static final String DEFAULT_AVATAR_URL = "images/user_avatar/default_avatar.jpg";
     public static final String DEFAULT_BANNER_URL = "images/group_banner/default_banner.jpg";
     public static final int OTP_LENGTH = 6;

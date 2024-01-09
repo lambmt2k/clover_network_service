@@ -45,6 +45,9 @@ public class FeedServiceImpl implements FeedService {
     @Value("${clover.server_host}")
     private String serverHost;
 
+    @Value("${clover.fe_url}")
+    private String feUrl;
+
     private final GroupRepository groupRepository;
     private final ConnectionRepository connectionRepository;
     private final FeedRepository feedRepository;
@@ -935,7 +938,7 @@ public class FeedServiceImpl implements FeedService {
             res.setMessageVN(ErrorCode.Feed.POST_NOT_FOUND.getMessageVN());
             return res;
         }
-        String dynamicLink = serverHost + "/api/feed/detail/" + postItem.getPostId();
+        String dynamicLink = feUrl + "/api/feed/detail/" + postItem.getPostId();
         res.setCode(ErrorCode.Feed.ACTION_SUCCESS.getCode());
         res.setData(dynamicLink);
         res.setMessageEN(ErrorCode.Feed.ACTION_SUCCESS.getMessageEN());

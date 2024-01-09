@@ -37,6 +37,7 @@ jwt:
 clover:
   server_host: https://clover-network-app-rok7a.ondigitalocean.app
   local_host: localhost:8080
+  fe_url: https://clover-network-web-final.vercel.app
 app_setting:
   firebase:
     bucket_name: 'clover-network-afd47.appspot.com'
