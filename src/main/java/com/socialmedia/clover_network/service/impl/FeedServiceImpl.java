@@ -1069,27 +1069,27 @@ public class FeedServiceImpl implements FeedService {
         }
         RoleGroupSettingReq currentUserRole = groupService
                 .getMemberRolePermission(currentUserId, postItem.getPrivacyGroupId(), userWallService.isUserWall(postItem.getPrivacyGroupId()));
-        if (!postItem.getAuthorId().equals(currentUserId)
-                || currentUserRole == null
-                || !Arrays.asList(GroupMemberRole.OWNER, GroupMemberRole.ADMIN).contains(currentUserRole.getRoleId())) {
+        if (postItem.getAuthorId().equals(currentUserId)
+                || (currentUserRole != null && Arrays.asList(GroupMemberRole.OWNER, GroupMemberRole.ADMIN).contains(currentUserRole.getRoleId()))) {
+            postItem.setDelFlag(true);
+            postItem.setUpdatedTime(now);
+            postItem.setLastActive(now);
+            feedRepository.save(postItem);
+
+            res.setCode(ErrorCode.Feed.ACTION_SUCCESS.getCode());
+            res.setData(postId);
+            res.setMessageEN(ErrorCode.Feed.ACTION_SUCCESS.getMessageEN());
+            res.setMessageVN(ErrorCode.Feed.ACTION_SUCCESS.getMessageVN());
+            logger.info("Finish API [disablePost]");
+            return res;
+        } else {
             res.setCode(ErrorCode.Group.NOT_PERMISSION.getCode());
             res.setData(postId);
             res.setMessageEN(ErrorCode.Group.NOT_PERMISSION.getMessageEN());
             res.setMessageVN(ErrorCode.Group.NOT_PERMISSION.getMessageVN());
+            logger.info("Finish API [disablePost]");
             return res;
         }
-
-        postItem.setDelFlag(true);
-        postItem.setUpdatedTime(now);
-        postItem.setLastActive(now);
-        feedRepository.save(postItem);
-
-        res.setCode(ErrorCode.Feed.ACTION_SUCCESS.getCode());
-        res.setData(postId);
-        res.setMessageEN(ErrorCode.Feed.ACTION_SUCCESS.getMessageEN());
-        res.setMessageVN(ErrorCode.Feed.ACTION_SUCCESS.getMessageVN());
-        logger.info("Finish API [disablePost]");
-        return res;
     }
 
     private CommentDTO.CommentInfo commentToPost(String authorId, CommentDTO commentDTO, PostItem postItem) {
