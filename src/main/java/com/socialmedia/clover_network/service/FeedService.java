@@ -22,5 +22,6 @@ public interface FeedService {
     ApiResponse getLinkDetailFeed(String postId);
     ApiResponse getCommentOfPost(String postId, int page, int size);
     ApiResponse reactToFeed(ReactDTO reactDTO);
+    ApiResponse disablePost(String postId);
     List<ListFeedRes.FeedInfoHome> listFeed(String userId, List<String> feedIds, int page, int size, String groupId);
 }

@@ -155,4 +155,15 @@ public class FeedController {
         }
     }
 
+    @DeleteMapping("/disable-post")
+    public ResponseEntity<ApiResponse> disablePost(@RequestParam(name = "postId") String postId) {
+        try {
+            ApiResponse res = feedService.disablePost(postId);
+            return ResponseEntity.ok().body(res);
+        } catch (Exception e) {
+            logger.error(e.getMessage());
+            return ResponseEntity.internalServerError().body(null);
+        }
+    }
+
 }
