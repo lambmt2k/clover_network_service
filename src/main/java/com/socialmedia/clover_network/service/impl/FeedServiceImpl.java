@@ -11,6 +11,7 @@ import com.socialmedia.clover_network.dto.res.ApiResponse;
 import com.socialmedia.clover_network.dto.res.CheckUserLikeDTO;
 import com.socialmedia.clover_network.dto.res.ListFeedRes;
 import com.socialmedia.clover_network.entity.*;
+import com.socialmedia.clover_network.enumuration.GroupMemberRole;
 import com.socialmedia.clover_network.enumuration.ImageType;
 import com.socialmedia.clover_network.mapper.CommentItemMapper;
 import com.socialmedia.clover_network.mapper.GroupEntityMapper;
@@ -1043,6 +1044,52 @@ public class FeedServiceImpl implements FeedService {
         res.setMessageEN(ErrorCode.Reaction.ACTION_SUCCESS.getMessageEN());
         res.setMessageVN(ErrorCode.Reaction.ACTION_SUCCESS.getMessageVN());
         return res;
+    }
+
+    @Override
+    public ApiResponse disablePost(String postId) {
+        logger.info("Start API [disablePost]");
+        ApiResponse res = new ApiResponse();
+        LocalDateTime now = LocalDateTime.now();
+        String currentUserId = AuthenticationHelper.getUserIdFromContext();
+        if (StringUtils.isEmpty(currentUserId)) {
+            res.setCode(ErrorCode.Token.FORBIDDEN.getCode());
+            res.setData(null);
+            res.setMessageEN(ErrorCode.Token.FORBIDDEN.getMessageEN());
+            res.setMessageVN(ErrorCode.Token.FORBIDDEN.getMessageVN());
+            return res;
+        }
+        PostItem postItem = feedRepository.findByPostIdAndDelFlagFalse(postId);
+        if (Objects.isNull(postItem)) {
+            res.setCode(ErrorCode.Feed.POST_NOT_FOUND.getCode());
+            res.setData(postId);
+            res.setMessageEN(ErrorCode.Feed.POST_NOT_FOUND.getMessageEN());
+            res.setMessageVN(ErrorCode.Feed.POST_NOT_FOUND.getMessageVN());
+            return res;
+        }
+        RoleGroupSettingReq currentUserRole = groupService
+                .getMemberRolePermission(currentUserId, postItem.getPrivacyGroupId(), userWallService.isUserWall(postItem.getPrivacyGroupId()));
+        if (postItem.getAuthorId().equals(currentUserId)
+                || (currentUserRole != null && Arrays.asList(GroupMemberRole.OWNER, GroupMemberRole.ADMIN).contains(currentUserRole.getRoleId()))) {
+            postItem.setDelFlag(true);
+            postItem.setUpdatedTime(now);
+            postItem.setLastActive(now);
+            feedRepository.save(postItem);
+
+            res.setCode(ErrorCode.Feed.ACTION_SUCCESS.getCode());
+            res.setData(postId);
+            res.setMessageEN(ErrorCode.Feed.ACTION_SUCCESS.getMessageEN());
+            res.setMessageVN(ErrorCode.Feed.ACTION_SUCCESS.getMessageVN());
+            logger.info("Finish API [disablePost]");
+            return res;
+        } else {
+            res.setCode(ErrorCode.Group.NOT_PERMISSION.getCode());
+            res.setData(postId);
+            res.setMessageEN(ErrorCode.Group.NOT_PERMISSION.getMessageEN());
+            res.setMessageVN(ErrorCode.Group.NOT_PERMISSION.getMessageVN());
+            logger.info("Finish API [disablePost]");
+            return res;
+        }
     }
 
     private CommentDTO.CommentInfo commentToPost(String authorId, CommentDTO commentDTO, PostItem postItem) {
