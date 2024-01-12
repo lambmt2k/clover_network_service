@@ -508,6 +508,13 @@ public class AuthenticationServiceImpl implements AuthenticationService {
             otpEntity.setUsed(true);
             otpRepository.save(otpEntity);
 
+            //remove all token
+            List<TokenItem> tokenItems = tokenItemRepository.findByUserIdAndDelFlagFalseOrderByCreatedTimeDesc(userInfoOpt.get().getUserId());
+            tokenItems.forEach(tokenItem -> {
+                tokenItem.setDelFlag(true);
+            });
+            tokenItemRepository.saveAll(tokenItems);
+
             res.setCode(ErrorCode.User.ACTION_SUCCESS.getCode());
             res.setData(req.getOtp());
             res.setMessageEN(ErrorCode.User.ACTION_SUCCESS.getMessageEN());
