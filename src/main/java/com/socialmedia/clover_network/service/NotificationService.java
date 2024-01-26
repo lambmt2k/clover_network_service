@@ -40,7 +40,6 @@ public class NotificationService {
 
     public void broadcastNotification(Long notificationId, List<String> listUserIds, Map<String, String> customData) {
         logger.info("[broadcastNotification] Start broadcast notification");
-        //TODO: push external channel (firebase, ...) : Firebase Cloud Messaging (FCM)
 
         //Distinct list userId
         Set<String> distinctMemberList = new HashSet<>(listUserIds);
