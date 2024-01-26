@@ -35,7 +35,7 @@ redis:
 jwt:
   secret: clover
 clover:
-  server_host: https://clover-network-app-rok7a.ondigitalocean.app
+  server_host: https://clover-app-pju97.ondigitalocean.app
   local_host: localhost:8080
   fe_url: https://clover-network.vercel.app
 app_setting:
